@@ -6,8 +6,8 @@ __pycache__/
 .Python
 
 # Environment
-# .env
-# *.env
+.env
+*.env
 
 # Data
 data/
