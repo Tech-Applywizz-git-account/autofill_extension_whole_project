@@ -1,0 +1,14 @@
+# Extension specific ignores
+node_modules/
+dist/
+build/
+*.log
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
