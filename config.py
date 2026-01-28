@@ -21,6 +21,7 @@ class Config:
     # Server Configuration
     PORT = int(os.environ.get("PORT", "8001"))
     HOST = os.environ.get("HOST", "0.0.0.0")
+    API_KEY = os.environ.get("APP_API_KEY", "").strip('"').strip("'") or None
     
     # Storage Paths
     DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')

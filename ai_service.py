@@ -1,133 +1,3 @@
-# """
-# AI Service - AWS Bedrock Integration
-# Handles AI predictions using Amazon Nova
-# """
-# import json
-# import boto3
-# import os
-# from models import AIRequest, AIResponse
-
-# def predict_answer(request: AIRequest) -> AIResponse:
-#     """
-#     Predict answer using AWS Bedrock (Amazon Nova)
-#     """
-#     try:
-#         aws_region = os.environ.get('AWS_REGION', 'us-east-1')
-#         aws_access_key = os.environ.get('AWS_ACCESS_KEY_ID')
-#         aws_secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
-        
-#         print(f"[AI Service] Predicting for: {request.question}")
-#         print(f"[AI Service] AWS Region: {aws_region}")
-#         print(f"[AI Service] Has credentials: {bool(aws_access_key and aws_secret_key)}")
-        
-#         if not aws_access_key or not aws_secret_key:
-#             print("[AI Service] ERROR: Missing AWS credentials")
-#             return AIResponse(
-#                 answer="", 
-#                 confidence=0, 
-#                 reasoning="AWS Credentials Missing"
-#             )
-
-#         bedrock = boto3.client(
-#             service_name='bedrock-runtime',
-#             region_name=aws_region,
-#             aws_access_key_id=aws_access_key,
-#             aws_secret_access_key=aws_secret_key
-#         )
-        
-#         # Build options string
-#         options_str = ""
-#         if request.options and len(request.options) > 0:
-#             options_str = f"\\n\\nAVAILABLE OPTIONS (YOU MUST CHOOSE EXACTLY ONE):\\n{', '.join(request.options)}"
-#         else:
-#             options_str = "\\n\\nFree text input"
-        
-#         # Define canonical intents
-#         canonical_intents = """
-#         AVAILABLE INTENTS:
-#         personal.firstName, personal.lastName, personal.email, personal.phone, personal.linkedin, 
-#         personal.city, personal.state, personal.country,
-#         workAuthorization.authorizedUS, workAuthorization.needsSponsorship,
-#         eeo.gender, eeo.race, eeo.veteran, eeo.disability
-#         """
-        
-#         prompt = f"""You are a job application assistant.
-
-# USER PROFILE:
-# {json.dumps(request.userProfile, indent=2)}
-
-# QUESTION: {request.question}
-# {options_str}
-
-# {canonical_intents}
-
-# CRITICAL INSTRUCTIONS:
-# 1. If options are provided above, you MUST select one option EXACTLY as written. DO NOT paraphrase or create new options.
-# 2. If no options provided, write the best answer based on the user profile.
-# 3. Identify the intent that best matches this question.
-
-# RESPONSE FORMAT (JSON ONLY):
-# {{
-#     "answer": "exact option or value",
-#     "confidence": 0.0-1.0,
-#     "reasoning": "why this answer",
-#     "intent": "intent.name"
-# }}
-# """
-        
-#         body = json.dumps({
-#             "inferenceConfig": {"max_new_tokens": 1000},
-#             "messages": [{"role": "user", "content": [{"text": prompt}]}]
-#         })
-        
-#         model_id = "us.amazon.nova-lite-v1:0"
-        
-#         response = bedrock.invoke_model(
-#             body=body,
-#             modelId=model_id,
-#             accept="application/json",
-#             contentType="application/json"
-#         )
-        
-#         response_body = json.loads(response.get("body").read())
-#         content_text = response_body["output"]["message"]["content"][0]["text"]
-        
-#         print(f"[AI Service] AWS Response: {content_text[:200]}")
-        
-#         # Parse JSON from AI response
-#         try:
-#             clean_text = content_text.replace("```json", "").replace("```", "").strip()
-#             ai_data = json.loads(clean_text)
-            
-#             print(f"[AI Service] Parsed answer: {ai_data.get('answer')}")
-            
-#             return AIResponse(
-#                 answer=ai_data.get('answer', ''),
-#                 confidence=ai_data.get('confidence', 0.0),
-#                 reasoning=ai_data.get('reasoning', ''),
-#                 intent=ai_data.get('intent')
-#             )
-            
-#         except json.JSONDecodeError as e:
-#             print(f"[AI Service] JSON Parse Error: {str(e)}")
-#             print(f"[AI Service] Raw text: {clean_text}")
-#             return AIResponse(
-#                 answer="", 
-#                 confidence=0, 
-#                 reasoning="AI JSON Parse Error"
-#             )
-            
-#     except Exception as e:
-#         print(f"[AI Service] AWS Bedrock Error: {str(e)}")
-#         return AIResponse(
-#             answer="", 
-#             confidence=0, 
-#             reasoning=f"AWS Error: {str(e)}"
-#         )
-
-
-
-
 """
 AI Service - AWS Bedrock Integration
 Handles AI predictions using Amazon Nova
@@ -196,14 +66,14 @@ INTENT_NORMALIZATION = {
 
 
 FORBIDDEN_ANSWER_PATTERNS = [
-    r"\bnot provided\b",
-    r"\bi don't know\b",
-    r"\bdo not know\b",
-    r"\bn/?a\b",
-    r"\bfree text input\b",              # your bug
-    r"\bno additional information\b",     # too passive
-    r"\bnothing to add\b",
-    r"\bnot sure\b",
+    r"\\bnot provided\\b",
+    r"\\bi don't know\\b",
+    r"\\bdo not know\\b",
+    r"\\bn/?a\\b",
+    r"\\bfree text input\\b",
+    r"\\bno additional information\\b",
+    r"\\bnothing to add\\b",
+    r"\\bnot sure\\b",
 ]
 
 
@@ -247,20 +117,16 @@ def _is_forbidden_answer(ans: str) -> bool:
 def _repair_answer(question: str, options: Optional[List[str]], intent: str) -> str:
     """
     If model returns garbage, generate safe job-applier fallback text.
-    (This ensures we NEVER return forbidden placeholders.)
     """
     q = (question or "").lower()
 
-    # If options exist, pick safest professional option (exact match required)
+    # If options exist, pick safest professional option
     if options:
-        # Prefer "Prefer not to say" for EEO if available
         pref = ["Prefer not to say", "Decline to answer", "Decline to state", "Prefer not to disclose"]
         for p in pref:
             for opt in options:
                 if opt.strip().lower() == p.lower():
                     return opt
-
-        # Otherwise pick first option (last resort) but must be exact
         return options[0]
 
     # Salary fallback
@@ -307,17 +173,16 @@ def predict_answer(request: AIRequest) -> AIResponse:
             aws_secret_access_key=aws_secret_key,
         )
 
-        # IMPORTANT: Do NOT put the phrase "Free text input" anywhere.
         options_block = ""
         if request.options and len(request.options) > 0:
             options_block = (
-                "\n\nAVAILABLE OPTIONS (CHOOSE EXACTLY ONE, COPY EXACTLY):\n"
-                + "\n".join([f"- {o}" for o in request.options])
+                "\\n\\nAVAILABLE OPTIONS (CHOOSE EXACTLY ONE, COPY EXACTLY):\\n"
+                + "\\n".join([f"- {o}" for o in request.options])
             )
         else:
-            options_block = "\n\nThis question requires a written response."
+            options_block = "\\n\\nThis question requires a written response."
 
-        allowed_intents_block = "\n".join([f"- {i}" for i in sorted(ALLOWED_INTENTS)])
+        allowed_intents_block = "\\n".join([f"- {i}" for i in sorted(ALLOWED_INTENTS)])
 
         prompt = f"""
 You are a HUMAN job applicant.
@@ -393,17 +258,15 @@ RESPONSE FORMAT (JSON ONLY, NO EXTRA TEXT):
 
         clean_text = content_text.replace("```json", "").replace("```", "").strip()
 
-        # Parse model JSON
         try:
             ai_data: Dict[str, Any] = json.loads(clean_text)
         except json.JSONDecodeError:
-            # Hard fallback
             intent = _normalize_intent(None, request.question)
             ans = _repair_answer(request.question, request.options, intent)
             return AIResponse(
                 answer=ans,
                 confidence=0.78,
-                reasoning="Fallback response due to formatting issue, optimized for job application success.",
+                reasoning="Fallback response due to formatting issue.",
                 intent=intent,
             )
 
@@ -414,47 +277,65 @@ RESPONSE FORMAT (JSON ONLY, NO EXTRA TEXT):
 
         intent = _normalize_intent(raw_intent, request.question)
 
-        # Enforce confidence
         try:
             conf = float(raw_conf)
         except Exception:
             conf = 0.75
         conf = max(0.70, min(conf, 0.99))
 
-        # If answer is forbidden/empty → repair
         if _is_forbidden_answer(raw_answer):
             repaired = _repair_answer(request.question, request.options, intent)
             return AIResponse(
                 answer=repaired,
                 confidence=max(conf, 0.75),
-                reasoning="Repaired answer to avoid placeholders and improve hiring outcome.",
+                reasoning="Repaired answer to avoid placeholders.",
                 intent=intent,
             )
 
-        # If options exist, enforce exact option match
         if request.options and raw_answer not in request.options:
-            # Try to match loosely then return exact option
             lower_map = {o.lower().strip(): o for o in request.options}
             candidate = lower_map.get(raw_answer.lower().strip())
+            
+            if not candidate:
+                synonym_map = {
+                    'male': ['man', 'cisgender male', 'cis male'],
+                    'female': ['woman', 'cisgender female', 'cis female'],
+                    'man': ['male', 'cisgender male', 'cis male'],
+                    'woman': ['female', 'cisgender female', 'cis female'],
+                    'non-binary': ['nonbinary', 'genderqueer', 'gender non-conforming', 'gender non-binary', 'non-binary/non-conforming'],
+                    'yes': ['y', 'true', 'i do', 'authorized'],
+                    'no': ['n', 'false', 'i do not', 'not authorized']
+                }
+                ans_lower = raw_answer.lower().strip()
+                if ans_lower in synonym_map:
+                    for syn in synonym_map[ans_lower]:
+                        if syn in lower_map:
+                            candidate = lower_map[syn]
+                            break
+            
+            if not candidate:
+                for opt_lower, opt_original in lower_map.items():
+                    if opt_lower in raw_answer.lower() or raw_answer.lower() in opt_lower:
+                        candidate = opt_original
+                        break
+
             if candidate:
                 raw_answer = candidate
             else:
                 raw_answer = _repair_answer(request.question, request.options, intent)
                 conf = max(conf, 0.75)
 
-        # Final safety: intent must be allowed
         if intent not in ALLOWED_INTENTS:
             intent = "unknown"
 
         return AIResponse(
             answer=raw_answer,
             confidence=conf,
-            reasoning=raw_reason or "Answer chosen to maximize hiring chances while staying professional and ATS-safe.",
+            reasoning=raw_reason or "Answer chosen to maximize hiring chances.",
             intent=intent,
         )
 
     except Exception as e:
-        # Never crash
         return AIResponse(
             answer="",
             confidence=0.0,
