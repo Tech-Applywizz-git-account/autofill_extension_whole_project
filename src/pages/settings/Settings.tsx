@@ -7,6 +7,7 @@ import {
     importProfile,
     clearProfile,
 } from "../../core/storage/profileStorage";
+import { CONFIG } from "../../config";
 import "./Settings.css";
 
 const Settings: React.FC = () => {
@@ -147,12 +148,22 @@ const Settings: React.FC = () => {
                     <button
                         className="save-btn"
                         style={{ marginTop: "10px", backgroundColor: "#28a745" }}
-                        onClick={() =>
+                        onClick={async () => {
+                            try {
+                                const email = profile?.personal?.email || "anonymous";
+                                await chrome.runtime.sendMessage({
+                                    action: 'proxyFetch',
+                                    url: `${CONFIG.API.AI_SERVICE}/api/feedback/track?email=${encodeURIComponent(email)}&type=click`,
+                                    options: { method: 'POST' }
+                                });
+                            } catch (err) {
+                                console.warn("[Settings] Failed to track feedback click:", err);
+                            }
                             window.open(
                                 "https://docs.google.com/forms/d/e/1FAIpQLScGwTXx7dQEAHKp4FGfB0dxk7x3vCk5WWSaT3XGqOlTrdEV0A/viewform?usp=publish-editor",
                                 "_blank"
-                            )
-                        }
+                            );
+                        }}
                     >
                         Give Feedback
                     </button>

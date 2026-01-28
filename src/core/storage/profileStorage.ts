@@ -1,48 +1,56 @@
 import { CanonicalProfile, EMPTY_PROFILE } from "../../types/canonicalProfile";
+import { CONFIG } from "../../config";
 
 const STORAGE_KEY = "autofill_canonical_profile";
 const VERSION_KEY = "autofill_profile_version";
 const LEARNED_PATTERNS_KEY = "learnedPatterns";
 const CURRENT_VERSION = "1.0.0";
-const BACKEND_URL = "https://only-ai-service-folder-autofill-extesnion.onrender.com/api/user-data";
+const AI_SERVICE_URL = CONFIG.API.AI_SERVICE; // Or your production URL
 
 /**
- * Sync profile and patterns to backend file storage
+ * Helper to perform fetch via background script to bypass CORS and add auth headers
  */
-async function syncToBackend(profile: CanonicalProfile): Promise<void> {
+async function proxyFetch(url: string, options: any = {}): Promise<any> {
+    return new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage({ action: 'proxyFetch', url, options }, (response) => {
+            if (chrome.runtime.lastError) {
+                reject(new Error(chrome.runtime.lastError.message));
+            } else if (response && response.success) {
+                resolve(response.data);
+            } else {
+                reject(new Error(response?.error || 'Unknown proxyFetch error'));
+            }
+        });
+    });
+}
+
+/**
+ * Sync profile to Supabase via AI Service
+ */
+async function syncToSupabase(profile: CanonicalProfile): Promise<void> {
     try {
         // Only sync if user has email
         if (!profile.personal.email) {
-            console.log("[ProfileStorage] Skipping backend sync - no email");
+            console.log("[ProfileStorage] Skipping sync - no email");
             return;
         }
 
-        // Get learned patterns from storage
-        const result = await chrome.storage.local.get([LEARNED_PATTERNS_KEY]);
-        const learnedPatterns = result[LEARNED_PATTERNS_KEY] || { answerMappings: [] };
+        console.log("[ProfileStorage] 🔄 Syncing profile to AI Service...");
 
-        // Send to backend
-        const response = await fetch(`${BACKEND_URL}/save`, {
+        const response = await proxyFetch(`${AI_SERVICE_URL}/api/user-data/save`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({
+            body: {
                 email: profile.personal.email,
-                profile,
-                learnedPatterns
-            }),
+                profile_data: profile
+            },
         });
 
-        if (response.ok) {
-            const data = await response.json();
-            console.log(`[ProfileStorage] ✅ Synced to backend: ${data.filepath}`);
-        } else {
-            console.warn("[ProfileStorage] ⚠️ Backend sync failed:", await response.text());
-        }
+        console.log("[ProfileStorage] ✅ Profile synced to AI Service");
     } catch (error) {
-        // Don't throw - backend sync is optional
-        console.warn("[ProfileStorage] Backend sync error (non-fatal):", error);
+        console.warn("[ProfileStorage] Sync error (non-fatal):", error);
     }
 }
 
@@ -51,18 +59,18 @@ async function syncToBackend(profile: CanonicalProfile): Promise<void> {
  */
 export async function saveProfile(profile: CanonicalProfile): Promise<void> {
     try {
+        console.log("[ProfileStorage] 💾 Saving profile to local storage:", profile.personal.email);
         await chrome.storage.local.set({
             [STORAGE_KEY]: profile,
             [VERSION_KEY]: CURRENT_VERSION,
         });
+        console.log("[ProfileStorage] ✅ Profile saved to local storage");
 
-        // Sync to backend (async, non-blocking)
-        syncToBackend(profile).catch(err => {
-            console.warn("[ProfileStorage] Background sync failed:", err);
-        });
+        // Sync to Supabase (await it so we know it finished)
+        await syncToSupabase(profile);
     } catch (error) {
         console.error("Failed to save profile:", error);
-        throw new Error("Could not save profile to storage");
+        throw error;
     }
 }
 
@@ -165,4 +173,37 @@ export async function updateProfileField(
     current[parts[parts.length - 1]] = value;
 
     await saveProfile(profile);
+}
+
+/**
+ * Restore profile from Supabase via AI Service
+ */
+export async function restoreProfile(email: string): Promise<CanonicalProfile | null> {
+    try {
+        console.log(`[ProfileStorage] 🔄 Restoring profile for ${email}...`);
+        const result = await proxyFetch(`${AI_SERVICE_URL}/api/user-data/${encodeURIComponent(email)}`);
+
+        if (result && result.profile) {
+            let profile = result.profile as any;
+            console.log("[ProfileStorage] 📥 Received profile from server:", profile.personal?.email || 'unknown');
+
+            // ROBUST UNWRAPPING: Handle double-wrapping from any previous bugs
+            if (profile.profile_data && (profile.email === email || profile.profile_data.personal?.email === email)) {
+                console.log("[ProfileStorage] 🛠️ Unwrapping nested profile data");
+                profile = profile.profile_data;
+            }
+
+            // Save locally
+            await chrome.storage.local.set({
+                [STORAGE_KEY]: profile,
+                [VERSION_KEY]: CURRENT_VERSION,
+            });
+            console.log("[ProfileStorage] ✅ Profile restored successfully:", profile.personal.email);
+            return profile as CanonicalProfile;
+        }
+        return null;
+    } catch (error) {
+        console.error("[ProfileStorage] Restore error:", error);
+        return null;
+    }
 }

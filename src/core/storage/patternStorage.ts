@@ -10,6 +10,10 @@
  */
 
 import { PatternMatcher } from './patternMatcher';
+import { loadProfile } from './profileStorage';
+import { CONFIG } from '../../config';
+
+const AI_SERVICE_URL = CONFIG.API.AI_SERVICE; // Or your production URL
 
 export interface LearnedPattern {
     id: string;
@@ -32,8 +36,6 @@ export interface AnswerMapping {
     contextOptions?: string[];
 }
 
-const API_BASE_URL = 'https://only-ai-service-folder-autofill-extesnion.onrender.com/api/patterns';
-
 // Shareable intents (must match backend)
 const SHAREABLE_INTENTS = [
     'eeo.gender', 'eeo.hispanic', 'eeo.veteran', 'eeo.disability', 'eeo.race', 'eeo.lgbtq',
@@ -46,6 +48,24 @@ const SHAREABLE_INTENTS = [
     'education.degree', 'education.school', 'education.major',
     'experience.company', 'experience.title'
 ];
+
+/**
+ * Helper to perform fetch via background script to bypass CORS
+ */
+async function proxyFetch(url: string, options: any = {}): Promise<any> {
+    return new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage({ action: 'proxyFetch', url, options }, (response) => {
+            if (chrome.runtime.lastError) {
+                reject(new Error(chrome.runtime.lastError.message));
+            } else if (response && response.success) {
+                resolve(response.data);
+            } else {
+                reject(new Error(response?.error || 'Unknown proxyFetch error'));
+            }
+        });
+    });
+}
+
 
 export class PatternStorage {
 
@@ -105,6 +125,10 @@ export class PatternStorage {
             }
             existing.lastUsed = new Date().toISOString();
             existing.synced = false; // Mark for re-sync
+            await this.saveLocalPatterns(patterns);
+
+            // Sync to Supabase
+            await this.syncPatternToSupabase(existing);
         } else {
             // Add new pattern
             const newPattern: LearnedPattern = {
@@ -117,12 +141,41 @@ export class PatternStorage {
             };
             patterns.push(newPattern);
             console.log(`[PatternStorage] 🎓 Learned new pattern: "${pattern.questionPattern}" → ${pattern.intent}`);
+
+            await this.saveLocalPatterns(patterns);
+
+            // Sync to Supabase
+            await this.syncPatternToSupabase(newPattern);
         }
+    }
 
-        await this.saveLocalPatterns(patterns);
+    /**
+     * Fetch global patterns from AI Service
+     */
+    async fetchGlobalPatterns(): Promise<LearnedPattern[]> {
+        try {
+            console.log('[PatternStorage] 🌐 Fetching global patterns from AI Service...');
+            const data = await proxyFetch(`${AI_SERVICE_URL}/api/patterns/sync`);
+            const patterns = data.patterns || [];
 
-        // Note: Pattern sharing removed - all patterns stored locally only
-        // This ensures 100% reliability without network dependency
+            return patterns.map((p: any) => ({
+                id: `global_${p.id}`,
+                questionPattern: p.question_pattern || p.questionPattern,
+                intent: p.intent,
+                canonicalKey: p.canonical_key || p.canonicalKey,
+                fieldType: p.field_type || p.fieldType,
+                answerMappings: p.answer_mappings || p.answerMappings,
+                confidence: 0.9,
+                usageCount: p.popularity || p.usageCount || 1,
+                lastUsed: new Date().toISOString(),
+                createdAt: p.created_at || p.createdAt || new Date().toISOString(),
+                source: 'AI' as const,
+                synced: true
+            }));
+        } catch (error) {
+            console.error('[PatternStorage] Error fetching global patterns:', error);
+            return [];
+        }
     }
 
     // ========================================
@@ -131,20 +184,13 @@ export class PatternStorage {
 
     /**
      * Find pattern with production-safe matching
-     * 
-     * Implements:
-     * 1. Question normalization
-     * 2. Intent validation
-     * 3. FieldType compatibility
-     * 4. Answer filtering
-     * 5. Keyword-anchored matching
-     * 6. Progressive dropdown learning
      */
     async findPattern(questionText: string, fieldType?: string, options?: string[]): Promise<LearnedPattern | null> {
         const localPatterns = await this.getLocalPatterns();
         const questionKeywords = PatternMatcher.extractKeywords(questionText);
 
-        const match = this.searchPatternsProduction(
+        // 1. Try local patterns first
+        let match = this.searchPatternsProduction(
             localPatterns,
             questionText,
             questionKeywords,
@@ -155,6 +201,22 @@ export class PatternStorage {
         if (match) {
             console.log(`[PatternStorage] ✅ REUSING stored pattern for "${questionText}"`);
             await this.incrementUsage(match.id);
+            return match;
+        }
+
+        // 2. Try global patterns if no local match
+        const globalPatterns = await this.fetchGlobalPatterns();
+        match = this.searchPatternsProduction(
+            globalPatterns,
+            questionText,
+            questionKeywords,
+            fieldType,
+            options
+        );
+
+        if (match) {
+            console.log(`[PatternStorage] 🌐 REUSING GLOBAL pattern for "${questionText}"`);
+            // We don't increment usage for global patterns locally yet
             return match;
         }
 
@@ -365,6 +427,92 @@ export class PatternStorage {
             totalUsage: patterns.reduce((sum, p) => sum + p.usageCount, 0),
             intentBreakdown
         };
+    }
+
+    /**
+     * Restore patterns from Supabase via AI Service
+     */
+    async restorePatterns(email: string): Promise<boolean> {
+        try {
+            console.log(`[PatternStorage] 🔄 Restoring patterns for ${email}...`);
+            const result = await proxyFetch(`${AI_SERVICE_URL}/api/patterns/user/${encodeURIComponent(email)}`);
+
+            if (result.success && result.patterns) {
+                const dbPatterns = result.patterns;
+                console.log(`[PatternStorage] 📥 Received ${dbPatterns.length} patterns from server`);
+
+                const learnedPatterns: LearnedPattern[] = dbPatterns.map((p: any) => ({
+                    id: p.id,
+                    questionPattern: p.question_pattern || p.questionPattern,
+                    intent: p.intent,
+                    canonicalKey: p.canonical_key || p.canonicalKey,
+                    fieldType: p.field_type || p.fieldType,
+                    answerMappings: p.answer_mappings || p.answerMappings,
+                    confidence: p.confidence || 1.0,
+                    usageCount: p.usage_count || p.usageCount || 0,
+                    lastUsed: p.last_used || p.lastUsed,
+                    createdAt: p.created_at || p.createdAt,
+                    source: p.source || 'AI',
+                    synced: true
+                }));
+
+                await this.saveLocalPatterns(learnedPatterns);
+                console.log(`[PatternStorage] ✅ Restored ${learnedPatterns.length} patterns to local storage`);
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error("[PatternStorage] Restore error:", error);
+            return false;
+        }
+    }
+
+    /**
+     * Sync a single pattern to Supabase via AI Service
+     */
+    private async syncPatternToSupabase(pattern: LearnedPattern): Promise<void> {
+        try {
+            const profile = await loadProfile();
+            if (!profile?.personal.email) {
+                console.warn("[PatternStorage] No email found in profile, cannot sync pattern");
+                return;
+            }
+
+            console.log(`[PatternStorage] 🔄 Syncing pattern to AI Service: ${pattern.intent}`);
+
+            const response = await proxyFetch(`${AI_SERVICE_URL}/api/patterns/upload?email=${encodeURIComponent(profile.personal.email)}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ pattern }),
+            });
+
+            if (response && (response.success || response.message?.includes('successfully'))) {
+                console.log("[PatternStorage] ✅ Pattern synced to AI Service");
+                pattern.synced = true;
+
+                // Save updated synced status back to local storage
+                const patterns = await this.getLocalPatterns();
+                const idx = patterns.findIndex(p => p.id === pattern.id);
+                if (idx !== -1) {
+                    patterns[idx].synced = true;
+                    await this.saveLocalPatterns(patterns);
+                }
+
+                // Notify UI that a pattern was stored
+                window.dispatchEvent(new CustomEvent('PATTERN_SYNCED', {
+                    detail: {
+                        intent: pattern.intent,
+                        question: pattern.questionPattern
+                    }
+                }));
+            } else {
+                console.error("[PatternStorage] ❌ Pattern sync failed:", response?.error || 'Unknown error');
+            }
+        } catch (error) {
+            console.warn("[PatternStorage] Pattern sync error:", error);
+        }
     }
 }
 

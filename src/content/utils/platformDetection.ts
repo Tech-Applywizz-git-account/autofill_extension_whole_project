@@ -19,7 +19,11 @@ export function detectPlatform(): JobPlatform {
     const hostname = window.location.hostname.toLowerCase();
 
     // Greenhouse detection
-    if (hostname.includes("greenhouse.io") || url.includes("greenhouse")) {
+    // Includes both direct greenhouse.io URLs and embedded forms (identified by gh_jid or gh_src params)
+    if (hostname.includes("greenhouse.io") ||
+        url.includes("greenhouse") ||
+        url.includes("gh_jid=") ||
+        url.includes("gh_src=")) {
         return JobPlatform.GREENHOUSE;
     }
 

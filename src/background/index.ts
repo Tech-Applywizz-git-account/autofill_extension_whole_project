@@ -4,6 +4,7 @@
  */
 
 import { loadProfile, hasCompleteProfile } from "../core/storage/profileStorage";
+import { CONFIG } from "../config";
 
 // Install/update handler
 chrome.runtime.onInstalled.addListener(async (details) => {
@@ -35,14 +36,14 @@ chrome.action.onClicked.addListener(async (tab) => {
 // Handle messages from content scripts or popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "checkProfile") {
-        hasCompleteProfile().then((exists) => {
+        hasCompleteProfile().then((exists: boolean) => {
             sendResponse({ exists });
         });
         return true; // Async response
     }
 
     if (message.action === "getProfile") {
-        loadProfile().then((profile) => {
+        loadProfile().then((profile: any) => {
             sendResponse({ profile });
         });
         return true;
@@ -67,11 +68,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     if (message.action === "runSelenium") {
-        const aiUrl = process.env.REACT_APP_AI_URL || 'https://only-ai-service-folder-autofill-extesnion.onrender.com';
+        const aiUrl = process.env.REACT_APP_AI_URL || 'http://localhost:8001';
         fetch(`${aiUrl}/run`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-API-Key': CONFIG.API.AI_API_KEY
             },
             body: JSON.stringify(message.plan)
         })
@@ -114,6 +116,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true;
     }
 
+    if (message.action === "BROADCAST_SCAN") {
+        handleBroadcastScan(sender.tab?.id).then(sendResponse);
+        return true;
+    }
+
+    if (message.action === "BROADCAST_AUTOFILL") {
+        handleBroadcastAutofill(sender.tab?.id, message.payload).then(sendResponse);
+        return true;
+    }
+
     // Production scan-and-fill architecture
     if (message.action === "START_AUTOFILL") {
         handleStartAutofill(message.payload).then(sendResponse);
@@ -122,6 +134,71 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     if (message.action === "FIELD_FILL_FAILED") {
         handleFieldFillFailed(message.payload).then(sendResponse);
+        return true;
+    }
+
+    if (message.action === "REPORT_AUTOFILL_COMPLETE") {
+        // Relay to the top frame of the same tab
+        if (sender.tab?.id) {
+            chrome.tabs.sendMessage(sender.tab.id, {
+                type: "AUTOFILL_COMPLETE_RELAY",
+                payload: message.payload
+            }, { frameId: 0 }).catch(err => {
+                console.warn("[Background] Failed to relay completion to top frame:", err.message);
+            });
+        }
+        sendResponse({ success: true });
+        return false;
+    }
+
+    if (message.action === "proxyFetch") {
+        const { url, options } = message;
+
+        // Ensure body is stringified if it's an object
+        if (options.body && typeof options.body === 'object') {
+            options.body = JSON.stringify(options.body);
+        }
+
+        const apiKey = CONFIG.API.AI_API_KEY || '';
+        console.log(`[Background] 🛠️ proxyFetch: ${options.method || 'GET'} ${url}`);
+        console.log(`[Background] 🔑 API Key Status: ${apiKey ? `Present (${apiKey.substring(0, 3)}...)` : 'MISSING'}`);
+
+        // Add API Key to headers if not present
+        const fetchOptions = {
+            ...options,
+            headers: {
+                ...(options.headers || {}),
+                'X-API-Key': apiKey
+            }
+        };
+
+        fetch(url, fetchOptions)
+            .then(async (res) => {
+                const contentType = res.headers.get("content-type");
+                let data;
+                if (contentType && contentType.includes("application/json")) {
+                    data = await res.json();
+                } else {
+                    data = { message: await res.text() };
+                }
+
+                console.log(`[Background] 📡 proxyFetch Response: ${res.status}`);
+
+                if (res.ok) {
+                    sendResponse({ success: true, data, status: res.status });
+                } else {
+                    console.error(`[Background] ❌ proxyFetch Failed (${res.status}):`, data);
+                    sendResponse({
+                        success: false,
+                        error: data.detail || data.message || `HTTP ${res.status}`,
+                        status: res.status
+                    });
+                }
+            })
+            .catch((err) => {
+                console.error("[Background] ❌ proxyFetch Network Error:", err);
+                sendResponse({ success: false, error: err.message });
+            });
         return true;
     }
 
@@ -171,15 +248,16 @@ async function handleFieldFillFailed(payload: any) {
 }
 
 /**
- * Handle AI prediction requests by calling the Selenium Runner's /predict endpoint
+ * Handle AI request
  */
 async function handleAIRequest(payload: any) {
     try {
-        const aiUrl = process.env.REACT_APP_AI_URL || 'https://only-ai-service-folder-autofill-extesnion.onrender.com';
+        const aiUrl = process.env.REACT_APP_AI_URL || 'http://localhost:8001';
         const response = await fetch(`${aiUrl}/predict`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-API-Key': CONFIG.API.AI_API_KEY
             },
             body: JSON.stringify(payload)
         });
@@ -217,11 +295,12 @@ async function handleScanApplication(url: string) {
 
         console.log('[Background] Triggering Selenium scan for:', url);
 
-        const aiUrl = process.env.REACT_APP_AI_URL || 'https://only-ai-service-folder-autofill-extesnion.onrender.com';
+        const aiUrl = process.env.REACT_APP_AI_URL || 'http://localhost:8001';
         const response = await fetch(`${aiUrl}/api/selenium/scan`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-API-Key': CONFIG.API.AI_API_KEY
             },
             body: JSON.stringify({ url })
         });
@@ -354,7 +433,6 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
 /**
  * Detect if URL is likely a job application site
- * Can be expanded with more patterns
  */
 async function isJobApplicationSite(url: string): Promise<boolean> {
     const jobSitePatterns = [
@@ -365,12 +443,83 @@ async function isJobApplicationSite(url: string): Promise<boolean> {
         /smartrecruiters\.com/i,
         /jobvite\.com/i,
         /taleo\.net/i,
-        /apply/i, // Generic "apply" in URL
+        /apply/i,
         /careers/i,
         /jobs/i,
     ];
 
     return jobSitePatterns.some((pattern) => pattern.test(url));
+}
+
+/**
+ * Broadcast scan request to all frames in the tab and aggregate results
+ */
+async function handleBroadcastScan(tabId: number | undefined) {
+    if (!tabId) return { success: false, error: "No tab ID" };
+
+    try {
+        console.log(`[Background] 🔍 Broadcasting scan to all frames in tab ${tabId}`);
+
+        // Get all frames in the tab
+        const frames = await chrome.webNavigation.getAllFrames({ tabId });
+        if (!frames) {
+            console.warn(`[Background] ⚠️ No frames found for tab ${tabId}`);
+            return { success: true, questions: [] };
+        }
+        console.log(`[Background] 🔍 Found ${frames.length} frames`);
+
+        const scanPromises = frames.map(frame =>
+            chrome.tabs.sendMessage(tabId, { action: 'PERFORM_SCAN' }, { frameId: frame.frameId })
+                .catch(err => {
+                    console.warn(`[Background] ⚠️ Frame ${frame.frameId} scan failed:`, err.message);
+                    return null;
+                })
+        );
+
+        const results = await Promise.all(scanPromises);
+
+        // Aggregate questions from all successful frame scans
+        const allQuestions = results
+            .filter(r => r && r.success && Array.isArray(r.questions))
+            .flatMap(r => r.questions);
+
+        console.log(`[Background] ✅ Aggregated ${allQuestions.length} questions from all frames`);
+        return { success: true, questions: allQuestions };
+    } catch (error: any) {
+        console.error("[Background] Broadcast Scan Error:", error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Broadcast autofill request to all frames in the tab
+ */
+async function handleBroadcastAutofill(tabId: number | undefined, payload: any) {
+    if (!tabId) return { success: false, error: "No tab ID" };
+
+    try {
+        console.log(`[Background] 🚀 Broadcasting autofill to all frames in tab ${tabId}`);
+
+        const frames = await chrome.webNavigation.getAllFrames({ tabId });
+        if (!frames) {
+            console.warn(`[Background] ⚠️ No frames found for tab ${tabId}`);
+            return { success: true };
+        }
+
+        const fillPromises = frames.map(frame =>
+            chrome.tabs.sendMessage(tabId, { action: 'START_AUTOFILL', payload }, { frameId: frame.frameId })
+                .catch(err => {
+                    console.warn(`[Background] ⚠️ Frame ${frame.frameId} fill failed:`, err.message);
+                    return null;
+                })
+        );
+
+        await Promise.all(fillPromises);
+        return { success: true };
+    } catch (error: any) {
+        console.error("[Background] Broadcast Autofill Error:", error);
+        return { success: false, error: error.message };
+    }
 }
 
 console.log("[Autofill] Background service worker loaded");
