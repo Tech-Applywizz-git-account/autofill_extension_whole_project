@@ -6,14 +6,17 @@ const TerserPlugin = require('terser-webpack-plugin');
 const webpack = require('webpack');
 const dotenv = require('dotenv');
 
-// Load env vars from .env file
-const env = dotenv.config().parsed || {};
+// Load env vars from .env file AND process.env
+const localEnv = dotenv.config().parsed || {};
+const mergedEnv = { ...process.env, ...localEnv };
 
-// Reduce it to a nice object, the same as before ("process.env.X" = "value")
-const envKeys = Object.keys(env).reduce((prev, next) => {
-    prev[`process.env.${next}`] = JSON.stringify(env[next]);
-    return prev;
-}, {});
+// Extract all REACT_APP_ variables and stringify them for DefinePlugin
+const envKeys = Object.keys(mergedEnv)
+    .filter(key => key.startsWith('REACT_APP_') || key === 'NODE_ENV')
+    .reduce((prev, next) => {
+        prev[`process.env.${next}`] = JSON.stringify(mergedEnv[next]);
+        return prev;
+    }, {});
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -91,12 +94,6 @@ module.exports = {
             filename: 'settings.html',
             chunks: ['settings'],
         }),
-        new webpack.DefinePlugin({
-            ...envKeys,
-            'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-            'process.env.REACT_APP_AI_URL': JSON.stringify(process.env.REACT_APP_AI_URL || 'https://only-ai-service-folder-autofill-extesnion.onrender.com'),
-            // 'process.env.REACT_APP_BACKEND_URL': JSON.stringify(process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000')
-            'process.env.REACT_APP_BACKEND_URL': JSON.stringify(process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000')
-        })
+        new webpack.DefinePlugin(envKeys)
     ],
 };

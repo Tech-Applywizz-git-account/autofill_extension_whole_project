@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { CanonicalProfile, EMPTY_PROFILE } from "../../types/canonicalProfile";
 import { Gender, Race, YesNoDecline, SexualOrientation } from "../../types/canonicalEnums";
-import { saveProfile } from "../../core/storage/profileStorage";
+import { saveProfile, restoreProfile } from "../../core/storage/profileStorage";
+import { patternStorage } from "../../core/storage/patternStorage";
 import { mapMultiSourceToProfile } from "../../core/mapping/apiMapper";
+import LandingPage from "./LandingPage";
+import { CONFIG } from "../../config";
 import "./Onboarding.css";
 
 // Default profile data for Demo User - AML Analyst
@@ -128,10 +131,36 @@ const DEFAULT_PROFILE_DATA: Partial<CanonicalProfile> = {
 };
 
 const Onboarding: React.FC = () => {
-    const [step, setStep] = useState(1);
+    const [step, setStep] = useState(0); // 0 is Landing Page
     const [profile, setProfile] = useState<CanonicalProfile>(EMPTY_PROFILE);
     const [fetching, setFetching] = useState(false);
     const [apwId, setApwId] = useState("");
+
+    const handleNewUser = () => {
+        setStep(1);
+    };
+
+    const handleExistingUser = async (email: string) => {
+        setFetching(true);
+        try {
+            const restoredProfile = await restoreProfile(email);
+            if (restoredProfile) {
+                setProfile(restoredProfile);
+                // Also restore patterns
+                await patternStorage.restorePatterns(email);
+                alert("Welcome back! Your data has been restored.");
+                window.close(); // Close onboarding as they are already set up
+            } else {
+                alert("No profile found for this email. Please start as a new user.");
+                setStep(1);
+            }
+        } catch (error) {
+            console.error("Restore error:", error);
+            alert("Failed to restore data. Please try again or start as a new user.");
+        } finally {
+            setFetching(false);
+        }
+    };
 
     const handleApiFetch = async () => {
         if (!apwId.trim()) {
@@ -148,8 +177,8 @@ const Onboarding: React.FC = () => {
             let localData = {};
             let isLocalSuccess = false;
             try {
-                // Changed to use configurable Backend URL (defaulting to port 3000 which proxies to 8000)
-                const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000';
+                // Changed to use configurable Backend URL
+                const backendUrl = CONFIG.API.BACKEND_URL;
                 const localResponse = await fetch(`${backendUrl}/api/lead-details/${normalizedId}`);
                 if (!localResponse.ok) {
                     console.warn(`Local API Error: ${localResponse.status}`);
@@ -163,7 +192,8 @@ const Onboarding: React.FC = () => {
             }
 
             // 2. Fetch from Vercel Client Details API
-            const vercelResponse = await fetch(`https://ticketingtoolapplywizz.vercel.app/api/get-client-details?applywizz_id=${normalizedId}`);
+            const vercelUrl = CONFIG.API.VERCEL_CRM;
+            const vercelResponse = await fetch(`${vercelUrl}?applywizz_id=${normalizedId}`);
             if (!vercelResponse.ok) {
                 console.warn(`Vercel API Error: ${vercelResponse.status}`);
             }
@@ -210,20 +240,29 @@ const Onboarding: React.FC = () => {
 
     return (
         <div className="onboarding-container">
-            <div className="onboarding-progress">
-                <div className="progress-steps">
-                    <div className={`progress-step ${step >= 1 ? "active" : ""}`}>1. Personal</div>
-                    <div className={`progress-step ${step >= 2 ? "active" : ""}`}>2. Education</div>
-                    <div className={`progress-step ${step >= 3 ? "active" : ""}`}>3. Work Experience</div>
-                    <div className={`progress-step ${step >= 4 ? "active" : ""}`}>4. Skills</div>
-                    <div className={`progress-step ${step >= 5 ? "active" : ""}`}>5. Equal Employment</div>
+            {step > 0 && (
+                <div className="onboarding-progress">
+                    <div className="progress-steps">
+                        <div className={`progress-step ${step >= 1 ? "active" : ""}`}>1. Personal</div>
+                        <div className={`progress-step ${step >= 2 ? "active" : ""}`}>2. Education</div>
+                        <div className={`progress-step ${step >= 3 ? "active" : ""}`}>3. Work Experience</div>
+                        <div className={`progress-step ${step >= 4 ? "active" : ""}`}>4. Skills</div>
+                        <div className={`progress-step ${step >= 5 ? "active" : ""}`}>5. Equal Employment</div>
+                    </div>
+                    <div className="progress-bar">
+                        <div className="progress-fill" style={{ width: `${(step / totalSteps) * 100}%` }} />
+                    </div>
                 </div>
-                <div className="progress-bar">
-                    <div className="progress-fill" style={{ width: `${(step / totalSteps) * 100}%` }} />
-                </div>
-            </div>
+            )}
 
             <div className="onboarding-content">
+                {step === 0 && (
+                    <LandingPage
+                        onNewUser={handleNewUser}
+                        onExistingUser={handleExistingUser}
+                        loading={fetching}
+                    />
+                )}
                 {step === 1 && (
                     <StepPersonal
                         profile={profile}
@@ -233,6 +272,7 @@ const Onboarding: React.FC = () => {
                         onApiFetch={handleApiFetch}
                         fetching={fetching}
                         onNext={() => setStep(2)}
+                        onBack={() => setStep(0)}
                     />
                 )}
                 {step === 2 && (
@@ -245,7 +285,14 @@ const Onboarding: React.FC = () => {
                     <StepSkills profile={profile} updateProfile={updateProfile} onNext={() => setStep(5)} onBack={() => setStep(3)} />
                 )}
                 {step === 5 && (
-                    <StepEqualEmployment profile={profile} updateProfile={updateProfile} onFinish={handleSaveProfile} onBack={() => setStep(4)} />
+                    <StepEqualEmployment
+                        profile={profile}
+                        updateProfile={updateProfile}
+                        onFinish={handleSaveProfile}
+                        onBack={() => setStep(4)}
+                        fetching={fetching}
+                        setFetching={setFetching}
+                    />
                 )}
             </div>
         </div>
@@ -261,8 +308,9 @@ const StepPersonal: React.FC<{
     setApwId: (id: string) => void;
     onApiFetch: () => void;
     fetching: boolean;
-    onNext: () => void
-}> = ({ profile, updateProfile, apwId, setApwId, onApiFetch, fetching, onNext }) => {
+    onNext: () => void;
+    onBack: () => void;
+}> = ({ profile, updateProfile, apwId, setApwId, onApiFetch, fetching, onNext, onBack }) => {
 
     const handlePrefill = () => {
         updateProfile(DEFAULT_PROFILE_DATA);
@@ -445,7 +493,10 @@ const StepPersonal: React.FC<{
                 </div>
             </div>
 
-            <button className="next-btn" onClick={onNext}>Next</button>
+            <div className="form-actions" style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                <button className="back-btn" onClick={onBack} style={{ flex: 1, background: '#f5f5f5', color: '#666', border: '1px solid #ddd', borderRadius: '8px', padding: '10px', cursor: 'pointer' }}>Back to Home</button>
+                <button className="next-btn" onClick={onNext} style={{ flex: 2 }}>Next</button>
+            </div>
         </div >
     );
 };
@@ -707,7 +758,14 @@ const StepSkills: React.FC<{ profile: CanonicalProfile; updateProfile: (u: Parti
     );
 };
 
-const StepEqualEmployment: React.FC<{ profile: CanonicalProfile; updateProfile: (u: Partial<CanonicalProfile>) => void; onFinish: () => void; onBack: () => void }> = ({ profile, updateProfile, onFinish, onBack }) => {
+const StepEqualEmployment: React.FC<{
+    profile: CanonicalProfile;
+    updateProfile: (u: Partial<CanonicalProfile>) => void;
+    onFinish: () => void;
+    onBack: () => void;
+    fetching: boolean;
+    setFetching: (f: boolean) => void;
+}> = ({ profile, updateProfile, onFinish, onBack, fetching, setFetching }) => {
     const [agreed, setAgreed] = useState(false);
 
     const handleFinish = async () => {
@@ -715,6 +773,8 @@ const StepEqualEmployment: React.FC<{ profile: CanonicalProfile; updateProfile: 
             alert("Please agree to the consent terms");
             return;
         }
+
+        console.log("[Onboarding] 🏁 Finishing setup...");
 
         // Create final profile with consent fixed
         const finalProfile = {
@@ -726,10 +786,22 @@ const StepEqualEmployment: React.FC<{ profile: CanonicalProfile; updateProfile: 
         };
 
         try {
+            setFetching(true);
+            console.log("[Onboarding] 💾 Saving final profile...");
             await saveProfile(finalProfile);
-            window.close();
+            console.log("[Onboarding] ✅ Profile saved successfully");
+
+            alert("Setup complete! Your profile is ready for autofill.");
+
+            // Small delay to ensure storage write is flushed before window closes
+            setTimeout(() => {
+                window.close();
+            }, 500);
         } catch (error) {
-            alert("Failed to save profile");
+            console.error("[Onboarding] Save failed:", error);
+            alert("Failed to save profile. Please try again.");
+        } finally {
+            setFetching(false);
         }
     };
 

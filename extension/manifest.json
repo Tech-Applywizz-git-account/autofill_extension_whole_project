@@ -6,21 +6,11 @@
     "permissions": [
         "storage",
         "activeTab",
-        "unlimitedStorage"
+        "unlimitedStorage",
+        "webNavigation"
     ],
     "host_permissions": [
-        "*://*.greenhouse.io/*",
-        "*://*.lever.co/*",
-        "*://*.myworkdayjobs.com/*",
-        "*://*.workday.com/*",
-        "*://*.smartrecruiters.com/*",
-        "*://*.icims.com/*",
-        "*://*.bamboohr.com/*",
-        "*://*.indeed.com/*",
-        "*://*.linkedin.com/*",
-        "*://*.glassdoor.com/*",
-        "*://*.careers-page.com/*",
-        "*://*.applytojob.com/*"
+        "<all_urls>"
     ],
     "background": {
         "service_worker": "background.js"
@@ -28,22 +18,12 @@
     "content_scripts": [
         {
             "matches": [
-                "*://*.greenhouse.io/*",
-                "*://*.lever.co/*",
-                "*://*.myworkdayjobs.com/*",
-                "*://*.workday.com/*",
-                "*://*.smartrecruiters.com/*",
-                "*://*.icims.com/*",
-                "*://*.bamboohr.com/*",
-                "*://*.indeed.com/*",
-                "*://*.linkedin.com/*",
-                "*://*.glassdoor.com/*",
-                "*://*.careers-page.com/*",
-                "*://*.applytojob.com/*"
+                "<all_urls>"
             ],
             "js": [
                 "content.js"
             ],
+            "all_frames": true,
             "run_at": "document_idle"
         }
     ],

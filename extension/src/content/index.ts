@@ -3,6 +3,7 @@ import { renderOverlayPanel } from "./ui/OverlayPanel";
 import { loadProfile } from "../core/storage/profileStorage";
 import { QuestionMapper } from "./mapping/questionMapper";
 import { initAutofillRunner } from "./autofillRunner";
+import { FormScanner } from "./scanner/formScanner";
 
 /**
  * Production content script with scan-and-fill architecture
@@ -42,17 +43,22 @@ window.fetch = function (...args) {
         // Small delay to ensure DOM is fully ready
         setTimeout(() => {
             try {
-                // Render overlay panel with empty fields (icon state)
-                // User will trigger scan manually via "Scan Application" button
-                const noOpAutoFill = async () => {
-                    console.log("[Autofill] No auto-fill in Selenium-only mode");
-                };
-                const noOpFieldUpdate = (index: number, field: DetectedField) => {
-                    console.log("[Autofill] Field update:", index, field);
-                };
+                // Only render overlay in the top-level frame
+                if (window === window.top) {
+                    // Render overlay panel with empty fields (icon state)
+                    // User will trigger scan manually via "Scan Application" button
+                    const noOpAutoFill = async () => {
+                        console.log("[Autofill] No auto-fill in Selenium-only mode");
+                    };
+                    const noOpFieldUpdate = (index: number, field: DetectedField) => {
+                        console.log("[Autofill] Field update:", index, field);
+                    };
 
-                renderOverlayPanel([], noOpAutoFill, noOpFieldUpdate);
-                console.log("[Autofill] Overlay panel rendered");
+                    renderOverlayPanel([], noOpAutoFill, noOpFieldUpdate);
+                    console.log("[Autofill] Overlay panel rendered in top frame");
+                } else {
+                    console.log("[Autofill] Content script active in iframe - skipping overlay");
+                }
             } catch (error) {
                 console.error("[Autofill] Error rendering overlay:", error);
             }
@@ -84,6 +90,34 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             sendResponse({ success: false, error: error instanceof Error ? error.message : String(error) });
         }
         return true; // Async response
+    }
+
+    // Handle frame-specific scan request
+    if (message.action === 'PERFORM_SCAN') {
+        console.log('[Content] 🔍 Performing scan in frame:', window.location.href);
+        const scanner = new FormScanner();
+        scanner.scan().then(questions => {
+            console.log(`[Content] ✅ Found ${questions.length} questions in frame`);
+            sendResponse({ success: true, questions });
+        }).catch(err => {
+            console.error('[Content] ❌ Scan failed in frame:', err);
+            sendResponse({ success: false, error: err.message });
+        });
+        return true;
+    }
+
+    // Handle frame-specific autofill request
+    if (message.action === 'START_AUTOFILL' || message.type === 'START_AUTOFILL') {
+        const payload = message.payload;
+        console.log('[Content] 🚀 Starting autofill in frame:', window.location.href);
+
+        // Dispatch event to AutofillRunner (which is initialized in this frame)
+        window.dispatchEvent(new CustomEvent('START_AUTOFILL_EVENT', {
+            detail: payload
+        }));
+
+        sendResponse({ success: true });
+        return false;
     }
 
     return false;

@@ -141,12 +141,30 @@ async function runAutofill(payload: FillPayload) {
     console.log(`\n📊 Final Results:`);
     console.log(`   ✅ Success: ${successes} field(s)`);
     console.log(`   ❌ Failed: ${failures} field(s)`);
-    console.log(`   📈 Success Rate: ${((successes / payload.fields.length) * 100).toFixed(1)}%\n`);
-
-    // Dispatch completion event for UI timer
+    if (failures > 0) {
+        console.log(`   ⚠️ Failed Fields:`);
+        results.filter(r => !r.ok).forEach(r => console.log(`      - ${r.questionText} (${r.reason || 'Unknown error'})`));
+    }
+    // Dispatch completion event for UI timer (local frame)
     window.dispatchEvent(new CustomEvent('AUTOFILL_COMPLETE_EVENT', {
         detail: { successes, failures }
     }));
+
+    // Report to background for cross-frame aggregation
+    try {
+        const successfulFieldNames = results.filter(r => r.ok).map(r => r.questionText);
+        await chrome.runtime.sendMessage({
+            action: 'REPORT_AUTOFILL_COMPLETE',
+            payload: {
+                successes,
+                failures,
+                runId: payload.runId,
+                successfulFields: successfulFieldNames // Report specific fields!
+            }
+        });
+    } catch (e) {
+        console.warn(`${LOG_PREFIX} Failed to report completion to background:`, e);
+    }
 }
 
 /**

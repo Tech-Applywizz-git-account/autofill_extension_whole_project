@@ -4,6 +4,7 @@ import { DetectedField, QuestionSection, FieldType } from "../../types/fieldDete
 import { updateProfileField, loadProfile } from "../../core/storage/profileStorage";
 import { fillField } from "../actions/fieldFiller";
 import { FormScanner } from "../scanner/formScanner";
+import { CONFIG } from "../../config";
 
 // CSS Styles specifically for the Shadow DOM injection
 const STYLES = `
@@ -420,6 +421,13 @@ const STYLES = `
   color: #00d084;
   font-size: 13px;
 }
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translate(-50%, 20px); }
+  15% { opacity: 1; transform: translate(-50%, 0); }
+  85% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -20px); }
+}
 `;
 
 interface OverlayPanelProps {
@@ -474,6 +482,44 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
     const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics>({});
     const [aiStatus, setAIStatus] = useState<string>("");
     const [aiLog, setAILog] = useState<{ question: string; answer: string }[]>([]);
+    const [statsSummary, setStatsSummary] = useState<{
+        users: { total: number; recent_24h: number };
+        feedback: { total: number; recent_24h: number };
+    } | null>(null);
+    const [notification, setNotification] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
+
+    // Helper to perform fetch via background script to bypass CORS
+    const proxyFetch = async (url: string, options: any = {}): Promise<any> => {
+        return new Promise((resolve, reject) => {
+            chrome.runtime.sendMessage({ action: 'proxyFetch', url, options }, (response) => {
+                if (chrome.runtime.lastError) {
+                    reject(new Error(chrome.runtime.lastError.message));
+                } else if (response && response.success) {
+                    resolve(response.data);
+                } else {
+                    reject(new Error(response?.error || 'Unknown proxyFetch error'));
+                }
+            });
+        });
+    };
+
+    // Fetch stats summary on mount
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const data = await proxyFetch(`${CONFIG.API.STATS_URL}/api/stats/summary`);
+                if (data.success) {
+                    setStatsSummary({
+                        users: data.users,
+                        feedback: data.feedback
+                    });
+                }
+            } catch (err) {
+                console.warn("[OverlayPanel] Failed to fetch stats summary:", err);
+            }
+        };
+        fetchStats();
+    }, []);
 
     // Detect if current URL is a Workday application
     const [isWorkdayUrl, setIsWorkdayUrl] = useState(window.location.href.toLowerCase().includes('workday'));
@@ -543,6 +589,17 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
             window.removeEventListener('AI_PROGRESS', handleAIProgress);
         };
     }, [])
+
+    // Listen for pattern sync notifications
+    useEffect(() => {
+        const handlePatternSynced = (e: any) => {
+            const { intent } = e.detail;
+            setNotification({ message: `✨ Pattern stored: ${intent}`, type: 'success' });
+            setTimeout(() => setNotification(null), 3000);
+        };
+        window.addEventListener('PATTERN_SYNCED', handlePatternSynced);
+        return () => window.removeEventListener('PATTERN_SYNCED', handlePatternSynced);
+    }, []);
 
     // Monitor URL changes to update Workday detection
     useEffect(() => {
@@ -658,6 +715,186 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
         e.stopPropagation();
         unmountOverlay();
     };
+
+    const handleScan = async () => {
+        const jobUrl = window.location.href;
+        setViewState("DETAILS"); // Open Detection List immediately
+
+        try {
+            // Record scan start time
+            const scanStart = new Date();
+            setPerformanceMetrics({ scanStarted: scanStart });
+
+            console.log('[Ext] 🔍 Broadcasting scan to all frames...');
+
+            // Use BROADCAST_SCAN to gather questions from all iframes
+            const scanResponse = await chrome.runtime.sendMessage({ action: 'BROADCAST_SCAN' });
+            if (!scanResponse.success) {
+                alert('❌ Scan failed: ' + scanResponse.error);
+                return;
+            }
+
+            const questions = scanResponse.questions;
+            console.log(`[Ext] ✓ Found ${questions.length} questions across all frames`);
+
+            // Record scan complete time
+            const scanComplete = new Date();
+            setPerformanceMetrics(prev => ({ ...prev, scanCompleted: scanComplete }));
+
+            // Send to QuestionMapper (via background script)
+            console.log('[Ext] 🧠 Mapping...');
+            setIsMapping(true);
+            const map = await chrome.runtime.sendMessage({ action: 'mapAnswers', questions: questions });
+            setIsMapping(false);
+            if (!map.success) { alert('❌ Mapping failed: ' + map.error); return; }
+
+            // Record mapping complete time
+            const mappingComplete = new Date();
+            setPerformanceMetrics(prev => ({ ...prev, mappingCompleted: mappingComplete }));
+
+            const c = map.data.filter((a: any) => a.source === 'canonical').length;
+            const f = map.data.filter((a: any) => a.source === 'fuzzy').length;
+            const ai = map.data.filter((a: any) => a.source === 'AI').length;
+
+            // Update with ACTUAL AI question count
+            setPerformanceMetrics(prev => ({ ...prev, aiQuestionCount: ai }));
+
+            // Store for fill execution
+            (window as any).__AWL_MAPPED__ = { jobUrl, answers: map.data };
+
+            //Convert to DetectedField format for UI display
+            const { classifySection } = await import('../index');
+            const detectedFields: DetectedField[] = map.data.map((answer: any) => ({
+                element: null as any, // Not needed for display-only
+                questionText: answer.questionText,
+                fieldType: answer.fieldType as any,
+                isRequired: answer.required || false,
+                options: answer.options || undefined,
+                section: classifySection(answer.canonicalKey),
+                canonicalKey: answer.canonicalKey,
+                confidence: answer.confidence || 0.5,
+                filled: false,
+                skipped: !answer.answer,
+                skipReason: !answer.answer ? 'No answer found' : undefined,
+                filledValue: answer.answer,
+                fileName: undefined,
+                source: answer.source
+            }));
+
+            // Update fields state
+            setFields(detectedFields);
+
+            // Show success message
+            console.log(`[Ext] ✅ Scan complete: ${questions.length} questions, ${c} canonical, ${f} fuzzy, ${ai} AI`);
+
+            // AUTOMATION: Automatically trigger autofill run
+            console.log('[Ext] ⚡ Automatically starting autofill run...');
+
+            // Record fill start time
+            const fillStart = new Date();
+            setPerformanceMetrics(prev => ({ ...prev, fillStarted: fillStart }));
+            setIsFilling(true);
+
+            try {
+                console.log('[Ext] 🚀 Starting PRODUCTION fill via autofillRunner...');
+
+                // Build payload for autofillRunner
+                const payload = {
+                    runId: `run_${Date.now()}`,
+                    url: window.location.href,
+                    jobId: jobUrl,
+                    fields: map.data.filter((a: any) => a.answer).map((answer: any) => ({
+                        questionText: answer.questionText,
+                        fieldType: answer.fieldType,
+                        value: answer.answer,
+                        canonicalKey: answer.canonicalKey,
+                        confidence: answer.confidence || 1.0,
+                        selector: answer.selector,
+                        options: answer.options,
+                        fileName: answer.fileName // Include fileName!
+                    }))
+                };
+
+                console.log(`[Ext] 📊 Broadcasting autofill to all frames...`);
+
+                // Use BROADCAST_AUTOFILL to send payload to all iframes
+                await chrome.runtime.sendMessage({
+                    action: 'BROADCAST_AUTOFILL',
+                    payload: payload
+                });
+
+                // Wait for autofillRunner to signal completion (collect results from all frames)
+                const result = await new Promise<{ successes: number; failures: number }>(resolve => {
+                    const successfulFields = new Set<string>();
+                    let timer: any = null;
+
+                    const resolveResults = () => {
+                        if (timer) clearTimeout(timer);
+                        window.removeEventListener('AUTOFILL_COMPLETE_EVENT', completionHandler);
+                        chrome.runtime.onMessage.removeListener(messageHandler);
+
+                        // Calculate successes based on unique fields filled
+                        const totalSuccesses = successfulFields.size;
+                        const totalAttempted = payload.fields.length;
+                        const totalFailures = Math.max(0, totalAttempted - totalSuccesses);
+
+                        resolve({ successes: totalSuccesses, failures: totalFailures });
+                    };
+
+                    const completionHandler = (e: any) => {
+                        console.log('[OverlayPanel] Received local completion event:', e.detail);
+                        if (timer) clearTimeout(timer);
+                        timer = setTimeout(resolveResults, 1500); // Wait a bit longer for all frames
+                    };
+
+                    const messageHandler = (message: any) => {
+                        if (message.type === 'AUTOFILL_COMPLETE_RELAY') {
+                            console.log('[OverlayPanel] Received relayed completion message:', message.payload);
+                            if (Array.isArray(message.payload.successfulFields)) {
+                                message.payload.successfulFields.forEach((f: string) => successfulFields.add(f));
+                            }
+                            if (timer) clearTimeout(timer);
+                            timer = setTimeout(resolveResults, 1000);
+                        }
+                    };
+
+                    window.addEventListener('AUTOFILL_COMPLETE_EVENT', completionHandler);
+                    chrome.runtime.onMessage.addListener(messageHandler);
+
+                    // Safety timeout
+                    setTimeout(resolveResults, 10000);
+                });
+
+                // Record fill complete time
+                const fillComplete = new Date();
+                setPerformanceMetrics(prev => ({ ...prev, fillCompleted: fillComplete }));
+
+                console.log('[Ext] ✅ Autofill complete - check console for detailed results');
+                setIsFilling(false);
+
+                // Update fields state to show them as filled
+                setFields(prev => prev.map(f => ({
+                    ...f,
+                    filled: f.filledValue ? true : f.filled
+                })));
+
+                // Allow UI to render timestamp before showing alert
+                setTimeout(() => {
+                    if (result.successes > 0) {
+                        alert("✅ Fields filled, please once recheck again carefully! ✨");
+                    }
+                }, 100);
+            } catch (e) {
+                console.error('[Ext] Autofill execution error:', e);
+                setIsFilling(false);
+            }
+
+        } catch (e) {
+            console.error('[Ext] Scan error:', e);
+            alert('❌ Error: ' + e);
+        }
+    };
+
 
     /**
      * Execute the autofill action
@@ -814,8 +1051,19 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
 
             {viewState === "MENU" && (
                 <div className="action-menu">
-                    <div className="menu-header">
+                    <div className="menu-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div className="drag-handle">⠿</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+                            <h3 style={{ margin: 0, fontSize: '14px' }}>🤖 Autofill Assistant</h3>
+                            {statsSummary && (
+                                <div style={{ fontSize: '9px', opacity: 0.9, marginTop: '2px', display: 'flex', flexDirection: 'column', gap: '1px', textAlign: 'center' }}>
+                                    <span>Total feedbacks in last 24 hours: {statsSummary.feedback.recent_24h}</span>
+                                    <span>Total feedbacks: {statsSummary.feedback.total}</span>
+                                    <span>Total users in the last 24 hours: {statsSummary.users.recent_24h}</span>
+                                    <span>Total users: {statsSummary.users.total}</span>
+                                </div>
+                            )}
+                        </div>
                         <div className="close-x" onClick={() => setViewState("ICON")}>×</div>
                     </div>
                     <div className="menu-content">
@@ -837,158 +1085,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                         )}
                         <button
                             className="run-autofill-btn"
-                            onClick={async () => {
-                                const jobUrl = window.location.href;
-                                try {
-                                    // Record scan start time
-                                    const scanStart = new Date();
-                                    setPerformanceMetrics({ scanStarted: scanStart });
-
-                                    console.log('[Ext] 🔍 Scanning current page...');
-
-                                    // Use FormScanner (statically imported at top)
-                                    const scanner = new FormScanner();
-                                    const questions = await scanner.scan();
-
-                                    console.log(`[Ext] ✓ Found ${questions.length} questions`);
-
-                                    // Record scan complete time
-                                    const scanComplete = new Date();
-                                    setPerformanceMetrics(prev => ({ ...prev, scanCompleted: scanComplete }));
-
-                                    // Send to QuestionMapper (via background script)
-                                    console.log('[Ext] 🧠 Mapping...');
-                                    setIsMapping(true);
-                                    const map = await chrome.runtime.sendMessage({ action: 'mapAnswers', questions: questions });
-                                    setIsMapping(false);
-                                    if (!map.success) { alert('❌ Mapping failed: ' + map.error); return; }
-
-                                    // Record mapping complete time
-                                    const mappingComplete = new Date();
-                                    setPerformanceMetrics(prev => ({ ...prev, mappingCompleted: mappingComplete }));
-
-                                    const c = map.data.filter((a: any) => a.source === 'canonical').length;
-                                    const f = map.data.filter((a: any) => a.source === 'fuzzy').length;
-                                    const ai = map.data.filter((a: any) => a.source === 'AI').length;
-
-                                    // Update with ACTUAL AI question count
-                                    setPerformanceMetrics(prev => ({ ...prev, aiQuestionCount: ai }));
-
-                                    // Store for fill execution
-                                    (window as any).__AWL_MAPPED__ = { jobUrl, answers: map.data };
-
-                                    //Convert to DetectedField format for UI display
-                                    const { classifySection } = await import('../index');
-                                    const detectedFields: DetectedField[] = map.data.map((answer: any) => ({
-                                        element: null as any, // Not needed for display-only
-                                        questionText: answer.questionText,
-                                        fieldType: answer.fieldType as any,
-                                        isRequired: answer.required || false,
-                                        options: answer.options || undefined,
-                                        section: classifySection(answer.canonicalKey),
-                                        canonicalKey: answer.canonicalKey,
-                                        confidence: answer.confidence || 0.5,
-                                        filled: false,
-                                        skipped: !answer.answer,
-                                        skipReason: !answer.answer ? 'No answer found' : undefined,
-                                        filledValue: answer.answer,
-                                        fileName: undefined,
-                                        source: answer.source
-                                    }));
-
-                                    // Update fields state
-                                    setFields(detectedFields);
-
-                                    // Show success message
-                                    console.log(`[Ext] ✅ Scan complete: ${questions.length} questions, ${c} canonical, ${f} fuzzy, ${ai} AI`);
-
-                                    // Switch to DETAILS view to show results
-                                    setViewState('DETAILS');
-
-                                    // ✅ User can now manually click "Autofill Run" to fill fields
-
-                                    // AUTOMATION: Automatically trigger autofill run
-                                    console.log('[Ext] ⚡ Automatically starting autofill run...');
-
-                                    // Record fill start time
-                                    const fillStart = new Date();
-                                    setPerformanceMetrics(prev => ({ ...prev, fillStarted: fillStart }));
-                                    setIsFilling(true);
-
-                                    try {
-                                        console.log('[Ext] 🚀 Starting PRODUCTION fill via autofillRunner...');
-
-                                        // Build payload for autofillRunner
-                                        const payload = {
-                                            runId: `run_${Date.now()}`,
-                                            url: window.location.href,
-                                            jobId: jobUrl,
-                                            fields: map.data.filter((a: any) => a.answer).map((answer: any) => ({
-                                                questionText: answer.questionText,
-                                                fieldType: answer.fieldType,
-                                                value: answer.answer,
-                                                canonicalKey: answer.canonicalKey,
-                                                confidence: answer.confidence || 1.0,
-                                                selector: answer.selector,
-                                                options: answer.options,
-                                                fileName: answer.fileName // Include fileName!
-                                            }))
-                                        };
-
-                                        console.log(`[Ext] 📊 Sending ${payload.fields.length} fields to autofillRunner...`);
-
-                                        // Send START_AUTOFILL_EVENT to autofillRunner (it will re-detect and match fields)
-                                        const event = new CustomEvent('START_AUTOFILL_EVENT', { detail: payload });
-                                        window.dispatchEvent(event);
-
-                                        // Wait for autofillRunner to signal completion
-                                        const result = await new Promise<{ successes: number; failures: number }>(resolve => {
-                                            const completionHandler = (e: any) => {
-                                                window.removeEventListener('AUTOFILL_COMPLETE_EVENT', completionHandler);
-                                                resolve(e.detail);
-                                            };
-                                            window.addEventListener('AUTOFILL_COMPLETE_EVENT', completionHandler);
-                                        });
-
-                                        // Record fill complete time
-                                        const fillComplete = new Date();
-                                        setPerformanceMetrics(prev => ({ ...prev, fillCompleted: fillComplete }));
-
-                                        console.log('[Ext] ✅ Autofill complete - check console for detailed results');
-                                        setIsFilling(false);
-
-                                        // Update fields state to show them as filled
-                                        if (result.failures === 0) {
-                                            setFields(prev => prev.map(f => ({
-                                                ...f,
-                                                filled: f.filledValue ? true : f.filled
-                                            })));
-                                        } else {
-                                            // Ideally we'd get specific failures, but for now mark all as filled if mostly successful
-                                            // or leave as is. Let's mark successful ones if we can, but we don't have IDs.
-                                            // Fallback: Mark all with values as filled
-                                            setFields(prev => prev.map(f => ({
-                                                ...f,
-                                                filled: f.filledValue ? true : f.filled
-                                            })));
-                                        }
-
-                                        // Allow UI to render timestamp before showing alert
-                                        setTimeout(() => {
-                                            const total = payload.fields.length;
-                                            const message = `✅ Filled ${result.successes}/${total} fields!\n\n${result.failures > 0 ? `⚠️ ${result.failures} field(s) failed` : ''}`;
-                                            alert(message);
-                                        }, 100);
-                                    } catch (e) {
-                                        console.error('[Ext] Autofill execution error:', e);
-                                        setIsFilling(false);
-                                    }
-
-                                } catch (e) {
-                                    console.error('[Ext] Scan error:', e);
-                                    alert('❌ Error: ' + e);
-                                }
-                            }}
+                            onClick={handleScan}
                         >
                             <span className="btn-icon">🔍</span> Scan Application
                         </button>
@@ -1032,11 +1129,38 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
 
                                 // Wait for autofillRunner to signal completion
                                 const result = await new Promise<{ successes: number; failures: number }>(resolve => {
-                                    const completionHandler = (e: any) => {
+                                    let totalSuccesses = 0;
+                                    let totalFailures = 0;
+                                    let timer: any = null;
+
+                                    const resolveResults = () => {
+                                        if (timer) clearTimeout(timer);
                                         window.removeEventListener('AUTOFILL_COMPLETE_EVENT', completionHandler);
-                                        resolve(e.detail);
+                                        chrome.runtime.onMessage.removeListener(messageHandler);
+                                        resolve({ successes: totalSuccesses, failures: totalFailures });
                                     };
+
+                                    const completionHandler = (e: any) => {
+                                        totalSuccesses += e.detail.successes || 0;
+                                        totalFailures += e.detail.failures || 0;
+                                        if (timer) clearTimeout(timer);
+                                        timer = setTimeout(resolveResults, 1000);
+                                    };
+
+                                    const messageHandler = (message: any) => {
+                                        if (message.type === 'AUTOFILL_COMPLETE_RELAY') {
+                                            totalSuccesses += message.payload.successes || 0;
+                                            totalFailures += message.payload.failures || 0;
+                                            if (timer) clearTimeout(timer);
+                                            timer = setTimeout(resolveResults, 1000);
+                                        }
+                                    };
+
                                     window.addEventListener('AUTOFILL_COMPLETE_EVENT', completionHandler);
+                                    chrome.runtime.onMessage.addListener(messageHandler);
+
+                                    // Safety timeout
+                                    setTimeout(resolveResults, 10000);
                                 });
 
                                 // Record fill complete time
@@ -1048,9 +1172,9 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
 
                                 // Allow UI to render timestamp before showing alert
                                 setTimeout(() => {
-                                    const total = payload.fields.length;
-                                    const message = `✅ Filled ${result.successes}/${total} fields!\n\n${result.failures > 0 ? `⚠️ ${result.failures} field(s) failed` : ''}`;
-                                    alert(message);
+                                    if (result.successes > 0) {
+                                        alert("✅ Fields filled, please once recheck again carefully! ✨");
+                                    }
                                 }, 100);
 
                             } catch (error) {
@@ -1072,7 +1196,17 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                 <div className="details-panel">
                     <div className="autofill-header">
                         <div className="drag-handle">⠿</div>
-                        <h3>🤖 Autofill Assistant</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <h3 style={{ margin: 0 }}>🤖 Autofill Assistant</h3>
+                            {statsSummary && (
+                                <div style={{ fontSize: '9px', opacity: 0.9, marginTop: '2px', display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                                    <span>Total feedbacks in last 24 hours: {statsSummary.feedback.recent_24h}</span>
+                                    <span>Total feedbacks: {statsSummary.feedback.total}</span>
+                                    <span>Total users in the last 24 hours: {statsSummary.users.recent_24h}</span>
+                                    <span>Total users: {statsSummary.users.total}</span>
+                                </div>
+                            )}
+                        </div>
                         <div className="header-actions">
                             <button onClick={() => setViewState("ICON")} className="action-btn">
                                 −
@@ -1263,11 +1397,32 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                             </div>
                         )}
                     </div>
+
                     <div className="panel-footer">
                         <button className="run-autofill-btn mini" onClick={handleRunAutofill}>
                             ⚡ Rerun Autofill
                         </button>
                     </div>
+
+                    {notification && (
+                        <div style={{
+                            position: 'absolute',
+                            bottom: '60px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            background: '#00d084',
+                            color: 'white',
+                            padding: '8px 16px',
+                            borderRadius: '20px',
+                            fontSize: '12px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                            zIndex: 1000,
+                            whiteSpace: 'nowrap',
+                            animation: 'fadeInOut 3s forwards'
+                        }}>
+                            {notification.message}
+                        </div>
+                    )}
                 </div>
             )}
         </div>

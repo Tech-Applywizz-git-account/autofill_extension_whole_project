@@ -5,6 +5,7 @@
  */
 
 import { jobrightSelectDropdown } from "./dropdownInteractions";
+import { isGreenhousePage } from "../utils/platformDetection";
 
 /**
  * Type text into an input field character-by-character
@@ -471,58 +472,58 @@ export async function triggerFileUpload(
         // GREENHOUSE SPECIAL HANDLING
         // Greenhouse hides the real file input and shows "Attach, Dropbox, or enter manually"
         // We need to find and click the "Attach" button/link first
-        const isGreenhousePage = window.location.hostname.includes('greenhouse.io');
+        const isGreenhouse = isGreenhousePage();
 
-        if (isGreenhousePage) {
+        if (isGreenhouse) {
             console.log(`[Autofill] 🏢 Greenhouse file upload detected`);
 
-            let attachButton: HTMLElement | null = null;
+            // If the element is already a file input and it's in the DOM, we might not need to click "Attach"
+            if (element instanceof HTMLInputElement && element.type === 'file' && document.body.contains(element)) {
+                console.log(`[Autofill] 📎 File input already present, skipping "Attach" click`);
+            } else {
+                let attachButton: HTMLElement | null = null;
 
-            // Search in the parent container
-            const container = element.closest('.attach-or-paste') ||
-                element.closest('.field') ||
-                element.closest('fieldset') ||
-                element.parentElement;
+                // Search in the parent container
+                const container = element.closest('.attach-or-paste') ||
+                    element.closest('.field') ||
+                    element.closest('fieldset') ||
+                    element.parentElement;
 
-            if (container) {
-                // First try: Look for Greenhouse's specific button with data-source="attach"
-                attachButton = container.querySelector('button[data-source="attach"]') as HTMLElement;
+                if (container) {
+                    // First try: Look for Greenhouse's specific button with data-source="attach"
+                    attachButton = container.querySelector('button[data-source="attach"]') as HTMLElement;
 
-                if (!attachButton) {
-                    // Fallback: Search by text content
-                    const links = container.querySelectorAll('a, button');
-                    for (const link of Array.from(links)) {
-                        if (link.textContent?.trim().toLowerCase() === 'attach') {
-                            attachButton = link as HTMLElement;
-                            break;
+                    if (!attachButton) {
+                        // Fallback: Search by text content
+                        const links = container.querySelectorAll('a, button');
+                        for (const link of Array.from(links)) {
+                            if (link.textContent?.trim().toLowerCase() === 'attach') {
+                                attachButton = link as HTMLElement;
+                                break;
+                            }
                         }
                     }
                 }
-            }
 
-            if (attachButton) {
-                console.log(`[Autofill] 🖱️ Clicking Attach button...`);
-                attachButton.click();
-                await sleep(800); // Wait for file input to be dynamically created
+                if (attachButton) {
+                    console.log(`[Autofill] 🖱️ Clicking Attach button...`);
+                    attachButton.click();
+                    await sleep(500); // Wait for file input to be dynamically created
 
-                // Greenhouse dynamically creates the file input when Attach is clicked
-                // Look for the newest file input
-                const fileInputs = document.querySelectorAll('input[type="file"]');
-                console.log(`[Autofill] 📎 Found ${fileInputs.length} file inputs on page`);
+                    // Greenhouse dynamically creates the file input when Attach is clicked
+                    // Look for the newest file input
+                    const fileInputs = document.querySelectorAll('input[type="file"]');
+                    console.log(`[Autofill] 📎 Found ${fileInputs.length} file inputs on page`);
 
-                if (fileInputs.length > 0) {
-                    // CRITICAL CHANGE: Greenhouse often has multiple file inputs (Resume, Cover Letter, etc.)
-                    // Resume is usually the FIRST one. Cover Letter is the second.
-                    // Previously we were taking the "newest" (last one), which caused Resume to be uploaded to Cover Letter.
-                    // Now we default to the FIRST input found.
-                    // Ideally we should match by ID/Name, but Greenhouse IDs are dynamic/obscure.
-                    // "Keep First" strategy aligns with our FormScanner logic.
-                    const fileInput = fileInputs[0] as HTMLInputElement;
-                    console.log(`[Autofill] ✓ Using FIRST file input (assuming Resume): ${fileInput.name || fileInput.id || 'unnamed'}`);
-                    element = fileInput;
+                    if (fileInputs.length > 0) {
+                        // Resume is usually the FIRST one.
+                        const fileInput = fileInputs[0] as HTMLInputElement;
+                        console.log(`[Autofill] ✓ Using FIRST file input (assuming Resume): ${fileInput.name || fileInput.id || 'unnamed'}`);
+                        element = fileInput;
+                    }
+                } else {
+                    console.warn(`[Autofill] ⚠️ Could not find Attach button for Greenhouse upload`);
                 }
-            } else {
-                console.warn(`[Autofill] ⚠️ Could not find Attach button for Greenhouse upload`);
             }
         }
 

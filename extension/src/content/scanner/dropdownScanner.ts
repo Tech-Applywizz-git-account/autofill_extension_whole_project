@@ -347,17 +347,28 @@ export async function extractCustomOptions(element: HTMLElement): Promise<string
  * Main function to extract options from any dropdown
  */
 export async function extractDropdownOptions(element: HTMLElement): Promise<string[]> {
-    // Check if it's a native select
+    // 1. Check if it's a custom dropdown container (even if it has a hidden native select)
+    // Greenhouse and other platforms use custom UI that wraps a hidden native select
+    const isCustom = element.querySelector('[role="combobox"], [class*="select"], [class*="dropdown"]') ||
+        element.getAttribute('role') === 'combobox' ||
+        element.classList.contains('select__control');
+
+    if (isCustom) {
+        console.log(`${LOG_PREFIX} 🎯 Custom dropdown detected, extracting custom options...`);
+        const customOptions = await extractCustomOptions(element);
+        if (customOptions.length > 0) return customOptions;
+    }
+
+    // 2. Fallback to native select if no custom options found or not a custom dropdown
     if (element instanceof HTMLSelectElement) {
         return extractNativeOptions(element);
     }
 
-    // Look for select in children
     const select = element.querySelector('select');
     if (select) {
         return extractNativeOptions(select as HTMLSelectElement);
     }
 
-    // Otherwise, treat as custom dropdown
+    // 3. Final attempt as custom if everything else fails
     return await extractCustomOptions(element);
 }

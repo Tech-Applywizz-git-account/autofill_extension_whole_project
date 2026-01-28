@@ -834,10 +834,14 @@ export class QuestionMapper {
 
         // 1.5 Synonym match (Male matched to Man, etc.)
         const synonyms: Record<string, string[]> = {
-            'male': ['man'],
-            'female': ['woman'],
-            'man': ['male'],
-            'woman': ['female']
+            'male': ['man', 'cisgender male', 'cis male'],
+            'female': ['woman', 'cisgender female', 'cis female'],
+            'man': ['male', 'cisgender male', 'cis male'],
+            'woman': ['female', 'cisgender female', 'cis female'],
+            'non-binary': ['nonbinary', 'genderqueer', 'gender non-conforming', 'gender non-binary', 'non-binary/non-conforming'],
+            'prefer not to say': ['decline to self-identify', 'decline to state', 'i prefer not to answer', 'prefer not to disclose'],
+            'yes': ['y', 'true', 'i do', 'authorized'],
+            'no': ['n', 'false', 'i do not', 'not authorized']
         };
 
         if (synonyms[valueLower]) {

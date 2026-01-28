@@ -86,21 +86,30 @@ export class FormScanner {
     }
 
     /**
-     * Find all form fields in the DOM
+     * Find all form fields in the current document
      */
     private findAllFormFields(): HTMLElement[] {
         const fields: HTMLElement[] = [];
+        const doc = document;
+
+        console.log(`${LOG_PREFIX} 🔍 Scanning document...`);
 
         // Find all input fields (text, email, tel, file, etc.)
-        const inputs = document.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"])');
+        const inputs = doc.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"])');
         inputs.forEach(input => {
-            if (this.isVisible(input as HTMLElement)) {
-                fields.push(input as HTMLElement);
+            const htmlInput = input as HTMLInputElement;
+            const isFile = htmlInput.type === 'file';
+
+            // For file inputs, we are more lenient with visibility because platforms like Greenhouse
+            // often use "visually-hidden" techniques that might fail our strict isVisible check.
+            // As long as it's not display: none, we should consider it.
+            if (this.isVisible(htmlInput) || (isFile && getComputedStyle(htmlInput).display !== 'none')) {
+                fields.push(htmlInput);
             }
         });
 
         // Find all textareas
-        const textareas = document.querySelectorAll('textarea');
+        const textareas = doc.querySelectorAll('textarea');
         textareas.forEach(textarea => {
             if (this.isVisible(textarea as HTMLElement)) {
                 fields.push(textarea as HTMLElement);
@@ -108,7 +117,7 @@ export class FormScanner {
         });
 
         // Find all native select elements
-        const selects = document.querySelectorAll('select');
+        const selects = doc.querySelectorAll('select');
         selects.forEach(select => {
             if (this.isVisible(select as HTMLElement)) {
                 fields.push(select as HTMLElement);
@@ -117,7 +126,7 @@ export class FormScanner {
 
         // Find custom dropdowns (React-Select, etc.)
         // Look for elements with role="combobox" or common React-Select classes
-        const customDropdowns = document.querySelectorAll('[role="combobox"], [aria-haspopup="listbox"]');
+        const customDropdowns = doc.querySelectorAll('[role="combobox"], [aria-haspopup="listbox"]');
         customDropdowns.forEach(dropdown => {
             if (!this.isVisible(dropdown as HTMLElement)) return;
 
@@ -130,7 +139,7 @@ export class FormScanner {
 
         // Find radio button groups (group by name attribute)
         const radioGroups = new Map<string, HTMLInputElement[]>();
-        const radios = document.querySelectorAll('input[type="radio"]');
+        const radios = doc.querySelectorAll('input[type="radio"]');
         radios.forEach(radio => {
             const input = radio as HTMLInputElement;
             if (!this.isVisible(input)) return;
@@ -155,7 +164,7 @@ export class FormScanner {
         // This is more reliable than grouping by question text
         // Multi-select checkbox groups share the same parent fieldset/div
         const checkboxContainerGroups = new Map<HTMLElement, HTMLInputElement[]>();
-        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        const checkboxes = doc.querySelectorAll('input[type="checkbox"]');
 
         checkboxes.forEach(checkbox => {
             const input = checkbox as HTMLInputElement;
