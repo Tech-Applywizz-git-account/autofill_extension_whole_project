@@ -54,7 +54,6 @@ app = FastAPI(
     title="AI Service",
     description="Unified AI prediction, pattern learning, and user data service",
     version="3.0.0",
-    dependencies=[Depends(verify_api_key)] # Apply globally to all routes
 )
 
 app.add_middleware(
@@ -69,7 +68,7 @@ app.add_middleware(
 # AI PREDICTION
 # ---------------------------------------------------------
 
-@app.post("/predict", response_model=AIResponse)
+@app.post("/predict", response_model=AIResponse, dependencies=[Depends(verify_api_key)])
 async def predict(request: AIRequest):
     """
     Prediction flow:
@@ -133,7 +132,7 @@ async def predict(request: AIRequest):
 # PATTERN MANAGEMENT
 # ---------------------------------------------------------
 
-@app.post("/api/patterns/upload")
+@app.post("/api/patterns/upload", dependencies=[Depends(verify_api_key)])
 async def upload_pattern(req: PatternUploadRequest, email: str = None):
     """Upload a manually curated or shared pattern"""
     try:
@@ -148,7 +147,7 @@ async def upload_pattern(req: PatternUploadRequest, email: str = None):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/patterns/search")
+@app.get("/api/patterns/search", dependencies=[Depends(verify_api_key)])
 async def search_patterns(q: str):
     """Search for patterns by question text"""
     if not q:
@@ -161,7 +160,7 @@ async def search_patterns(q: str):
     }
 
 
-@app.get("/api/patterns/stats")
+@app.get("/api/patterns/stats", dependencies=[Depends(verify_api_key)])
 async def pattern_stats():
     """Get memory statistics"""
     try:
@@ -170,7 +169,7 @@ async def pattern_stats():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/patterns/sync")
+@app.get("/api/patterns/sync", dependencies=[Depends(verify_api_key)])
 async def sync_patterns(since: str | None = None):
     """Sync all patterns (date filter ready)"""
     try:
@@ -184,7 +183,7 @@ async def sync_patterns(since: str | None = None):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/patterns/user/{email}")
+@app.get("/api/patterns/user/{email}", dependencies=[Depends(verify_api_key)])
 async def get_user_patterns_endpoint(email: str):
     """Get all learned patterns for a specific user"""
     try:
@@ -202,18 +201,18 @@ async def get_user_patterns_endpoint(email: str):
 # USER PROFILE MANAGEMENT
 # ---------------------------------------------------------
 
-@app.post("/api/user-data/save")
+@app.post("/api/user-data/save", dependencies=[Depends(verify_api_key)])
 async def save_user_data(profile: UserProfile):
     """Persist user profile"""
     try:
-        if save_user_profile(profile.email, profile.dict()):
+        if save_user_profile(profile.email, profile.model_dump()):
             return {"success": True, "message": "Profile saved"}
         raise HTTPException(status_code=500, detail="Failed to save profile")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/user-data/{email}")
+@app.get("/api/user-data/{email}", dependencies=[Depends(verify_api_key)])
 async def get_user_data(email: str):
     """Fetch user profile"""
     profile = get_user_profile(email)
@@ -225,7 +224,7 @@ async def get_user_data(email: str):
 # STATS & FEEDBACK
 # ---------------------------------------------------------
 
-@app.get("/api/stats/summary")
+@app.get("/api/stats/summary", dependencies=[Depends(verify_api_key)])
 async def get_stats_summary():
     """Get summary stats for the overlay panel"""
     try:
@@ -239,7 +238,7 @@ async def get_stats_summary():
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-@app.post("/api/feedback/track")
+@app.post("/api/feedback/track", dependencies=[Depends(verify_api_key)])
 async def track_user_feedback(email: str, type: str = "click"):
     """Track user feedback interaction"""
     success = track_feedback(email, type)
