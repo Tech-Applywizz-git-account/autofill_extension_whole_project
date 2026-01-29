@@ -68,7 +68,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     if (message.action === "runSelenium") {
-        const aiUrl = process.env.REACT_APP_AI_URL || 'http://localhost:8001';
+        const aiUrl = CONFIG.API.AI_SERVICE;
         fetch(`${aiUrl}/run`, {
             method: 'POST',
             headers: {
@@ -252,7 +252,7 @@ async function handleFieldFillFailed(payload: any) {
  */
 async function handleAIRequest(payload: any) {
     try {
-        const aiUrl = process.env.REACT_APP_AI_URL || 'http://localhost:8001';
+        const aiUrl = CONFIG.API.AI_SERVICE;
         const response = await fetch(`${aiUrl}/predict`, {
             method: 'POST',
             headers: {
@@ -295,7 +295,7 @@ async function handleScanApplication(url: string) {
 
         console.log('[Background] Triggering Selenium scan for:', url);
 
-        const aiUrl = process.env.REACT_APP_AI_URL || 'http://localhost:8001';
+        const aiUrl = CONFIG.API.AI_SERVICE;
         const response = await fetch(`${aiUrl}/api/selenium/scan`, {
             method: 'POST',
             headers: {
