@@ -6,12 +6,12 @@
 export const CONFIG = {
     // API Endpoints
     API: {
-        AI_SERVICE: process.env.REACT_APP_AI_URL || 'http://localhost:8001',
-        PATTERN_API: process.env.REACT_APP_PATTERN_URL || 'http://localhost:8001/api/patterns',
-        USER_DATA: process.env.REACT_APP_USER_DATA_URL || 'http://localhost:8001/api/user-data',
+        AI_SERVICE: process.env.REACT_APP_AI_URL || 'https://autofill-extension-backend.onrender.com',
+        PATTERN_API: process.env.REACT_APP_PATTERN_URL || 'https://autofill-extension-backend.onrender.com/api/patterns',
+        USER_DATA: process.env.REACT_APP_USER_DATA_URL || 'https://autofill-extension-backend.onrender.com/api/user-data',
         VERCEL_CRM: process.env.REACT_APP_VERCEL_CRM_URL || 'https://ticketingtoolapplywizz.vercel.app/api/get-client-details',
         BACKEND_URL: process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000',
-        STATS_URL: process.env.REACT_APP_AI_URL || 'http://localhost:8001',
+        STATS_URL: process.env.REACT_APP_AI_URL || 'https://autofill-extension-backend.onrender.com',
         AI_API_KEY: process.env.REACT_APP_AI_API_KEY || '',
     },
 
