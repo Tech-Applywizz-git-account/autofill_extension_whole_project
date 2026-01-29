@@ -10,7 +10,7 @@
         "webNavigation"
     ],
     "host_permissions": [
-        "<all_urls>"
+        "https://autofill-extension-backend.onrender.com/*"
     ],
     "background": {
         "service_worker": "background.js"
