@@ -1,397 +1,203 @@
-// extension/src/content/workday/workdayHandler.ts
 /**
- * WORKDAY-SPECIFIC AUTOFILL HANDLER
- * 
- * Workday Applications are unique:
- * 1. Heavy use of data-automation-id attributes
- * 2. Dynamic field loading based on country selection
- * 3. Progressive disclosure (forms appear in stages)
- * 4. Strict validation on blur events
- * 5. React-based with synthetic events
- * 
- * Strategy:
- * - Priority 1: Fill Country/Location fields FIRST
- * - Wait for network requests to complete (not fixed delays)
- * - Re-scan DOM after critical selections
- * - Use data-automation-id for reliable field matching
- * - Trigger proper React events
+ * Workday Handler - Main Orchestrator
+ * Coordinates: Scan → Deduplicate → Map (Canonical/Learned/Fuzzy/AI) → Fill
+ * ZERO changes to Greenhouse logic - Workday-specific implementation
  */
 
-import { fillField } from '../actions/fieldFiller';
-import { DetectedField, FieldType, QuestionSection } from '../../types/fieldDetection';
-import { detectFieldsInCurrentDOM, bestMatchField, Detected } from '../fieldMatching';
-import { ResolvedField, FillPayload } from '../autofillRunner';
-import { detectWorkdayFields, WorkdayField } from './workdayFieldDetector';
+import { scanWorkdayApplication, clearScannerState, getDiscoveredFields } from './workdayScanner';
+import { fillMappedAnswers } from './workdayFiller';
+import { QuestionMapper, MappedAnswer, ScannedQuestion } from '../mapping/questionMapper';
 
-const LOG_PREFIX = "[WorkdayHandler]";
+const LOG_PREFIX = '[WorkdayHandler]';
 
-// Priority fields that trigger form changes
-// These MUST be filled FIRST before other fields load
-const PRIORITY_FIELDS = [
-    'country',      // HIGHEST PRIORITY - always triggers form reload
-    'location',
-    'region',
-    'state',
-    'province',
-    'territory',
-    'nationality',
-    'citizen'       // Some forms ask for citizenship instead of country
-];
+// Session-based question cache (tracks what we've already mapped)
+interface QuestionCache {
+    normalized: string;
+    answer: MappedAnswer;
+}
 
-// CRITICAL: These keywords in questionText mean "fill this first!"
-const CRITICAL_FIRST_KEYWORDS = ['country', 'nation'];
+const SESSION_STATE = {
+    mappedQuestions: new Map<string, MappedAnswer>(),
+    isProcessing: false
+};
 
-export function isWorkdayApplication(): boolean {
-    return window.location.href.includes('myworkdayjobs.com') ||
-        window.location.href.includes('myworkday.com') ||
-        document.querySelector('[data-automation-id]') !== null;
+/**
+ * Normalize question text for deduplication
+ */
+function normalizeQuestionText(text: string): string {
+    return text.toLowerCase()
+        .replace(/[^\w\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
 }
 
 /**
- * Main handler for Workday applications
+ * Main entry point: Handle Workday application autofill
  */
-export async function handleWorkdayApplication(payload: FillPayload): Promise<void> {
-    console.log(`${LOG_PREFIX} 🏢 WORKDAY APPLICATION DETECTED`);
-    console.log(`${LOG_PREFIX} Using specialized Workday filling strategy\n`);
+export async function handleWorkdayApplication(payload?: any): Promise<void> {
+    console.log(`${LOG_PREFIX} 🚀 Starting Workday autofill process...`);
 
-    // Step 1: Enhanced Workday-specific field detection
-    console.log(`${LOG_PREFIX} 📡 Using Workday-specific field detector...`);
-    const workdayFields = detectWorkdayFields();
-    console.log(`${LOG_PREFIX} Workday fields detected: ${workdayFields.length}`);
-    console.log(`${LOG_PREFIX} Priority fields found: ${workdayFields.filter(f => f.isPriority).length}`);
-
-    // Also get standard detection for fallback matching
-    let detected = detectFieldsInCurrentDOM();
-    console.log(`${LOG_PREFIX} Standard detection: ${detected.length} fields\n`);
-
-    // Step 2: CRITICAL - Separate fields with COUNTRY always FIRST
-    const { priorityFields, regularFields } = separateFieldsByPriority(payload.fields);
-
-    // FORCE Country to be absolute first if it exists
-    const countryField = priorityFields.find(f =>
-        CRITICAL_FIRST_KEYWORDS.some(keyword => f.questionText.toLowerCase().includes(keyword))
-    );
-
-    if (countryField) {
-        // Move country to front
-        const otherPriority = priorityFields.filter(f => f !== countryField);
-        priorityFields.length = 0;
-        priorityFields.push(countryField, ...otherPriority);
-        console.log(`${LOG_PREFIX} ⭐ COUNTRY field will be filled FIRST: "${countryField.questionText}"`);
+    if (SESSION_STATE.isProcessing) {
+        console.warn(`${LOG_PREFIX} ⚠️ Already processing, please wait...`);
+        return;
     }
 
-    console.log(`${LOG_PREFIX} Priority fields (country/location): ${priorityFields.length}`);
-    console.log(`${LOG_PREFIX} Regular fields: ${regularFields.length}\n`);
+    SESSION_STATE.isProcessing = true;
 
-    let priorityFilled = 0;
+    try {
+        // ==================== PHASE 1: INITIAL SCAN & FILL ====================
+        console.log(`\n${LOG_PREFIX} ═════════════════════════════════════════`);
+        console.log(`${LOG_PREFIX} PHASE 1: INITIAL SCAN (Skipping Add Buttons)`);
+        console.log(`${LOG_PREFIX} ═════════════════════════════════════════\n`);
 
-    // Step 3: Fill priority fields FIRST (with network waiting)
-    if (priorityFields.length > 0) {
-        console.log(`${LOG_PREFIX} 📍 PHASE 1: Filling PRIORITY fields (triggers form changes)...`);
+        // Pass 1: Scan WITHOUT clicking Add buttons
+        await processWorkdayPass(false);
 
-        for (const field of priorityFields) {
-            const success = await fillWorkdayField(detected, field, workdayFields);
-            if (success) {
-                priorityFilled++;
-                // Extra delay after country to ensure it's committed
-                if (CRITICAL_FIRST_KEYWORDS.some(k => field.questionText.toLowerCase().includes(k))) {
-                    console.log(`${LOG_PREFIX} ⏳ Extra delay after country field...`);
-                    await sleep(500);
+        // ==================== PHASE 2: DELTA SCAN & FILL ====================
+        console.log(`\n${LOG_PREFIX} ═════════════════════════════════════════`);
+        console.log(`${LOG_PREFIX} PHASE 2: DELTA SCAN (Clicking Add Buttons)`);
+        console.log(`${LOG_PREFIX} ═════════════════════════════════════════\n`);
+
+        // Pass 2: Scan WITH clicking Add buttons
+        // Ideally we would only process NEW fields, but our deduplication logic handles this naturally
+        // because we cache answers by question text.
+        // However, we want to ensure we don't try to fill fields that are already filled/stable.
+        // The filler already checks `STATE.filledFields` to skip filled ones!
+        // The Deduplication logic checks `SESSION_STATE.mappedQuestions` to skip mapping known ones.
+
+        await processWorkdayPass(true);
+
+        console.log(`${LOG_PREFIX} ═════════════════════════════════════════`);
+        console.log(`${LOG_PREFIX} ✅ WORKDAY AUTOFILL COMPLETE (Both Passes)`);
+        // We can't easily aggregate stats from the helper without returning them, 
+        // but the individual pass logs are sufficient.
+        console.log(`${LOG_PREFIX} ═════════════════════════════════════════\n`);
+
+    } catch (error) {
+        console.error(`${LOG_PREFIX} ❌ Error during Workday autofill:`, error);
+    } finally {
+        SESSION_STATE.isProcessing = false;
+    }
+}
+
+/**
+ * Helper to run a single scan-map-fill pass
+ */
+async function processWorkdayPass(clickAddButtons: boolean): Promise<void> {
+    const scannedQuestions = await scanWorkdayApplication(clickAddButtons);
+    console.log(`${LOG_PREFIX} ✅ Scan complete: ${scannedQuestions.length} questions found\n`);
+
+    // ==================== DEDUPLICATION ====================
+
+    // Separate questions into cached vs new
+    const newQuestions: ScannedQuestion[] = [];
+    const cachedAnswers: MappedAnswer[] = [];
+
+    for (const question of scannedQuestions) {
+        const normalizedText = normalizeQuestionText(question.questionText);
+        const cached = SESSION_STATE.mappedQuestions.get(normalizedText);
+
+        if (cached) {
+            // Already mapped in this session (or previous pass)
+            // console.log(`${LOG_PREFIX}   💾 Using cached answer: "${question.questionText}"`); // Too verbose for pass 2
+            cachedAnswers.push(cached);
+        } else {
+            // New question - needs mapping
+            newQuestions.push(question);
+        }
+    }
+
+    console.log(`${LOG_PREFIX} 📊 Deduplication results:`);
+    console.log(`${LOG_PREFIX}    Cached: ${cachedAnswers.length}`);
+    console.log(`${LOG_PREFIX}    New: ${newQuestions.length}\n`);
+
+    // ==================== MAPPING ====================
+    let newAnswers: MappedAnswer[] = [];
+
+    if (newQuestions.length > 0) {
+        console.log(`${LOG_PREFIX} 🤖 Mapping ${newQuestions.length} new questions...`);
+
+        // Use questionMapper to map new questions
+        const mapper = new QuestionMapper();
+        newAnswers = await mapper.processQuestions(newQuestions);
+
+        // ---------------------------------------------------------
+        // POST-MAPPING OVERRIDES & INJECTIONS
+        // ---------------------------------------------------------
+
+        // 1. INJECT SKILLS from localStorage
+        // The user specifically asked to use skills from local storage
+        try {
+            const storedSkills = localStorage.getItem('user_skills'); // Assuming this key
+            // Or try to get it from the payload if available, but user said "local storage"
+            // Let's look for a "Skills" question in our newAnswers
+            if (storedSkills) {
+                const skillsField = newAnswers.find(a =>
+                    normalizeQuestionText(a.questionText).includes('skills')
+                );
+
+                if (skillsField) {
+                    console.log(`${LOG_PREFIX} 💉 Injecting stored SKILLS into: "${skillsField.questionText}"`);
+                    skillsField.answer = storedSkills;
+                    skillsField.source = 'injected_skills';
                 }
             }
+        } catch (e) {
+            console.warn(`${LOG_PREFIX} ⚠️ Failed to inject skills:`, e);
         }
 
-        // Step 4: CRITICAL - Wait for Workday to load country-specific questions
-        if (priorityFilled > 0) {
-            console.log(`${LOG_PREFIX} ⏳ Waiting for Workday to load country-specific questions...`);
-            await waitForWorkdayFormUpdate();
-
-            // Step 5: RE-SCAN the DOM for new fields
-            console.log(`${LOG_PREFIX} 🔄 Re-scanning DOM after priority field selection...`);
-            const previousCount = detected.length;
-
-            // Re-detect with both methods
-            const newWorkdayFields = detectWorkdayFields();
-            detected = detectFieldsInCurrentDOM();
-
-            const newFieldsCount = detected.length - previousCount;
-            console.log(`${LOG_PREFIX} Second scan: ${detected.length} fields (${newFieldsCount} new fields loaded)`);
-            console.log(`${LOG_PREFIX} Enhanced scan: ${newWorkdayFields.length} Workday fields\n`);
+        // 2. FORCE "LINKEDIN" for "How did you hear about us"
+        // The user specifically asked for this override
+        for (const ans of newAnswers) {
+            const text = normalizeQuestionText(ans.questionText);
+            if (text.includes('how did you hear') || text.includes('source')) {
+                console.log(`${LOG_PREFIX} 💉 Forcing "LinkedIn" for source question: "${ans.questionText}"`);
+                ans.answer = 'LinkedIn';
+                ans.source = 'hardcoded_override';
+            }
         }
-    }
 
-    // Step 6: Fill remaining fields
-    console.log(`${LOG_PREFIX} 📝 PHASE 2: Filling remaining fields...`);
-    let regularFilled = 0;
-    for (const field of regularFields) {
-        const success = await fillWorkdayField(detected, field, workdayFields);
-        if (success) regularFilled++;
-        await sleep(200); // Small delay between fields for validation
-    }
+        console.log(`${LOG_PREFIX} ✅ Mapping complete: ${newAnswers.length}/${newQuestions.length} answered\n`);
 
-    console.log(`${LOG_PREFIX} ✅ Workday application fill complete`);
-    console.log(`${LOG_PREFIX} Priority filled: ${priorityFilled}/${priorityFields.length}`);
-    console.log(`${LOG_PREFIX} Regular filled: ${regularFilled}/${regularFields.length}`);
-}
-
-/**
- * Separate fields into priority and regular based on field type
- */
-function separateFieldsByPriority(fields: ResolvedField[]): {
-    priorityFields: ResolvedField[];
-    regularFields: ResolvedField[];
-} {
-    const priorityFields: ResolvedField[] = [];
-    const regularFields: ResolvedField[] = [];
-
-    for (const field of fields) {
-        const questionLower = field.questionText.toLowerCase();
-        const isPriority = PRIORITY_FIELDS.some(keyword => questionLower.includes(keyword));
-
-        if (isPriority) {
-            priorityFields.push(field);
-        } else {
-            regularFields.push(field);
+        // Store newly mapped answers in session cache
+        for (const answer of newAnswers) {
+            const normalizedText = normalizeQuestionText(answer.questionText);
+            SESSION_STATE.mappedQuestions.set(normalizedText, answer);
         }
-    }
-
-    return { priorityFields, regularFields };
-}
-
-/**
- * Fill a single Workday field with proper event handling
- */
-async function fillWorkdayField(
-    detected: Detected[],
-    field: ResolvedField,
-    workdayFields?: WorkdayField[]
-): Promise<boolean> {
-    console.log(`${LOG_PREFIX}   Filling: "${field.questionText}"`);
-
-    // Try data-automation-id match first (Workday's preferred method)
-    let match = findByAutomationId(detected, field);
-
-    // Fallback to standard matching
-    if (!match) {
-        match = bestMatchField(detected, field.questionText, field.canonicalKey);
-    }
-
-    if (!match) {
-        console.warn(`${LOG_PREFIX}   ❌ No match found for: ${field.questionText}`);
-        return false;
-    }
-
-    // Create DetectedField for fillField
-    const detectedField: DetectedField = {
-        element: match.element as any,
-        questionText: match.questionText,
-        fieldType: mapSeleniumTypeToFieldType(field.fieldType),
-        isRequired: false,
-        options: field.options,
-        section: QuestionSection.PERSONAL,
-        canonicalKey: field.canonicalKey || '',
-        confidence: field.confidence || 1.0,
-        filled: false,
-        filledValue: String(field.value),
-        skipped: false
-    };
-
-    const result = await fillField(detectedField, String(field.value), field.fileName);
-
-    if (result.success) {
-        // Trigger blur event for Workday validation
-        (match.element as HTMLElement).blur();
-        await sleep(100);
-        console.log(`${LOG_PREFIX}   ✅ Filled successfully`);
     } else {
-        console.warn(`${LOG_PREFIX}   ❌ Fill failed`);
+        console.log(`${LOG_PREFIX} ℹ️ No new questions to map\n`);
     }
 
-    return result.success;
+    // ==================== FILLING ====================
+    console.log(`${LOG_PREFIX} 📝 Filling fields...`);
+
+    const allAnswers = [...cachedAnswers, ...newAnswers];
+    // Fill mapped answers using static import
+    const discoveredFields = getDiscoveredFields();
+
+    // FILL ONLY if we have answers? Or always try? 
+    // Always try because even cached answers need to be filled in the new fields (e.g. new "Job Title" field)
+    await fillMappedAnswers(allAnswers, discoveredFields);
 }
 
 /**
- * Find field by Workday's data-automation-id attribute
+ * Reset session cache (for testing or when starting fresh)
  */
-function findByAutomationId(detected: Detected[], field: ResolvedField): Detected | null {
-    // Workday uses predictable automation IDs
-    const automationPatterns = [
-        field.canonicalKey,
-        field.questionText.toLowerCase().replace(/\s+/g, '-'),
-        field.questionText.toLowerCase().replace(/\s+/g, '_')
-    ];
-
-    for (const pattern of automationPatterns) {
-        if (!pattern) continue;
-
-        const found = detected.find(d => {
-            const el = d.element as HTMLElement;
-            const autoId = el.getAttribute('data-automation-id') ||
-                el.closest('[data-automation-id]')?.getAttribute('data-automation-id');
-
-            return autoId && (
-                autoId.includes(pattern) ||
-                pattern.includes(autoId)
-            );
-        });
-
-        if (found) {
-            console.log(`${LOG_PREFIX}   ✓ Matched via data-automation-id: ${pattern}`);
-            return found;
-        }
-    }
-
-    return null;
+export function resetWorkdaySession(): void {
+    console.log(`${LOG_PREFIX} 🔄 Resetting session cache...`);
+    SESSION_STATE.mappedQuestions.clear();
+    clearScannerState();
 }
 
 /**
- * Wait for Workday to finish loading new form fields
- * This is MUCH better than fixed 5-second delays!
+ * Get session statistics (for debugging)
  */
-async function waitForWorkdayFormUpdate(): Promise<void> {
-    // Track network activity
-    const networkMonitor = new WorkdayNetworkMonitor();
-    networkMonitor.start();
-
-    return new Promise((resolve) => {
-        // MutationObserver for DOM changes
-        const observer = new MutationObserver((mutations) => {
-            const hasNewWorkdayFields = mutations.some(m =>
-                Array.from(m.addedNodes).some(node => {
-                    if (node.nodeType !== Node.ELEMENT_NODE) return false;
-                    const el = node as Element;
-
-                    // Check for Workday-specific attributes
-                    return el.hasAttribute('data-automation-id') ||
-                        el.querySelector('[data-automation-id]') !== null ||
-                        el.querySelector('input, select, textarea') !== null;
-                })
-            );
-
-            if (hasNewWorkdayFields && networkMonitor.isQuiet()) {
-                console.log(`${LOG_PREFIX}   ✓ New fields loaded and network quiet`);
-                observer.disconnect();
-                networkMonitor.stop();
-                resolve();
-            }
-        });
-
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-
-        // Fallback timeout (max wait)
-        setTimeout(() => {
-            observer.disconnect();
-            networkMonitor.stop();
-            console.log(`${LOG_PREFIX}   ⏱️ Max wait time reached`);
-            resolve();
-        }, 8000); // Maximum 8 seconds
-
-        // Minimum wait (Workday usually takes 2-4 seconds)
-        setTimeout(() => {
-            if (networkMonitor.isQuiet()) {
-                observer.disconnect();
-                networkMonitor.stop();
-                console.log(`${LOG_PREFIX}   ✓ Network quiet after minimum wait`);
-                resolve();
-            }
-        }, 2000); // Minimum 2 seconds
-    });
-}
-
-/**
- * Monitor network activity to detect when Workday has finished loading
- */
-class WorkdayNetworkMonitor {
-    private pendingRequests = 0;
-    private lastActivity = Date.now();
-    private originalFetch!: typeof fetch;
-    private originalXHR!: typeof XMLHttpRequest;
-
-    start() {
-        // Intercept fetch
-        this.originalFetch = window.fetch;
-        window.fetch = async (...args) => {
-            this.pendingRequests++;
-            this.lastActivity = Date.now();
-
-            try {
-                const response = await this.originalFetch.apply(window, args);
-                this.pendingRequests--;
-                this.lastActivity = Date.now();
-                return response;
-            } catch (error) {
-                this.pendingRequests--;
-                this.lastActivity = Date.now();
-                throw error;
-            }
-        };
-
-        // Intercept XMLHttpRequest
-        const monitor = this;
-        this.originalXHR = window.XMLHttpRequest;
-
-        // Create a wrapper class that extends the original XMLHttpRequest
-        const OriginalXHR = this.originalXHR;
-        window.XMLHttpRequest = class extends OriginalXHR {
-            constructor() {
-                super();
-
-                this.addEventListener('loadstart', () => {
-                    monitor.pendingRequests++;
-                    monitor.lastActivity = Date.now();
-                });
-
-                this.addEventListener('loadend', () => {
-                    monitor.pendingRequests--;
-                    monitor.lastActivity = Date.now();
-                });
-            }
-        } as any;
-    }
-
-    stop() {
-        if (this.originalFetch) {
-            window.fetch = this.originalFetch;
-        }
-        if (this.originalXHR) {
-            window.XMLHttpRequest = this.originalXHR;
-        }
-    }
-
-    isQuiet(): boolean {
-        // Network is quiet if:
-        // 1. No pending requests
-        // 2. Last activity was at least 500ms ago
-        return this.pendingRequests === 0 &&
-            (Date.now() - this.lastActivity) > 500;
-    }
-}
-
-/**
- * Map Selenium field type to FieldType enum
- */
-function mapSeleniumTypeToFieldType(seleniumType: string): FieldType {
-    const type = String(seleniumType).toLowerCase();
-
-    if (type === 'select_native') return FieldType.SELECT_NATIVE;
-    if (type === 'select') return FieldType.SELECT_NATIVE;
-    if (type.includes('dropdown') || type === 'dropdown_custom') return FieldType.DROPDOWN_CUSTOM;
-    if (type === 'textarea') return FieldType.TEXTAREA;
-    if (type === 'email') return FieldType.EMAIL;
-    if (type === 'phone') return FieldType.PHONE;
-    if (type === 'number') return FieldType.NUMBER;
-    if (type === 'radio' || type === 'radio_group') return FieldType.RADIO_GROUP;
-    if (type === 'checkbox') return FieldType.CHECKBOX;
-    if (type === 'date') return FieldType.DATE;
-    if (type === 'file' || type === 'file_upload') return FieldType.FILE_UPLOAD;
-    if (type === 'multiselect') return FieldType.MULTISELECT;
-
-    return FieldType.TEXT;
-}
-
-function sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+export function getWorkdaySessionStats(): {
+    cachedQuestions: number;
+    isProcessing: boolean;
+} {
+    return {
+        cachedQuestions: SESSION_STATE.mappedQuestions.size,
+        isProcessing: SESSION_STATE.isProcessing
+    };
 }

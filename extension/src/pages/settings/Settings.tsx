@@ -7,6 +7,7 @@ import {
     importProfile,
     clearProfile,
 } from "../../core/storage/profileStorage";
+import { clearAllCache } from "../../core/storage/aiResponseCache";
 import { CONFIG } from "../../config";
 import "./Settings.css";
 
@@ -74,6 +75,15 @@ const Settings: React.FC = () => {
         await clearProfile();
         setProfile(null);
         alert("Profile cleared");
+    };
+
+    const handleClearCache = async () => {
+        if (!confirm("Are you sure you want to clear the AI Response Cache? This will remove all learned answers and previous predictions.")) {
+            return;
+        }
+
+        await clearAllCache();
+        alert("AI Cache cleared successfully!");
     };
 
     if (!profile) {
@@ -190,6 +200,13 @@ const Settings: React.FC = () => {
                         <h3>Danger Zone</h3>
                         <button className="danger-btn" onClick={handleClear}>
                             Clear All Data
+                        </button>
+                        <button
+                            className="danger-btn"
+                            style={{ marginLeft: "10px", backgroundColor: "#ffc107", color: "#000" }}
+                            onClick={handleClearCache}
+                        >
+                            Clear AI Cache
                         </button>
                     </section>
                 </div>

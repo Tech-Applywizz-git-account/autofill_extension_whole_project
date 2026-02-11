@@ -7,7 +7,8 @@
 import { fillField } from './actions/fieldFiller';
 import { DetectedField, FieldType, QuestionSection } from '../types/fieldDetection';
 import { detectFieldsInCurrentDOM, bestMatchField, Detected } from './fieldMatching';
-import { isWorkdayApplication, handleWorkdayApplication } from './workday/workdayHandler';
+import { isWorkdayApplication } from './workday/workdayDetector';
+import { handleWorkdayApplication } from './workday/workdayHandler';
 
 const LOG_PREFIX = "[AutofillRunner]";
 
@@ -61,21 +62,16 @@ async function runAutofill(payload: FillPayload) {
     console.log(`   Run ID: ${payload.runId}`);
     console.log(`   Fields to fill: ${payload.fields.length}\n`);
 
-    // WORKDAY DETECTION: Use specialized handler for Workday applications
+    // ========== WORKDAY DETECTION ==========
+    // If this is a Workday application, delegate to Workday handler
     if (isWorkdayApplication()) {
-        console.log(`🏢 WORKDAY APPLICATION DETECTED - Using specialized handler\n`);
+        console.log(`${LOG_PREFIX} 🏢 WORKDAY APPLICATION DETECTED - Using Workday handler\n`);
         await handleWorkdayApplication(payload);
-
-        // Dispatch completion event
-        window.dispatchEvent(new CustomEvent('AUTOFILL_COMPLETE_EVENT', {
-            detail: {
-                successes: payload.fields.length,
-                failures: 0,
-                platform: 'Workday'
-            }
-        }));
         return;
     }
+
+    // ========== GREENHOUSE LOGIC (UNCHANGED) ==========
+    console.log(`${LOG_PREFIX} 🌱 GREENHOUSE APPLICATION - Using standard flow\n`);
 
     // Step 1: Detect fields in current DOM
     console.log(`🔍 Step 1: Detecting fields in current DOM...`);

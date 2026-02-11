@@ -26,14 +26,14 @@ export async function selectDropdownKeyboardFirst(
 
     try {
         // Step 1: Focus the dropdown
-        const input = findDropdownInput(element);
+        let input = findDropdownInput(element);
         if (!input) {
             console.warn(`${LOG_PREFIX} ❌ Could not find dropdown input`);
             return false;
         }
 
         input.focus();
-        await sleep(100);
+        await sleep(300); // Increased from 100ms
         console.log(`${LOG_PREFIX} ✅ Focused input`);
 
         // Step 2: Open with Space/Enter (NOT click!)
@@ -45,29 +45,67 @@ export async function selectDropdownKeyboardFirst(
 
         // Step 3: MutationObserver waits for menu
         console.log(`${LOG_PREFIX} ⏳ Waiting for dropdown menu...`);
-        const menuAppeared = await waitForDropdownMenu(1000); // Reduced from 2000ms
+        const menuAppeared = await waitForDropdownMenu(2000); // Increased from 1000ms
         if (!menuAppeared) {
             console.warn(`${LOG_PREFIX} ❌ Menu did not appear after keyboard open`);
             return false;
         }
         console.log(`${LOG_PREFIX} ✅ Menu appeared`);
 
+        // Step 3.5: Check for a dedicated SEARCH input inside the menu
+        // (Common in Greenhouse, Select2, etc. where the trigger is not the search box)
+        const menuSearchInput = findMenuSearchInput();
+        if (menuSearchInput) {
+            console.log(`${LOG_PREFIX} 🔍 Found search input in menu! Switching focus.`);
+            input = menuSearchInput;
+            input.focus();
+            await sleep(200); // Increased from 50ms
+        }
+
         // Step 4: Type to filter options
         await typeToFilter(input, value);
-        await sleep(50); // Aggressive: reduced from 100ms - wait for filtering
+        await sleep(1200); // Increased to 1.2s - Wait for options to load after fast typing
 
-        // Step 5: ArrowDown to navigate (if needed)
+        // Step 5: ArrowDown to navigate (Crucial for React-Select)
+        console.log(`${LOG_PREFIX} ⬇️ Pressing ArrowDown to highlight option`);
+        dispatchKeyEvent(input, 'ArrowDown', 'ArrowDown');
+        await sleep(300); // Wait for highlight
+
         // Step 6: Enter to commit
-        // Step 5: ArrowDown to navigate (if needed)
-        // Step 6: Enter to commit
-        const committed = await commitSelection(input);
+        let committed = await commitSelection(input);
+
+        // Fallback: If Enter didn't close the menu, try Tab
         if (!committed) {
+            console.warn(`${LOG_PREFIX} ⚠️ Enter failed, trying Tab...`);
+            dispatchKeyEvent(input, 'Tab', 'Tab');
+            await sleep(300);
+            committed = !(await isMenuOpen());
+        }
+
+        // Fallback: If Keyboard failed, try clicking the option directly
+        if (!committed) {
+            console.warn(`${LOG_PREFIX} ⚠️ Keyboard commit failed, trying click fallback...`);
+            const clicked = await clickOption(value);
+            if (clicked) {
+                console.log(`${LOG_PREFIX} ✅ Click fallback successful`);
+                committed = true;
+            }
+        }
+
+        if (!committed) {
+            // One last check: maybe it selected but menu didn't close immediately?
+            await sleep(100);
+            if (verifySelection(element, value)) {
+                console.log(`${LOG_PREFIX} ✅ Verified selection despite menu not closing cleanly`);
+                return true;
+            }
+
             console.warn(`${LOG_PREFIX} ❌ Failed to commit selection`);
             return false;
         }
 
         // Step 7: Strict verification
-        await sleep(75); // Aggressive: reduced from 150ms - wait for React state to update
+        await sleep(75); // Wait for state update
         const verified = verifySelection(element, value);
 
         if (verified) {
@@ -116,6 +154,25 @@ function findDropdownInput(element: HTMLElement): HTMLInputElement | null {
 }
 
 /**
+ * Find a search input inside the OPEN dropdown menu
+ */
+function findMenuSearchInput(): HTMLInputElement | null {
+    const menu = getDropdownMenu();
+    if (!menu) return null;
+
+    // Check for inputs inside the menu
+    const inputs = menu.querySelectorAll('input');
+    for (const input of Array.from(inputs)) {
+        // Consider it a search input if it's visible and not disabled
+        const style = window.getComputedStyle(input);
+        if (style.display !== 'none' && style.visibility !== 'hidden' && !input.disabled) {
+            return input as HTMLInputElement;
+        }
+    }
+    return null;
+}
+
+/**
  * Open dropdown using keyboard (Space or Enter)
  * This is more reliable than clicking for React dropdowns
  */
@@ -124,7 +181,7 @@ async function openDropdownWithKeyboard(input: HTMLInputElement): Promise<boolea
 
     // Try Space key first (works for most dropdowns)
     dispatchKeyEvent(input, ' ', 'Space');
-    await sleep(40); // Aggressive: reduced from 75ms
+    await sleep(40);
 
     if (await isMenuOpen()) {
         console.log(`${LOG_PREFIX} ✅ Opened with Space`);
@@ -133,7 +190,7 @@ async function openDropdownWithKeyboard(input: HTMLInputElement): Promise<boolea
 
     // Try Enter key
     dispatchKeyEvent(input, 'Enter', 'Enter');
-    await sleep(40); // Aggressive: reduced from 75ms
+    await sleep(40);
 
     if (await isMenuOpen()) {
         console.log(`${LOG_PREFIX} ✅ Opened with Enter`);
@@ -142,7 +199,7 @@ async function openDropdownWithKeyboard(input: HTMLInputElement): Promise<boolea
 
     // Try ArrowDown (some dropdowns open on arrow)
     dispatchKeyEvent(input, 'ArrowDown', 'ArrowDown');
-    await sleep(40); // Aggressive: reduced from 75ms
+    await sleep(40);
 
     if (await isMenuOpen()) {
         console.log(`${LOG_PREFIX} ✅ Opened with ArrowDown`);
@@ -154,7 +211,7 @@ async function openDropdownWithKeyboard(input: HTMLInputElement): Promise<boolea
     const control = input.closest('.select__control') || input.parentElement;
     if (control) {
         (control as HTMLElement).click();
-        await sleep(40); // Aggressive: reduced from 75ms
+        await sleep(40);
         return isMenuOpen();
     }
 
@@ -165,22 +222,7 @@ async function openDropdownWithKeyboard(input: HTMLInputElement): Promise<boolea
  * Check if dropdown menu is currently open
  */
 async function isMenuOpen(): Promise<boolean> {
-    // Check for common menu selectors
-    const menuSelectors = [
-        '.select__menu',
-        '[role="listbox"]',
-        '[role="menu"]',
-        '.dropdown-menu',
-        '[aria-expanded="true"] + [role="listbox"]'
-    ];
-
-    for (const selector of menuSelectors) {
-        if (document.querySelector(selector)) {
-            return true;
-        }
-    }
-
-    return false;
+    return !!getDropdownMenu();
 }
 
 /**
@@ -214,8 +256,6 @@ function waitForDropdownMenu(timeout: number): Promise<boolean> {
 }
 
 /**
- * Get the dropdown menu element
-/**
  * Get the visible dropdown menu element
  */
 function getDropdownMenu(): Element | null {
@@ -223,7 +263,9 @@ function getDropdownMenu(): Element | null {
         '.select__menu',
         '[role="listbox"]',
         '[role="menu"]',
-        '.dropdown-menu'
+        '.dropdown-menu',
+        '.select2-results',   // Select2
+        '.select2-dropdown'   // Select2
     ];
 
     for (const selector of selectors) {
@@ -250,19 +292,25 @@ function getDropdownMenu(): Element | null {
 async function typeToFilter(input: HTMLInputElement, value: string) {
     console.log(`${LOG_PREFIX} ⌨️ Typing to filter: ${value}`);
 
-    // Clear existing value first
-    input.value = '';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    await sleep(50);
+    // Clear existing value first if it's a search box
+    // But be careful not to clear if it's a read-only trigger
+    if (!input.readOnly) {
+        input.value = '';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        await sleep(50);
+    }
 
     // Type each character
     for (const char of value) {
         input.value += char;
         input.dispatchEvent(new Event('input', { bubbles: true }));
-        await sleep(10); // Balanced: 3x faster than original 30ms, safe for all sites
+        input.dispatchEvent(new KeyboardEvent('keydown', { key: char, bubbles: true }));
+        input.dispatchEvent(new KeyboardEvent('keypress', { key: char, bubbles: true }));
+        input.dispatchEvent(new KeyboardEvent('keyup', { key: char, bubbles: true }));
+        await sleep(20); // Fast typing
     }
 
-    console.log(`${LOG_PREFIX} ✅ Typed: ${input.value}`);
+    console.log(`${LOG_PREFIX} ✅ Typed: ${value}`);
 }
 
 /**
@@ -273,7 +321,7 @@ async function commitSelection(input: HTMLInputElement): Promise<boolean> {
 
     // Press Enter to select
     dispatchKeyEvent(input, 'Enter', 'Enter');
-    await sleep(50); // Aggressive: reduced from 100ms
+    await sleep(50);
 
     // Check if menu closed (indicates selection was made)
     const menuStillOpen = await isMenuOpen();
@@ -284,31 +332,27 @@ async function commitSelection(input: HTMLInputElement): Promise<boolean> {
  * Verify that the selection was applied correctly
  */
 function verifySelection(element: HTMLElement, expectedValue: string): boolean {
+    const expectedLower = expectedValue.toLowerCase();
+
     // Method 1: Check .select__single-value (React-Select)
     const control = element.closest('.select__control');
     if (control) {
         const singleValue = control.querySelector('.select__single-value');
         if (singleValue) {
-            const displayedText = singleValue.textContent?.trim() || '';
+            const displayedText = singleValue.textContent?.trim().toLowerCase() || '';
             console.log(`${LOG_PREFIX} 🔍 Displayed value: "${displayedText}"`);
 
-            // Fuzzy match (contains or similar)
-            if (displayedText.includes(expectedValue) || expectedValue.includes(displayedText)) {
-                return true;
-            }
-
-            // Exact match
-            if (displayedText === expectedValue) {
+            if (displayedText.includes(expectedLower) || expectedLower.includes(displayedText)) {
                 return true;
             }
         }
     }
 
     // Method 2: Check aria-selected option
-    const selectedOption = document.querySelector('[role="option"][aria-selected="true"]');
-    if (selectedOption) {
-        const optionText = selectedOption.textContent?.trim() || '';
-        if (optionText.includes(expectedValue) || expectedValue.includes(optionText)) {
+    const selectedOptions = document.querySelectorAll('[role="option"][aria-selected="true"]');
+    for (const option of Array.from(selectedOptions)) {
+        const optionText = option.textContent?.trim().toLowerCase() || '';
+        if (optionText.includes(expectedLower) || expectedLower.includes(optionText)) {
             return true;
         }
     }
@@ -316,10 +360,15 @@ function verifySelection(element: HTMLElement, expectedValue: string): boolean {
     // Method 3: Check input value
     const input = findDropdownInput(element);
     if (input && input.value) {
-        const inputValue = input.value.trim();
-        if (inputValue.includes(expectedValue) || expectedValue.includes(inputValue)) {
+        const inputValue = input.value.trim().toLowerCase();
+        if (inputValue.includes(expectedLower) || expectedLower.includes(inputValue)) {
             return true;
         }
+    }
+
+    // Method 4: Check if any visible text in container matches
+    if (element.textContent?.toLowerCase().includes(expectedLower)) {
+        return true;
     }
 
     console.warn(`${LOG_PREFIX} ⚠️ Verification failed - no match found`);
@@ -333,4 +382,52 @@ function dispatchKeyEvent(element: HTMLElement, key: string, code: string) {
     element.dispatchEvent(new KeyboardEvent('keydown', { key, code, bubbles: true }));
     element.dispatchEvent(new KeyboardEvent('keypress', { key, code, bubbles: true }));
     element.dispatchEvent(new KeyboardEvent('keyup', { key, code, bubbles: true }));
+}
+
+/**
+ * Find and click an option by text (Fallback)
+ */
+async function clickOption(text: string): Promise<boolean> {
+    const selectors = [
+        '[role="option"]',
+        '.select__option',
+        '.dropdown-item',
+        'li[role="option"]',
+        'div[role="option"]',
+        '.select2-results__option'
+    ];
+
+    const target = text.toLowerCase();
+
+    // Strategy A: Specific options
+    for (const selector of selectors) {
+        const options = document.querySelectorAll(selector);
+        for (const option of Array.from(options)) {
+            const content = option.textContent?.trim().toLowerCase() || '';
+            if (content.includes(target)) { // Changed to includes for better matching
+                console.log(`${LOG_PREFIX} 🖱️ Clicking option: "${content}"`);
+                (option as HTMLElement).click();
+                await sleep(50);
+                return true;
+            }
+        }
+    }
+
+    // Strategy B: Menu scan
+    const menu = getDropdownMenu();
+    if (menu) {
+        // Look for any clickable element with correct text
+        const allElements = menu.querySelectorAll('div, li, span, a');
+        for (const el of Array.from(allElements)) {
+            const content = el.textContent?.trim().toLowerCase() || '';
+            if (content === target) { // Exact match for generic elements
+                console.log(`${LOG_PREFIX} 🖱️ Clicking match in menu: "${content}"`);
+                (el as HTMLElement).click();
+                await sleep(50);
+                return true;
+            }
+        }
+    }
+
+    return false;
 }

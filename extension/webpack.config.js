@@ -7,7 +7,7 @@ const webpack = require('webpack');
 const dotenv = require('dotenv');
 
 // Load env vars from .env file AND process.env
-const localEnv = dotenv.config().parsed || {};
+const localEnv = dotenv.config({ path: './src/.env' }).parsed || dotenv.config().parsed || {};
 const mergedEnv = { ...process.env, ...localEnv };
 
 // Extract all REACT_APP_ variables and stringify them for DefinePlugin

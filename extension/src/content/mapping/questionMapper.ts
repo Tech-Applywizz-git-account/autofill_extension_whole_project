@@ -1,11 +1,13 @@
 /**
  * QuestionMapper - Maps scanned questions to answers
- * Uses canonical matching, learned patterns, fuzzy matching, and AI fallback
+ * Uses predefined patterns, canonical matching, learned patterns, fuzzy matching, and AI fallback
  */
 
 import { loadProfile } from '../../core/storage/profileStorage';
 import { askAI } from '../../core/ai/aiService';
 import { patternStorage } from '../../core/storage/patternStorage';
+import { findQuestionIntent, getValueByIntent } from './questionPatternDatabase';
+import { getCachedResponse, setCachedResponse } from '../../core/storage/aiResponseCache';
 
 export interface ScannedQuestion {
     questionText: string;
@@ -15,11 +17,13 @@ export interface ScannedQuestion {
     selector: string;
 }
 
+export type MappedSource = 'canonical' | 'learned' | 'fuzzy' | 'AI' | 'injected_skills' | 'hardcoded_override';
+
 export interface MappedAnswer {
     selector: string;
     questionText: string;
     answer: string;
-    source: 'canonical' | 'learned' | 'fuzzy' | 'AI';
+    source: MappedSource;
     confidence: number;
     required: boolean;
     fieldType: string;
@@ -73,10 +77,49 @@ export class QuestionMapper {
         const mappedAnswers: MappedAnswer[] = [];
         const unmappedForAI: ScannedQuestion[] = [];
 
+        console.log(`🎯 Phase 0: Checking predefined question patterns...\n`);
+
+        // Phase 0: Try predefined question patterns (fastest - instant recognition)
+        for (const q of uniqueQuestions) {
+            const match = findQuestionIntent(q.questionText, q.fieldType);
+            if (match) {
+                const intent = match.intent;
+                const value = getValueByIntent(profile, intent);
+                // Debug log to trace "No" values
+                if (value === 'No' || value === 'No Experience') {
+                    console.warn(`  ⚠️ Debug: Intent "${intent}" returned "${value}" from profile`);
+                }
+                if (value) {
+                    // Successfully matched using predefined pattern
+                    mappedAnswers.push({
+                        selector: q.selector,
+                        questionText: q.questionText,
+                        answer: value,
+                        source: 'canonical' as const,
+                        confidence: 1.0,
+                        required: q.required,
+                        fieldType: q.fieldType,
+                        options: q.options || undefined,
+                        canonicalKey: intent
+                    });
+                    console.log(`  ⚡ "${q.questionText}" → ${intent} (predefined pattern: "${match.pattern}")`);
+                    continue; // Skip to next question
+                }
+            }
+            // No predefined pattern match - will try canonical/learned/fuzzy
+            unmappedForAI.push(q);
+        }
+
+        console.log(`\n✅  Phase 0 Complete: ${mappedAnswers.length}/${uniqueQuestions.length} mapped via predefined patterns\n`);
+
+        // Phase 1: Try canonical, learned, then fuzzy matching for remaining questions
         console.log(`🚀 Phase 1: Attempting canonical, learned pattern, and fuzzy matching...\n`);
 
+        const phase1Candidates = [...unmappedForAI]; // Copy questions that didn't match patterns
+        unmappedForAI.length = 0; // Clear for Phase 1 results
+
         // Phase 1: Try canonical, learned, then fuzzy matching
-        for (const q of uniqueQuestions) {
+        for (const q of phase1Candidates) {
             console.log(`\n  🔍 Mapping: "${q.questionText}"`);
             const result = await this.tryMapping(q, profile);
 
@@ -363,6 +406,15 @@ export class QuestionMapper {
         let value = profile;
 
         for (const part of parts) {
+            // Handle array access: if current value is an array, take the first item
+            // This is a simplified approach for Workday sections.
+            // Ideally, the Handler should pass the specific item context, but for now this fixes the "undefined" error.
+            if (Array.isArray(value) && value.length > 0) {
+                value = value[0];
+            } else if (Array.isArray(value) && value.length === 0) {
+                return null;
+            }
+
             value = value?.[part];
             if (value === undefined) return null;
         }
@@ -911,15 +963,53 @@ export class QuestionMapper {
     /**
      * Request AI answers for unmapped questions
      * ⚡ PARALLEL PROCESSING - all AI calls happen simultaneously
+     * 💾 CACHED - Checks cache first to avoid redundant API calls
      */
     private async requestAIAnswers(questions: ScannedQuestion[], profile: any): Promise<MappedAnswer[]> {
         console.log(`⚡ Processing ${questions.length} AI question(s) in PARALLEL...`);
         const startTime = Date.now();
         console.log(`⏱️  AI request started at ${new Date().toLocaleTimeString()}\n`);
 
+        let cacheHits = 0;
+        let cacheMisses = 0;
+
         // Create all AI request promises at once (parallel execution)
         const aiPromises = questions.map(async (q, index) => {
             try {
+                // 💾 PHASE 1: Check cache first
+                const cached = await getCachedResponse(q.questionText, q.fieldType, q.options);
+                if (cached) {
+                    cacheHits++;
+                    console.log(`   💾 [${index + 1}/${questions.length}] Cache HIT: "${q.questionText}" (${Math.round((Date.now() - cached.timestamp) / (60 * 1000))} min old)`);
+
+                    // Dispatch event for UI
+                    window.dispatchEvent(new CustomEvent('AI_PROGRESS', {
+                        detail: {
+                            current: index + 1,
+                            total: questions.length,
+                            question: q.questionText,
+                            status: 'complete',
+                            answer: cached.answer,
+                            cached: true
+                        }
+                    }));
+
+                    return {
+                        selector: q.selector,
+                        questionText: q.questionText,
+                        answer: cached.answer,
+                        source: 'AI' as const,
+                        confidence: cached.confidence,
+                        required: q.required,
+                        fieldType: q.fieldType,
+                        options: q.options || undefined,
+                        canonicalKey: cached.intent
+                    } as MappedAnswer;
+                }
+
+                // 📡 PHASE 2: Cache miss - call AI
+                cacheMisses++;
+
                 // Dispatch START event for UI
                 window.dispatchEvent(new CustomEvent('AI_PROGRESS', {
                     detail: {
@@ -930,7 +1020,7 @@ export class QuestionMapper {
                     }
                 }));
 
-                console.log(`   📤 [${index + 1}/${questions.length}] Asking AI: "${q.questionText}"`);
+                console.log(`   📤 [${index + 1}/${questions.length}] Cache MISS - Asking AI: "${q.questionText}"`);
                 if (q.options && q.options.length > 0 && q.options.length <= 20) {
                     console.log(`      Options provided: [${q.options.slice(0, 3).join(', ')}${q.options.length > 3 ? '...' : ''}]`);
                 }
@@ -977,6 +1067,18 @@ export class QuestionMapper {
                         }
                     }
 
+                    // 💾 PHASE 3: Store in cache for future use
+                    await setCachedResponse(
+                        q.questionText,
+                        q.fieldType,
+                        q.options,
+                        {
+                            answer: finalAnswer,
+                            confidence: aiResponse.confidence || 0.8,
+                            intent: aiResponse.intent
+                        }
+                    );
+
                     // Dispatch COMPLETE event for UI
                     window.dispatchEvent(new CustomEvent('AI_PROGRESS', {
                         detail: {
@@ -1018,7 +1120,11 @@ export class QuestionMapper {
 
         const endTime = Date.now();
         const duration = ((endTime - startTime) / 1000).toFixed(1);
+
         console.log(`\n⚡ Parallel AI processing complete in ${duration}s`);
+        console.log(`📊 Cache Statistics:`);
+        console.log(`   💾 Cache Hits: ${cacheHits}/${questions.length} (${((cacheHits / questions.length) * 100).toFixed(0)}%)`);
+        console.log(`   📡 API Calls: ${cacheMisses}/${questions.length} (${((cacheMisses / questions.length) * 100).toFixed(0)}%)`);
         console.log(`✅ Successfully answered: ${aiAnswers.length}/${questions.length} questions`);
         if (aiAnswers.length < questions.length) {
             console.log(`⚠️  Failed to answer: ${questions.length - aiAnswers.length} question(s)`);
