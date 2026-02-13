@@ -77,6 +77,19 @@ export async function handleWorkdayApplication(payload?: any): Promise<void> {
         console.error(`${LOG_PREFIX} ❌ Error during Workday autofill:`, error);
     } finally {
         SESSION_STATE.isProcessing = false;
+
+        // Collect all successfully mapped question names for the UI to count
+        const successfulFields = Array.from(SESSION_STATE.mappedQuestions.values())
+            .map(ans => ans.questionText);
+
+        // Signal completion to UI components (OverlayPanel)
+        window.dispatchEvent(new CustomEvent('AUTOFILL_COMPLETE_EVENT', {
+            detail: {
+                successes: successfulFields.length,
+                failures: 0,
+                successfulFields: successfulFields
+            }
+        }));
     }
 }
 

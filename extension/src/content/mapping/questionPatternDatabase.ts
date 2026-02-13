@@ -32,7 +32,7 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
     // ========================================================================
     // PERSONAL INFORMATION (Priority: 100-95)
     // ========================================================================
-    
+
     {
         patterns: ['first name', 'firstname', 'given name', 'forename', 'name first'],
         intent: 'personal.firstName',
@@ -103,14 +103,14 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
         excludePatterns: ['state', 'country']
     },
     {
-        patterns: ['state', 'province', 'current state', 'state/province'],
+        patterns: ['state', 'province', 'current state', 'state/province', 'region', 'territory'],
         intent: 'personal.state',
         fieldTypes: ['text', 'dropdown'],
         priority: 95,
         excludePatterns: ['city', 'country', 'zip']
     },
     {
-        patterns: ['zip code', 'postal code', 'zip', 'postcode', 'post code'],
+        patterns: ['zip code', 'postal code', 'zip', 'postcode', 'post code', 'pincode', 'pin code'],
         intent: 'personal.postalCode',
         fieldTypes: ['text'],
         priority: 95,
@@ -180,7 +180,39 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
     // ========================================================================
     // EDUCATION (Priority: 80-75)
     // ========================================================================
-    
+
+    {
+        patterns: ['start month', 'starting month', 'month started'],
+        intent: 'education.startMonth',
+        fieldTypes: ['dropdown', 'text'],
+        priority: 85,
+        contextPatterns: ['education'],
+        excludePatterns: ['end', 'completion']
+    },
+    {
+        patterns: ['start year', 'starting year', 'year started', 'started in'],
+        intent: 'education.startYear',
+        fieldTypes: ['dropdown', 'text'],
+        priority: 85,
+        contextPatterns: ['education'],
+        excludePatterns: ['end', 'completion']
+    },
+    {
+        patterns: ['end month', 'ending month', 'month completed', 'graduation month'],
+        intent: 'education.endMonth',
+        fieldTypes: ['dropdown', 'text'],
+        priority: 85,
+        contextPatterns: ['education'],
+        excludePatterns: ['start', 'enrollment']
+    },
+    {
+        patterns: ['end year', 'ending year', 'year completed', 'graduation year', 'year of graduation'],
+        intent: 'education.endYear',
+        fieldTypes: ['dropdown', 'text'],
+        priority: 85,
+        contextPatterns: ['education'],
+        excludePatterns: ['start', 'enrollment']
+    },
     {
         patterns: ['school name', 'university name', 'college name', 'school', 'university', 'college', 'institution', 'educational institution'],
         intent: 'education.school',
@@ -196,7 +228,10 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
         priority: 80
     },
     {
-        patterns: ['degree type', 'degree', 'education level', 'highest degree', 'degree earned'],
+        patterns: [
+            'degree type', 'degree', 'education level', 'highest degree', 'degree earned',
+            'highest education obtained', 'highest level count', 'education attained'
+        ],
         intent: 'education.degree',
         fieldTypes: ['dropdown', 'text'],
         priority: 80,
@@ -256,7 +291,7 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
     // ========================================================================
     // WORK EXPERIENCE (Priority: 70-65)
     // ========================================================================
-    
+
     {
         patterns: ['company name', 'company', 'employer', 'organization', 'employer name', 'organization name'],
         intent: 'experience.company',
@@ -307,7 +342,7 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
         priority: 70,
         contextPatterns: ['experience', 'employment']
     },
-    
+
     // Date fields - specific for experience
     {
         patterns: ['from month', 'start month', 'month (mm)', 'starting month'],
@@ -341,7 +376,7 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
         contextPatterns: ['experience', 'employment', 'work history'],
         excludePatterns: ['from', 'start']
     },
-    
+
     {
         patterns: ['responsibilities', 'job description', 'duties', 'achievements', 'role description', 'describe your role', 'what did you do'],
         intent: 'experience.bullets',
@@ -373,7 +408,7 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
     // ========================================================================
     // WORK AUTHORIZATION (Priority: 90-85)
     // ========================================================================
-    
+
     {
         patterns: [
             'authorized to work',
@@ -455,7 +490,7 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
     // ========================================================================
     // EEO / DEMOGRAPHIC (Priority: 85-80)
     // ========================================================================
-    
+
     {
         patterns: ['gender', 'sex', 'gender identity', 'gender preference'],
         intent: 'eeo.gender',
@@ -513,7 +548,7 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
     // ========================================================================
     // SKILLS, CERTIFICATIONS, LANGUAGES (Priority: 75-70)
     // ========================================================================
-    
+
     {
         patterns: ['skills', 'technical skills', 'skill set', 'competencies', 'your skills', 'relevant skills'],
         intent: 'skills',
@@ -567,7 +602,7 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
     // ========================================================================
     // PROFESSIONAL DEVELOPMENT (Priority: 70-65)
     // ========================================================================
-    
+
     {
         patterns: ['professional memberships', 'associations', 'organizations', 'member of', 'professional organizations'],
         intent: 'professionalMemberships',
@@ -602,7 +637,7 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
     // ========================================================================
     // REFERENCES (Priority: 70-65)
     // ========================================================================
-    
+
     {
         patterns: ['reference name', 'references', 'professional reference', 'reference full name'],
         intent: 'references.name',
@@ -643,7 +678,7 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
     // ========================================================================
     // EMERGENCY CONTACT (Priority: 70-65)
     // ========================================================================
-    
+
     {
         patterns: ['emergency contact', 'emergency name', 'in case of emergency', 'emergency contact name'],
         intent: 'emergencyContact.name',
@@ -670,7 +705,7 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
     // ========================================================================
     // PREFERENCES & AVAILABILITY (Priority: 75-65)
     // ========================================================================
-    
+
     {
         patterns: ['start date', 'available to start', 'when can you start', 'earliest start date', 'availability date', 'date available'],
         intent: 'preferences.startDate',
@@ -685,7 +720,10 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
         priority: 75
     },
     {
-        patterns: ['salary expectations', 'desired salary', 'expected compensation', 'salary requirement', 'salary range'],
+        patterns: [
+            'salary expectations', 'desired salary', 'expected compensation',
+            'salary requirement', 'salary range', 'desired pay'
+        ],
         intent: 'preferences.desiredSalary',
         fieldTypes: ['text', 'number'],
         priority: 73
@@ -742,7 +780,7 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
     // ========================================================================
     // APPLICATION-SPECIFIC QUESTIONS (Priority: 75-70)
     // ========================================================================
-    
+
     {
         patterns: [
             'previously applied',
@@ -796,7 +834,7 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
     // ========================================================================
     // CASCADING: "HOW DID YOU HEAR" (Priority: 95-88)
     // ========================================================================
-    
+
     {
         patterns: [
             'how did you hear',
@@ -810,7 +848,7 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
         fieldTypes: ['dropdown', 'text'],
         priority: 95
     },
-    
+
     // CASCADING LEVEL 2: Social Media Platform Details
     {
         patterns: [
@@ -827,7 +865,7 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
         cascadeParent: 'customAnswers.howDidYouHear',
         cascadeValues: ['social media', 'social network', 'social networking']
     },
-    
+
     // CASCADING LEVEL 2: Job Board Details
     {
         patterns: [
@@ -843,7 +881,7 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
         cascadeParent: 'customAnswers.howDidYouHear',
         cascadeValues: ['job board', 'job site', 'online job board']
     },
-    
+
     // Referral name
     {
         patterns: [
@@ -864,7 +902,7 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
     // ========================================================================
     // ESSAY / OPEN-ENDED QUESTIONS (Priority: 75-70)
     // ========================================================================
-    
+
     {
         patterns: [
             'why do you want',
@@ -919,7 +957,7 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
     // ========================================================================
     // LEGAL & BACKGROUND CHECK (Priority: 85-75)
     // ========================================================================
-    
+
     {
         patterns: [
             'convicted',
@@ -970,7 +1008,7 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
     // ========================================================================
     // CONSENT & AGREEMENTS (Priority: 80-70)
     // ========================================================================
-    
+
     {
         patterns: [
             'consent',
@@ -1012,7 +1050,7 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
     // ========================================================================
     // FILE UPLOADS (Priority: 95-90)
     // ========================================================================
-    
+
     {
         patterns: ['resume', 'cv', 'curriculum vitae', 'upload resume', 'attach resume'],
         intent: 'documents.resume',
@@ -1069,7 +1107,7 @@ export function findQuestionIntent(
     parentContext?: string,
     previousAnswers?: Map<string, string>
 ): MatchResult | null {
-    
+
     const normalized = questionText.toLowerCase().trim();
     const contextNormalized = parentContext ? parentContext.toLowerCase().trim() : '';
 
@@ -1163,8 +1201,11 @@ export function findQuestionIntent(
 export function getValueByIntent(profile: any, intent: string): any {
     const parts = intent.split('.');
     let value = profile;
+    let lastPart = parts[parts.length - 1];
 
-    for (const part of parts) {
+    for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
+
         // Handle array access (e.g., education[0].school)
         if (Array.isArray(value) && value.length > 0) {
             value = value[0]; // Use first entry for now
@@ -1173,6 +1214,32 @@ export function getValueByIntent(profile: any, intent: string): any {
         if (value && typeof value === 'object' && part in value) {
             value = value[part];
         } else {
+            // SPECIAL CASE: Extract components from full date strings
+            // If we're looking for .startYear or .startMonth but only have .startDate
+            if (i === parts.length - 1 && (part.endsWith('Year') || part.endsWith('Month'))) {
+                const baseKey = part.startsWith('start') ? 'startDate' : 'endDate';
+                const parentValue = (value && typeof value === 'object') ? value[baseKey] : null;
+
+                if (parentValue && typeof parentValue === 'string') {
+                    // Try to parse YYYY-MM-DD or MM/YYYY or YYYY
+                    if (part.endsWith('Year')) {
+                        const yearMatch = parentValue.match(/\d{4}/);
+                        if (yearMatch) return yearMatch[0];
+                    } else if (part.endsWith('Month')) {
+                        // Extract month (01-12) and convert to name if possible
+                        const monthMatch = parentValue.match(/(?:^|-|\/)(\d{1,2})(?:-|\/|$)/);
+                        if (monthMatch) {
+                            const monthNum = parseInt(monthMatch[1]);
+                            const months = [
+                                'January', 'February', 'March', 'April', 'May', 'June',
+                                'July', 'August', 'September', 'October', 'November', 'December'
+                            ];
+                            return months[monthNum - 1] || monthMatch[1];
+                        }
+                    }
+                }
+            }
+
             console.log(`[QuestionPatternDB] ⚠️ Intent path "${intent}" not found in profile`);
             return null;
         }
@@ -1245,7 +1312,7 @@ export function batchMatchQuestions(
     questions: Array<{ text: string; fieldType?: string; context?: string }>,
     previousAnswers?: Map<string, string>
 ): Map<string, MatchResult> {
-    
+
     const results = new Map<string, MatchResult>();
 
     for (const q of questions) {

@@ -23,10 +23,20 @@ export function detectFieldsInCurrentDOM(): Detected[] {
     const inputs = Array.from(document.querySelectorAll<HTMLElement>('input, textarea, select'));
 
     for (const el of inputs) {
-        if (!isVisible(el)) continue;
-
         const tag = el.tagName.toLowerCase();
         const type = (el as HTMLInputElement).type?.toLowerCase?.() ?? "";
+
+        // Special case: file inputs are often hidden/styled away, so we allow them
+        // if they are not display:none (or even if they are, we can still fill them)
+        // Let's at least allow them if they are not display:none, or if they have a label.
+        // Actually, most invisible file inputs are still detectable if we don't skip them.
+        if (tag === "input" && type === "file") {
+            // Skip ONLY IF display is none AND it has no visible label/container
+            // But to be safe and simple: just allow file inputs to bypass visibility check
+            // because they are almost always "invisible" while we need to fill them.
+        } else {
+            if (!isVisible(el)) continue;
+        }
 
         // File
         if (tag === "input" && type === "file") {

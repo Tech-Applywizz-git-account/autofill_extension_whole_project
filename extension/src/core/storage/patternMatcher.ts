@@ -80,6 +80,7 @@ export class PatternMatcher {
      * Normalize question for exact matching
      */
     static normalizeQuestion(question: string): string {
+        if (!question) return '';
         return question
             .toLowerCase()
             .trim()

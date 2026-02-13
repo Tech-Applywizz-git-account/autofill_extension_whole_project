@@ -5,7 +5,7 @@
  */
 
 import { jobrightSelectDropdown } from "./dropdownInteractions";
-import { isGreenhousePage } from "../utils/platformDetection";
+import { isGreenhousePage, isBambooHRPage } from "../utils/platformDetection";
 
 /**
  * Type text into an input field character-by-character
@@ -469,60 +469,53 @@ export async function triggerFileUpload(
     fileName?: string
 ): Promise<boolean> {
     try {
-        // GREENHOUSE SPECIAL HANDLING
-        // Greenhouse hides the real file input and shows "Attach, Dropbox, or enter manually"
-        // We need to find and click the "Attach" button/link first
+        // PLATFORM SPECIAL HANDLING (Greenhouse, BambooHR)
+        // These platforms often hide the real file input and show a styled button
         const isGreenhouse = isGreenhousePage();
+        const isBambooHR = isBambooHRPage();
 
-        if (isGreenhouse) {
-            console.log(`[Autofill] 🏢 Greenhouse file upload detected`);
+        if (isGreenhouse || isBambooHR) {
+            console.log(`[Autofill] 🏢 ${isGreenhouse ? 'Greenhouse' : 'BambooHR'} file upload detected`);
 
-            // If the element is already a file input and it's in the DOM, we might not need to click "Attach"
             if (element instanceof HTMLInputElement && element.type === 'file' && document.body.contains(element)) {
-                console.log(`[Autofill] 📎 File input already present, skipping "Attach" click`);
+                console.log(`[Autofill] 📎 File input already present, skipping button-click logic`);
             } else {
-                let attachButton: HTMLElement | null = null;
-
-                // Search in the parent container
+                let triggerButton: HTMLElement | null = null;
                 const container = element.closest('.attach-or-paste') ||
                     element.closest('.field') ||
                     element.closest('fieldset') ||
+                    element.closest('.form-group') ||
                     element.parentElement;
 
                 if (container) {
-                    // First try: Look for Greenhouse's specific button with data-source="attach"
-                    attachButton = container.querySelector('button[data-source="attach"]') as HTMLElement;
+                    // Greenhouse specific
+                    if (isGreenhouse) {
+                        triggerButton = container.querySelector('button[data-source="attach"]') as HTMLElement;
+                    }
 
-                    if (!attachButton) {
-                        // Fallback: Search by text content
-                        const links = container.querySelectorAll('a, button');
-                        for (const link of Array.from(links)) {
-                            if (link.textContent?.trim().toLowerCase() === 'attach') {
-                                attachButton = link as HTMLElement;
+                    // Fallback: Search by text content
+                    if (!triggerButton) {
+                        const targets = container.querySelectorAll('a, button, [role="button"]');
+                        for (const target of Array.from(targets)) {
+                            const text = target.textContent?.trim().toLowerCase() || "";
+                            if (text === 'attach' || text === 'choose file' || text === 'upload') {
+                                triggerButton = target as HTMLElement;
                                 break;
                             }
                         }
                     }
                 }
 
-                if (attachButton) {
-                    console.log(`[Autofill] 🖱️ Clicking Attach button...`);
-                    attachButton.click();
-                    await sleep(500); // Wait for file input to be dynamically created
+                if (triggerButton) {
+                    console.log(`[Autofill] 🖱️ Clicking trigger button: "${triggerButton.textContent?.trim()}"`);
+                    triggerButton.click();
+                    await sleep(500);
 
-                    // Greenhouse dynamically creates the file input when Attach is clicked
-                    // Look for the newest file input
                     const fileInputs = document.querySelectorAll('input[type="file"]');
-                    console.log(`[Autofill] 📎 Found ${fileInputs.length} file inputs on page`);
-
                     if (fileInputs.length > 0) {
-                        // Resume is usually the FIRST one.
-                        const fileInput = fileInputs[0] as HTMLInputElement;
-                        console.log(`[Autofill] ✓ Using FIRST file input (assuming Resume): ${fileInput.name || fileInput.id || 'unnamed'}`);
-                        element = fileInput;
+                        // Use the most likely one (first for resume, or nearest to trigger)
+                        element = fileInputs[0] as HTMLInputElement;
                     }
-                } else {
-                    console.warn(`[Autofill] ⚠️ Could not find Attach button for Greenhouse upload`);
                 }
             }
         }

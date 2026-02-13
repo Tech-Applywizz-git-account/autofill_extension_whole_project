@@ -680,6 +680,19 @@ async function fillMappedFields(mappedFields: any[]): Promise<{ filled: number, 
 
         const success = await fillFieldWithRetry(field);
 
+        // Dispatch incremental progress event for UI feedback
+        window.dispatchEvent(new CustomEvent('FIELD_FILL_PROGRESS', {
+            detail: { questionText: field.label, ok: success }
+        }));
+
+        // Also report to background for relay (in case of iframes or for uniformity)
+        try {
+            chrome.runtime.sendMessage({
+                action: 'FIELD_FILL_PROGRESS',
+                payload: { questionText: field.label, ok: success }
+            }).catch(() => { });
+        } catch (e) { }
+
         if (success) {
             STATE.filledFields.add(field.fingerprint);
             filled++;

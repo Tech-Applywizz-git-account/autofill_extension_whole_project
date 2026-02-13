@@ -252,6 +252,10 @@ export class PatternStorage {
             }
 
             // ✅ VALIDATION 3: Question matching
+            if (!pattern.questionPattern) {
+                console.warn(`[PatternStorage] ⚠️ Pattern missing questionPattern: ${pattern.id}`);
+                continue;
+            }
             const pNormalized = PatternMatcher.normalizeQuestion(pattern.questionPattern);
             const patternKeywords = PatternMatcher.extractKeywords(pattern.questionPattern);
 

@@ -24,7 +24,7 @@ export function isWorkdayApplication(): boolean {
     }
 
     // Check for Workday-specific classes
-    const hasWorkdayClasses = document.querySelector('.wd-icon, .WDJC, .css-') !== null;
+    const hasWorkdayClasses = document.querySelector('.wd-icon, .WDJC') !== null;
     if (hasWorkdayClasses) {
         console.log(`${LOG_PREFIX} ✅ Detected via Workday CSS classes`);
         return true;

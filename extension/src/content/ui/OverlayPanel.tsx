@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { createRoot, Root } from "react-dom/client";
 import { DetectedField, QuestionSection, FieldType } from "../../types/fieldDetection";
 import { updateProfileField, loadProfile } from "../../core/storage/profileStorage";
+import { patternStorage } from "../../core/storage/patternStorage";
 import { fillField } from "../actions/fieldFiller";
 import { FormScanner } from "../scanner/formScanner";
 import { CONFIG } from "../../config";
@@ -258,6 +259,16 @@ const STYLES = `
   border-color: #00d084;
 }
 
+.section-filter button.missed {
+  border-color: #fa5252;
+  color: #fa5252;
+}
+
+.section-filter button.missed.active {
+  background: #fa5252;
+  color: white;
+}
+
 .fields-list {
   display: flex;
   flex-direction: column;
@@ -286,6 +297,10 @@ const STYLES = `
 
 .field-item.skipped {
   border-left: 4px solid #fab005;
+}
+
+.field-item.failed {
+  border-left: 4px solid #fa5252;
 }
 
 .field-status.suggested {
@@ -422,6 +437,123 @@ const STYLES = `
   font-size: 13px;
 }
 
+.field-status.failed {
+  color: #fa5252;
+  font-weight: 500;
+}
+
+.completion-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.completion-notification {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  width: 300px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes modalPop {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.completion-header {
+  font-weight: 700;
+  font-size: 18px;
+  color: #212529;
+  text-align: center;
+}
+
+.completion-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.stat-row.success {
+  background: rgba(0, 208, 132, 0.1);
+  color: #00b371;
+}
+
+.stat-row.missed {
+  background: rgba(250, 82, 82, 0.1);
+  color: #fa5252;
+}
+
+.missed-questions-list {
+  width: 100%;
+  max-height: 120px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #f8f9fa;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #eee;
+  font-size: 11px;
+}
+
+.missed-question-item {
+  color: #495057;
+  padding: 4px 8px;
+  background: white;
+  border-radius: 4px;
+  border-left: 3px solid #fa5252;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.close-notification-btn {
+  background: #212529;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.close-notification-btn:hover {
+  background: #343a40;
+}
+
 @keyframes fadeInOut {
   0% { opacity: 0; transform: translate(-50%, 20px); }
   15% { opacity: 1; transform: translate(-50%, 0); }
@@ -443,6 +575,7 @@ interface PerformanceMetrics {
     mappingCompleted?: Date;
     fillStarted?: Date;
     fillCompleted?: Date;
+    fillProgress?: { current: number; total: number };
 }
 
 type ViewState = "ICON" | "MENU" | "DETAILS";
@@ -473,13 +606,15 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
     const [position, setPosition] = useState({ x: window.innerWidth - 80, y: 100 });
     const [isDragging, setIsDragging] = useState(false);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-    const [selectedSection, setSelectedSection] = useState<QuestionSection | "all">("all");
+    const [selectedSection, setSelectedSection] = useState<QuestionSection | "all" | "missed">("all");
     const [viewMode, setViewMode] = useState<"fields" | "resume">("fields");
     const [resumeText, setResumeText] = useState<string>("");
     const [fields, setFields] = useState<DetectedField[]>(initialFields);
+    const [completionResult, setCompletionResult] = useState<{ successes: number; failures: number; missedQuestions: string[] } | null>(null);
     const [isFilling, setIsFilling] = useState(false);
     const [isMapping, setIsMapping] = useState(false);
     const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics>({});
+    const [fillProgress, setFillProgress] = useState<{ current: number; total: number } | null>(null);
     const [aiStatus, setAIStatus] = useState<string>("");
     const [aiLog, setAILog] = useState<{ question: string; answer: string }[]>([]);
     const [statsSummary, setStatsSummary] = useState<{
@@ -487,6 +622,12 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
         feedback: { total: number; recent_24h: number };
     } | null>(null);
     const [notification, setNotification] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
+
+    // Use a ref to always have the latest fields for async closures (like handleScan timeouts)
+    const fieldsRef = useRef(fields);
+    useEffect(() => {
+        fieldsRef.current = fields;
+    }, [fields]);
 
     // Helper to perform fetch via background script to bypass CORS
     const proxyFetch = async (url: string, options: any = {}): Promise<any> => {
@@ -760,7 +901,11 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
             setPerformanceMetrics(prev => ({ ...prev, aiQuestionCount: ai }));
 
             // Store for fill execution
-            (window as any).__AWL_MAPPED__ = { jobUrl, answers: map.data };
+            (window as any).__AWL_MAPPED__ = {
+                jobUrl,
+                answers: map.data,
+                activeFrameIds: scanResponse.activeFrameIds || []
+            };
 
             //Convert to DetectedField format for UI display
             const { classifySection } = await import('../index');
@@ -774,6 +919,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                 canonicalKey: answer.canonicalKey,
                 confidence: answer.confidence || 0.5,
                 filled: false,
+                failed: false,
                 skipped: !answer.answer,
                 skipReason: !answer.answer ? 'No answer found' : undefined,
                 filledValue: answer.answer,
@@ -815,6 +961,10 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                     }))
                 };
 
+                // Initialize progress
+                const totalMapped = payload.fields.length;
+                setFillProgress({ current: 0, total: totalMapped });
+
                 console.log(`[Ext] 📊 Broadcasting autofill to all frames...`);
 
                 // Use BROADCAST_AUTOFILL to send payload to all iframes
@@ -823,17 +973,21 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                     payload: payload
                 });
 
+                const successfulFields = new Set<string>();
+                const processedFieldNames = new Set<string>();
+
                 // Wait for autofillRunner to signal completion (collect results from all frames)
                 const result = await new Promise<{ successes: number; failures: number }>(resolve => {
-                    const successfulFields = new Set<string>();
+                    const reportingFrames = new Set<number>();
+                    const activeIds = scanResponse.activeFrameIds || [];
                     let timer: any = null;
 
                     const resolveResults = () => {
                         if (timer) clearTimeout(timer);
                         window.removeEventListener('AUTOFILL_COMPLETE_EVENT', completionHandler);
+                        window.removeEventListener('FIELD_FILL_PROGRESS', progressHandler);
                         chrome.runtime.onMessage.removeListener(messageHandler);
 
-                        // Calculate successes based on unique fields filled
                         const totalSuccesses = successfulFields.size;
                         const totalAttempted = payload.fields.length;
                         const totalFailures = Math.max(0, totalAttempted - totalSuccesses);
@@ -841,28 +995,102 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                         resolve({ successes: totalSuccesses, failures: totalFailures });
                     };
 
+                    const checkAllDone = () => {
+                        // We are done ONLY if all active frames have reported
+                        const allActiveReported = activeIds.every((id: number) => reportingFrames.has(id));
+                        const allFieldsProcessed = processedFieldNames.size >= totalMapped;
+
+                        if (allActiveReported && allFieldsProcessed) {
+                            console.log('[OverlayPanel] ✅ All active frames reported & all fields processed. Resolving...');
+                            if (timer) clearTimeout(timer);
+                            // Short settle time now that we have accurate counting
+                            timer = setTimeout(resolveResults, 500);
+                        } else if (allActiveReported && !allFieldsProcessed) {
+                            // Frames reported but some fields missing? Wait a bit more
+                            if (timer) clearTimeout(timer);
+                            timer = setTimeout(resolveResults, 3000);
+                        } else {
+                            // inactivity fallback
+                            if (timer) clearTimeout(timer);
+                            timer = setTimeout(resolveResults, 10000);
+                        }
+                    };
+
+                    const progressHandler = (e: any) => {
+                        const { questionText, ok } = e.detail;
+                        if (questionText) {
+                            processedFieldNames.add(questionText);
+                            if (ok) {
+                                successfulFields.add(questionText);
+                                setFields(prev => prev.map(f =>
+                                    f.questionText === questionText ? { ...f, filled: true, failed: false } : f
+                                ));
+                            } else {
+                                setFields(prev => prev.map(f =>
+                                    f.questionText === questionText ? { ...f, filled: false, failed: true } : f
+                                ));
+                            }
+
+                            // Update UI progress
+                            setFillProgress({ current: processedFieldNames.size, total: totalMapped });
+                        }
+                        checkAllDone();
+                    };
+
                     const completionHandler = (e: any) => {
                         console.log('[OverlayPanel] Received local completion event:', e.detail);
-                        if (timer) clearTimeout(timer);
-                        timer = setTimeout(resolveResults, 1500); // Wait a bit longer for all frames
+                        if (Array.isArray(e.detail.successfulFields)) {
+                            e.detail.successfulFields.forEach((f: string) => {
+                                successfulFields.add(f);
+                                processedFieldNames.add(f);
+                            });
+                        }
+                        reportingFrames.add(0); // Top frame is ID 0
+
+                        // Update UI progress in case it jumped
+                        setFillProgress({ current: processedFieldNames.size, total: totalMapped });
+                        checkAllDone();
                     };
 
                     const messageHandler = (message: any) => {
                         if (message.type === 'AUTOFILL_COMPLETE_RELAY') {
-                            console.log('[OverlayPanel] Received relayed completion message:', message.payload);
-                            if (Array.isArray(message.payload.successfulFields)) {
-                                message.payload.successfulFields.forEach((f: string) => successfulFields.add(f));
+                            const frameId = message.payload.frameId;
+                            console.log('[OverlayPanel] Received relayed completion from frame:', frameId);
+
+                            if (frameId !== undefined) {
+                                reportingFrames.add(frameId);
                             }
-                            if (timer) clearTimeout(timer);
-                            timer = setTimeout(resolveResults, 1000);
+
+                            if (Array.isArray(message.payload.successfulFields)) {
+                                message.payload.successfulFields.forEach((f: string) => {
+                                    successfulFields.add(f);
+                                    processedFieldNames.add(f);
+                                });
+                            }
+
+                            setFillProgress({ current: processedFieldNames.size, total: totalMapped });
+                            checkAllDone();
+                        } else if (message.type === 'FIELD_FILL_PROGRESS_RELAY') {
+                            const { questionText, ok } = message.payload;
+                            if (questionText) {
+                                processedFieldNames.add(questionText);
+                                if (ok) successfulFields.add(questionText);
+                                setFillProgress({ current: processedFieldNames.size, total: totalMapped });
+                            }
+                            checkAllDone();
                         }
                     };
 
                     window.addEventListener('AUTOFILL_COMPLETE_EVENT', completionHandler);
+                    window.addEventListener('FIELD_FILL_PROGRESS', progressHandler);
                     chrome.runtime.onMessage.addListener(messageHandler);
 
                     // Safety timeout
-                    setTimeout(resolveResults, 10000);
+                    setTimeout(resolveResults, 90000);
+
+                    if (activeIds.length === 0 && totalMapped === 0) {
+                        timer = setTimeout(resolveResults, 1000);
+                    }
                 });
 
                 // Record fill complete time
@@ -872,16 +1100,36 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                 console.log('[Ext] ✅ Autofill complete - check console for detailed results');
                 setIsFilling(false);
 
-                // Update fields state to show them as filled
-                setFields(prev => prev.map(f => ({
-                    ...f,
-                    filled: f.filledValue ? true : f.filled
-                })));
+                // Update fields state to show finished status (redundancy check)
+                setFields(prev => prev.map(f => {
+                    const isSuccess = successfulFields.has(f.questionText);
+                    const isProcessed = processedFieldNames.has(f.questionText);
+                    return {
+                        ...f,
+                        filled: isSuccess,
+                        failed: isProcessed && !isSuccess
+                    };
+                }));
 
-                // Allow UI to render timestamp before showing alert
+                // Allow UI to render timestamp before showing notification
                 setTimeout(() => {
-                    if (result.successes > 0) {
-                        alert("✅ Fields filled, please once recheck again carefully! ✨");
+                    const currentFields = fieldsRef.current;
+                    if (result.successes > 0 || result.failures > 0) {
+                        // Find questions that failed or were required but not filled
+                        const missed = currentFields.filter(f => f.failed || (f.isRequired && !f.filled && !f.filledValue))
+                            .map(f => f.questionText);
+
+                        console.log(`[Ext] Completion list calculated: Found ${missed.length} missed questions out of ${result.failures} reported failures.`);
+
+                        setCompletionResult({
+                            ...result,
+                            missedQuestions: Array.from(new Set(missed)) // Deduplicate
+                        });
+
+                        // Automatically switch to missed filter in the side panel
+                        if (result.failures > 0) {
+                            setSelectedSection("missed");
+                        }
                     }
                 }, 100);
             } catch (e) {
@@ -1005,13 +1253,13 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                         if (retryFill.success) {
                             const retryResults = retryFill.data.results || {};
                             const retrySuccesses = Object.entries(retryResults).filter(([, status]) => status === 'success').length;
-                            alert(`✅ Retry complete: ${retrySuccesses}/${failures.length} fields fixed!`);
+                            alert("✅ application filling completed");
                         }
                     } else {
-                        alert(`✅ Filled ${successes.length}/${successes.length + failures.length} fields.\n\n⚠️ ${failures.length} fields need manual review.`);
+                        alert("✅ application filling completed");
                     }
                 } else {
-                    alert('✅ All fields filled successfully!');
+                    alert("✅ application filling completed");
                 }
 
                 // Record fill complete time
@@ -1121,46 +1369,107 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                                     }))
                                 };
 
-                                console.log(`[Ext] 📊 Sending ${payload.fields.length} fields to autofillRunner...`);
+                                // Initialize progress
+                                const totalMapped = payload.fields.length;
+                                setFillProgress({ current: 0, total: totalMapped });
 
-                                // Send START_AUTOFILL_EVENT to autofillRunner (it will re-detect and match fields)
-                                const event = new CustomEvent('START_AUTOFILL_EVENT', { detail: payload });
-                                window.dispatchEvent(event);
+                                console.log(`[Ext] 📊 Broadcasting ${payload.fields.length} fields to all frames...`);
+
+                                // BROADCAST to all frames so that sub-frame results are captured
+                                await chrome.runtime.sendMessage({
+                                    action: 'BROADCAST_AUTOFILL',
+                                    payload: payload
+                                });
 
                                 // Wait for autofillRunner to signal completion
                                 const result = await new Promise<{ successes: number; failures: number }>(resolve => {
-                                    let totalSuccesses = 0;
-                                    let totalFailures = 0;
+                                    const reportingFrames = new Set<number>();
+                                    const processedFieldNames = new Set<string>();
+                                    const successfulFields = new Set<string>();
+                                    const activeIds = (window as any).__AWL_MAPPED__?.activeFrameIds || [];
                                     let timer: any = null;
 
                                     const resolveResults = () => {
                                         if (timer) clearTimeout(timer);
                                         window.removeEventListener('AUTOFILL_COMPLETE_EVENT', completionHandler);
+                                        window.removeEventListener('FIELD_FILL_PROGRESS', progressHandler);
                                         chrome.runtime.onMessage.removeListener(messageHandler);
-                                        resolve({ successes: totalSuccesses, failures: totalFailures });
+                                        resolve({ successes: successfulFields.size, failures: Math.max(0, totalMapped - successfulFields.size) });
+                                    };
+
+                                    const checkAllDone = () => {
+                                        const allActiveReported = activeIds.every((id: number) => reportingFrames.has(id));
+                                        const allFieldsProcessed = processedFieldNames.size >= totalMapped;
+
+                                        if (allActiveReported && allFieldsProcessed) {
+                                            if (timer) clearTimeout(timer);
+                                            // accurate counting delay
+                                            timer = setTimeout(resolveResults, 500);
+                                        } else if (allActiveReported && !allFieldsProcessed) {
+                                            if (timer) clearTimeout(timer);
+                                            timer = setTimeout(resolveResults, 3000);
+                                        } else {
+                                            if (timer) clearTimeout(timer);
+                                            timer = setTimeout(resolveResults, 10000);
+                                        }
+                                    };
+
+                                    const progressHandler = (e: any) => {
+                                        const { questionText, ok } = e.detail;
+                                        if (questionText) {
+                                            processedFieldNames.add(questionText);
+                                            if (ok) successfulFields.add(questionText);
+                                            setFillProgress({ current: processedFieldNames.size, total: totalMapped });
+                                        }
+                                        checkAllDone();
                                     };
 
                                     const completionHandler = (e: any) => {
-                                        totalSuccesses += e.detail.successes || 0;
-                                        totalFailures += e.detail.failures || 0;
-                                        if (timer) clearTimeout(timer);
-                                        timer = setTimeout(resolveResults, 1000);
+                                        if (Array.isArray(e.detail.successfulFields)) {
+                                            e.detail.successfulFields.forEach((f: string) => {
+                                                successfulFields.add(f);
+                                                processedFieldNames.add(f);
+                                            });
+                                        }
+                                        reportingFrames.add(0);
+                                        setFillProgress({ current: processedFieldNames.size, total: totalMapped });
+                                        checkAllDone();
                                     };
 
                                     const messageHandler = (message: any) => {
                                         if (message.type === 'AUTOFILL_COMPLETE_RELAY') {
-                                            totalSuccesses += message.payload.successes || 0;
-                                            totalFailures += message.payload.failures || 0;
-                                            if (timer) clearTimeout(timer);
-                                            timer = setTimeout(resolveResults, 1000);
+                                            if (Array.isArray(message.payload.successfulFields)) {
+                                                message.payload.successfulFields.forEach((f: string) => {
+                                                    successfulFields.add(f);
+                                                    processedFieldNames.add(f);
+                                                });
+                                            }
+                                            if (message.payload.frameId !== undefined) {
+                                                reportingFrames.add(message.payload.frameId);
+                                            }
+                                            setFillProgress({ current: processedFieldNames.size, total: totalMapped });
+                                            checkAllDone();
+                                        } else if (message.type === 'FIELD_FILL_PROGRESS_RELAY') {
+                                            const { questionText, ok } = message.payload;
+                                            if (questionText) {
+                                                processedFieldNames.add(questionText);
+                                                if (ok) successfulFields.add(questionText);
+                                                setFillProgress({ current: processedFieldNames.size, total: totalMapped });
+                                            }
+                                            checkAllDone();
                                         }
                                     };
 
                                     window.addEventListener('AUTOFILL_COMPLETE_EVENT', completionHandler);
+                                    window.addEventListener('FIELD_FILL_PROGRESS', progressHandler);
                                     chrome.runtime.onMessage.addListener(messageHandler);
 
                                     // Safety timeout
-                                    setTimeout(resolveResults, 10000);
+                                    setTimeout(resolveResults, 90000);
+
+                                    if (activeIds.length === 0 && totalMapped === 0) {
+                                        timer = setTimeout(resolveResults, 1000);
+                                    }
                                 });
 
                                 // Record fill complete time
@@ -1170,16 +1479,28 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                                 console.log('[Ext] ✅ Autofill complete - check console for detailed results');
                                 setIsFilling(false);
 
-                                // Allow UI to render timestamp before showing alert
+                                // Show the missing result
                                 setTimeout(() => {
-                                    if (result.successes > 0) {
-                                        alert("✅ Fields filled, please once recheck again carefully! ✨");
+                                    const currentFields = fieldsRef.current;
+                                    if (result.successes > 0 || result.failures > 0) {
+                                        // Retrieve missed questions from current fields state
+                                        const missed = currentFields.filter(f => f.failed || (f.isRequired && !f.filled && !f.filledValue))
+                                            .map(f => f.questionText);
+
+                                        setCompletionResult({
+                                            ...result,
+                                            missedQuestions: Array.from(new Set(missed))
+                                        });
+
+                                        // Automatically switch to missed filter in the side panel
+                                        if (result.failures > 0) {
+                                            setSelectedSection("missed");
+                                        }
                                     }
                                 }, 100);
 
                             } catch (error) {
                                 console.error('[Ext] Fill error:', error);
-                                alert('❌ Error: ' + error);
                                 setIsFilling(false);
                             }
                         }} disabled={isFilling || isMapping}>
@@ -1324,6 +1645,14 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                                                     <span className="perf-value">{formatTime(performanceMetrics.fillStarted)}</span>
                                                 </div>
                                             )}
+                                            {fillProgress && (
+                                                <div className="perf-item">
+                                                    <span className="perf-label">├─ Filling:</span>
+                                                    <span className="perf-value" style={{ color: fillProgress.current === fillProgress.total ? '#00d084' : '#ff922b' }}>
+                                                        {fillProgress.current} / {fillProgress.total} fields
+                                                    </span>
+                                                </div>
+                                            )}
                                             {performanceMetrics.fillCompleted && (
                                                 <div className="perf-item">
                                                     <span className="perf-label">├─ Fill Complete:</span>
@@ -1357,6 +1686,12 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                                     >
                                         All ({fields.length})
                                     </button>
+                                    <button
+                                        className={`missed ${selectedSection === "missed" ? "active" : ""}`}
+                                        onClick={() => setSelectedSection("missed")}
+                                    >
+                                        Missed ({stats.missedTotal})
+                                    </button>
                                     {Object.keys(fieldsBySection).map((section) => (
                                         <button
                                             key={section}
@@ -1371,13 +1706,15 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
 
                                 {/* Fields List */}
                                 <div className="fields-list">
-                                    {filteredFields.map((field, index) => (
-                                        <FieldItem
-                                            key={index}
-                                            field={field}
-                                            onUpdate={(val) => handleFieldUpdate(fields.indexOf(field), val)}
-                                        />
-                                    ))}
+                                    {(selectedSection === "missed"
+                                        ? fields.filter(f => f.failed || (f.isRequired && !f.filled && !f.filledValue))
+                                        : filteredFields).map((field, index) => (
+                                            <FieldItem
+                                                key={index}
+                                                field={field}
+                                                onUpdate={(val) => handleFieldUpdate(fields.indexOf(field), val)}
+                                            />
+                                        ))}
                                 </div>
                             </>
                         ) : (
@@ -1423,6 +1760,44 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                             {notification.message}
                         </div>
                     )}
+
+                    {completionResult && (
+                        <div className="completion-backdrop" onClick={() => setCompletionResult(null)}>
+                            <div className="completion-notification" onClick={e => e.stopPropagation()}>
+                                <div className="completion-header">🎉 Application Fill Completed</div>
+                                <div className="completion-stats">
+                                    <div className="stat-row success">
+                                        <span>Fields Succeeded</span>
+                                        <span>{completionResult.successes}</span>
+                                    </div>
+                                    <div className="stat-row missed">
+                                        <span>Fields Missed</span>
+                                        <span>{completionResult.failures}</span>
+                                    </div>
+                                </div>
+
+                                {completionResult.missedQuestions.length > 0 && (
+                                    <div className="missed-questions-list">
+                                        <div style={{ fontWeight: '600', marginBottom: '4px', borderBottom: '1px solid #eee', paddingBottom: '2px' }}>
+                                            Missed Questions:
+                                        </div>
+                                        {completionResult.missedQuestions.map((q, i) => (
+                                            <div key={i} className="missed-question-item" title={q}>
+                                                • {q}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <button
+                                    className="close-notification-btn"
+                                    onClick={() => setCompletionResult(null)}
+                                >
+                                    Got it!
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
@@ -1441,7 +1816,7 @@ const FieldItem: React.FC<{ field: DetectedField; onUpdate: (val: string) => voi
     const handleSave = async (e: React.MouseEvent) => {
         e.stopPropagation();
 
-        // Update DOM element using our helper which handles all field types (including Greenhouse dropdowns)
+        // 1. Update DOM element
         try {
             const result = await fillField(field, editValue);
             console.log(`Assistant manual fill result:`, result);
@@ -1449,7 +1824,7 @@ const FieldItem: React.FC<{ field: DetectedField; onUpdate: (val: string) => voi
             console.error("Failed to fill DOM element from assistant:", err);
         }
 
-        // Update profile if canonical key is available
+        // 2. Update profile if canonical key is available
         if (field.canonicalKey) {
             try {
                 await updateProfileField(field.canonicalKey, editValue);
@@ -1473,6 +1848,25 @@ const FieldItem: React.FC<{ field: DetectedField; onUpdate: (val: string) => voi
             }
         }
 
+        // 3. Persist to Learned Patterns for future recognition
+        try {
+            await patternStorage.addPattern({
+                questionPattern: field.questionText,
+                intent: field.canonicalKey || `custom.${field.questionText.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
+                canonicalKey: field.canonicalKey || "",
+                fieldType: field.fieldType,
+                confidence: 1.0,
+                source: 'manual',
+                answerMappings: [{
+                    canonicalValue: editValue,
+                    variants: [editValue]
+                }]
+            });
+            console.log(`[Ext] Learned mapping for: ${field.questionText}`);
+        } catch (err) {
+            console.warn("[Ext] Failed to learn pattern:", err);
+        }
+
         onUpdate(editValue);
         setIsEditing(false);
     };
@@ -1484,7 +1878,7 @@ const FieldItem: React.FC<{ field: DetectedField; onUpdate: (val: string) => voi
 
     return (
         <div
-            className={`field-item ${field.filled ? "filled" : ""} ${field.skipped && field.filledValue ? "suggested" : ""} ${field.skipped && !field.filledValue ? "skipped" : ""
+            className={`field-item ${field.filled ? "filled" : ""} ${field.failed ? "failed" : ""} ${field.skipped && field.filledValue ? "suggested" : ""} ${field.skipped && !field.filledValue ? "skipped" : ""
                 } ${field.confidence < 0.6 ? "low-confidence" : ""}`}
             onClick={handleFocus}
         >
@@ -1506,6 +1900,12 @@ const FieldItem: React.FC<{ field: DetectedField; onUpdate: (val: string) => voi
                         {field.filledValue === true || field.filledValue === "true" ? "Yes" :
                             field.filledValue === false || field.filledValue === "false" ? "No" :
                                 truncate(String(field.filledValue || ""), 30)}
+                    </span>
+                )}
+
+                {field.failed && !isEditing && (
+                    <span className="field-status failed">
+                        ❌ Missed
                     </span>
                 )}
 
@@ -1573,6 +1973,7 @@ function calculateStats(fields: DetectedField[]) {
     const requiredFilled = fields.filter((f) => f.isRequired && f.filled).length;
     const optionalTotal = fields.filter((f) => !f.isRequired).length;
     const optionalFilled = fields.filter((f) => !f.isRequired && f.filled).length;
+    const missedTotal = fields.filter(f => f.failed || (f.isRequired && !f.filled && !f.filledValue)).length;
 
     return {
         requiredTotal,
@@ -1581,6 +1982,7 @@ function calculateStats(fields: DetectedField[]) {
         optionalTotal,
         optionalFilled,
         optionalPercent: optionalTotal > 0 ? Math.round((optionalFilled / optionalTotal) * 100) : 0,
+        missedTotal
     };
 }
 

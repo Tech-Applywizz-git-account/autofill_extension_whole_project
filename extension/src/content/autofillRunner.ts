@@ -116,6 +116,20 @@ async function runAutofill(payload: FillPayload) {
         const ok = await fillMatchedField(match, rf);
         results.push({ questionText: rf.questionText, ok });
 
+        // Dispatch incremental progress event
+        const progressEvent = new CustomEvent('FIELD_FILL_PROGRESS', {
+            detail: { questionText: rf.questionText, ok }
+        });
+        window.dispatchEvent(progressEvent);
+
+        // Report progress to background for cross-frame tracking
+        try {
+            chrome.runtime.sendMessage({
+                action: 'FIELD_FILL_PROGRESS',
+                payload: { questionText: rf.questionText, ok, runId: payload.runId }
+            }).catch(() => { });
+        } catch (e) { }
+
         if (ok) {
             console.log(`│ ✅ SUCCESS - Field filled and verified`);
             console.log(`└${'─'.repeat(66)}`);
@@ -141,21 +155,33 @@ async function runAutofill(payload: FillPayload) {
         console.log(`   ⚠️ Failed Fields:`);
         results.filter(r => !r.ok).forEach(r => console.log(`      - ${r.questionText} (${r.reason || 'Unknown error'})`));
     }
+    const successfulFieldNames = results.filter(r => r.ok).map(r => r.questionText);
+
     // Dispatch completion event for UI timer (local frame)
     window.dispatchEvent(new CustomEvent('AUTOFILL_COMPLETE_EVENT', {
-        detail: { successes, failures }
+        detail: {
+            successes,
+            failures,
+            successfulFields: successfulFieldNames
+        }
     }));
 
     // Report to background for cross-frame aggregation
     try {
         const successfulFieldNames = results.filter(r => r.ok).map(r => r.questionText);
+
+        // Get frame ID (0 for top frame, or use chrome.runtime's implicit frame tracking)
+        // In the content script, we can't easily get our own frameId without help from background,
+        // but background knows who sent the message! 
+        // We'll let background attach the frameId to the relay.
+
         await chrome.runtime.sendMessage({
             action: 'REPORT_AUTOFILL_COMPLETE',
             payload: {
                 successes,
                 failures,
                 runId: payload.runId,
-                successfulFields: successfulFieldNames // Report specific fields!
+                successfulFields: successfulFieldNames
             }
         });
     } catch (e) {
@@ -181,6 +207,7 @@ async function fillMatchedField(match: Detected, rf: ResolvedField): Promise<boo
             canonicalKey: rf.canonicalKey || '',
             confidence: rf.confidence || 1.0,
             filled: false,
+            failed: false,
             filledValue: String(rf.value),
             skipped: false
         };

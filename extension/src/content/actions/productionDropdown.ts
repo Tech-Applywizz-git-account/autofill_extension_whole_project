@@ -110,6 +110,8 @@ export async function selectDropdownKeyboardFirst(
 
         if (verified) {
             console.log(`${LOG_PREFIX} ✅ Selection verified: ${value}`);
+            // Force a bit more time for UI to settle and runner to not race ahead
+            await sleep(500);
             return true;
         } else {
             console.warn(`${LOG_PREFIX} ❌ Verification failed for: ${value}`);

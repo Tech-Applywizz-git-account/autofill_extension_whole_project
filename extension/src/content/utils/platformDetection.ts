@@ -8,6 +8,7 @@ export enum JobPlatform {
     WORKDAY = "workday",
     ICIMS = "icims",
     LEVER = "lever",
+    BAMBOOHR = "bamboohr",
     GENERIC = "generic"
 }
 
@@ -42,6 +43,11 @@ export function detectPlatform(): JobPlatform {
         return JobPlatform.LEVER;
     }
 
+    // BambooHR detection
+    if (hostname.includes("bamboohr.com") || url.includes("bamboohr")) {
+        return JobPlatform.BAMBOOHR;
+    }
+
     return JobPlatform.GENERIC;
 }
 
@@ -71,6 +77,13 @@ export function isICIMSPage(): boolean {
  */
 export function isLeverPage(): boolean {
     return detectPlatform() === JobPlatform.LEVER;
+}
+
+/**
+ * Check if current page is BambooHR
+ */
+export function isBambooHRPage(): boolean {
+    return detectPlatform() === JobPlatform.BAMBOOHR;
 }
 
 /**

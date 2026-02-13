@@ -45,6 +45,7 @@ export interface DetectedField {
 
     // Fill status
     filled: boolean;
+    failed: boolean;
     skipped: boolean;
     skipReason?: string;
     filledValue?: any;

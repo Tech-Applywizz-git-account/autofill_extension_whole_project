@@ -142,10 +142,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (sender.tab?.id) {
             chrome.tabs.sendMessage(sender.tab.id, {
                 type: "AUTOFILL_COMPLETE_RELAY",
-                payload: message.payload
+                payload: {
+                    ...message.payload,
+                    frameId: sender.frameId // Attach frame ID of the reporter
+                }
             }, { frameId: 0 }).catch(err => {
                 console.warn("[Background] Failed to relay completion to top frame:", err.message);
             });
+        }
+        sendResponse({ success: true });
+        return false;
+    }
+
+    if (message.action === "FIELD_FILL_PROGRESS") {
+        // Relay progress back to top frame (0)
+        if (sender.tab?.id) {
+            chrome.tabs.sendMessage(sender.tab.id, {
+                type: "FIELD_FILL_PROGRESS_RELAY",
+                payload: {
+                    ...message.payload,
+                    frameId: sender.frameId
+                }
+            }, { frameId: 0 }).catch(() => { });
         }
         sendResponse({ success: true });
         return false;
@@ -248,27 +266,55 @@ async function handleFieldFillFailed(payload: any) {
 }
 
 /**
+ * Pending AI requests to deduplicate simultaneous calls
+ */
+const pendingAIRequests = new Map<string, Promise<any>>();
+
+/**
  * Handle AI request
  */
 async function handleAIRequest(payload: any) {
     try {
-        const aiUrl = CONFIG.API.AI_SERVICE;
-        const response = await fetch(`${aiUrl}/predict`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-API-Key': CONFIG.API.AI_API_KEY
-            },
-            body: JSON.stringify(payload)
-        });
+        // Generate a unique key for deduplication
+        const cacheKey = `${payload.question}|${payload.fieldType}|${payload.options?.sort().join(',') || 'none'}`;
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`AI prediction failed (${response.status}): ${errorText}`);
+        // If a request for this question is already in flight, return the existing promise
+        if (pendingAIRequests.has(cacheKey)) {
+            console.log(`[Background] 🔄 Deduplicating simultaneous AI request for: "${payload.question}"`);
+            return pendingAIRequests.get(cacheKey);
         }
 
-        const data = await response.json();
-        return { success: true, data };
+        // Create the new request promise
+        const requestPromise = (async () => {
+            const aiUrl = CONFIG.API.AI_SERVICE;
+            const response = await fetch(`${aiUrl}/predict`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': CONFIG.API.AI_API_KEY
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`AI prediction failed (${response.status}): ${errorText}`);
+            }
+
+            const data = await response.json();
+            return { success: true, data };
+        })();
+
+        // Store in pending map
+        pendingAIRequests.set(cacheKey, requestPromise);
+
+        try {
+            const result = await requestPromise;
+            return result;
+        } finally {
+            // Cleanup when done
+            pendingAIRequests.delete(cacheKey);
+        }
     } catch (error: any) {
         console.error("[Background] AI Request Error:", error);
         return { success: false, error: error.message };
@@ -339,7 +385,7 @@ async function handleMapAnswers(questions: any[]) {
         const response = await chrome.tabs.sendMessage(tabs[0].id, {
             action: 'processQuestions',
             questions
-        });
+        }, { frameId: 0 });
 
         return response;
     } catch (error: any) {
@@ -483,8 +529,13 @@ async function handleBroadcastScan(tabId: number | undefined) {
             .filter(r => r && r.success && Array.isArray(r.questions))
             .flatMap(r => r.questions);
 
-        console.log(`[Background] ✅ Aggregated ${allQuestions.length} questions from all frames`);
-        return { success: true, questions: allQuestions };
+        // Get IDs of frames that actually found fields (active frames)
+        const activeFrameIds = results
+            .map((r, i) => (r && r.success && Array.isArray(r.questions) && r.questions.length > 0) ? frames[i].frameId : null)
+            .filter(id => id !== null) as number[];
+
+        console.log(`[Background] ✅ Aggregated ${allQuestions.length} questions from ${activeFrameIds.length} active frames (IDs: ${activeFrameIds.join(',')})`);
+        return { success: true, questions: allQuestions, activeFrameIds };
     } catch (error: any) {
         console.error("[Background] Broadcast Scan Error:", error);
         return { success: false, error: error.message };

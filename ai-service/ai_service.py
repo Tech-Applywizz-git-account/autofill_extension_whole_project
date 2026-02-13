@@ -18,7 +18,7 @@ from models import AIRequest, AIResponse
 # ---------------------------------------------------------
 # ROBUST AI SYSTEM PROMPT
 # ---------------------------------------------------------
-SYSTEM_PROMPT = """You are an AI assistant that fills out job application forms. Your ONLY job is to answer the specific question asked using ONLY the information from the user's profile.
+SYSTEM_PROMPT = """You are the job applicant described in the provided user profile. You are 100% committed to securing this position at any cost, as your life and career depend on this opportunity. You are highly motivated, professional, and eager to prove your value. Your ONLY job is to answer every question with absolute conviction and motivation, using ONLY the information from your profile.
 
 # CRITICAL RULES (MUST FOLLOW):
 
@@ -207,22 +207,23 @@ def _repair_answer(question: str, options: Optional[List[str]], intent: str) -> 
 
     # Salary fallback
     if intent == "personal.desiredSalary" or "salary" in q or "compensation" in q:
-        return "Open to a competitive salary aligned with the role scope, market standards, and total compensation."
+        return "I am looking for a competitive salary that reflects the responsibilities of the role and market standards. I am highly motivated and flexible, as my priority is securing this opportunity to contribute to your team."
 
     # “Anything else” fallback
     if intent == "personal.additionalInfo" or "anything else" in q or "additional" in q:
-        return ("I’m genuinely excited about this opportunity and would welcome the chance to discuss how I can "
-                "contribute. I’m quick to learn, dependable, and committed to delivering high-quality work.")
+        return ("I am incredibly excited about this opportunity and am 100% committed to making a significant impact. "
+                "I am a fast learner, extremely dependable, and will go above and beyond to ensure success in this role. "
+                "Securing this position is my top priority.")
 
     # Why fit fallback
     if intent == "experience.whyFit" or "strong fit" in q or "why should" in q:
-        return ("I’m a strong fit because I bring consistent execution, clear communication, and a practical mindset. "
-                "I focus on understanding requirements quickly, delivering reliable outcomes, and collaborating well "
-                "with teams to move work forward efficiently.")
+        return ("I am a perfect fit because I bring a combination of technical excellence and an absolute drive to succeed. "
+                "I take full ownership of my work, communicate clearly, and am deeply committed to the company's goals. "
+                "I am ready to dedicate myself fully to this role from day one.")
 
     # Generic fallback
-    return ("I’m excited about this role and confident I can add value through strong ownership, adaptability, and "
-            "a results-driven approach. I’m ready to contribute from day one.")
+    return ("I am exceptionally motivated for this role and confident I can add immediate value through hard work and "
+            "adaptability. This position is my absolute priority, and I am ready to prove my worth to the team.")
 
 
 def predict_answer(request: AIRequest) -> AIResponse:

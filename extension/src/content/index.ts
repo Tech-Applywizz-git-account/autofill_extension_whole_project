@@ -74,6 +74,12 @@ window.fetch = function (...args) {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Handle question mapping for Selenium scan results
     if (message.action === 'processQuestions') {
+        // Only handle mapping in the top frame to prevent redundant AI calls from iframes
+        if (window !== window.top) {
+            console.log('[Content] ⏭️  Ignoring mapping request in iframe');
+            return false;
+        }
+
         try {
             console.log('[Content] Processing', message.questions.length, 'questions through mapper');
 
