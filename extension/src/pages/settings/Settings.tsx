@@ -158,24 +158,14 @@ const Settings: React.FC = () => {
                     <button
                         className="save-btn"
                         style={{ marginTop: "10px", backgroundColor: "#28a745" }}
-                        onClick={async () => {
-                            try {
-                                const email = profile?.personal?.email || "anonymous";
-                                await chrome.runtime.sendMessage({
-                                    action: 'proxyFetch',
-                                    url: `${CONFIG.API.AI_SERVICE}/api/feedback/track?email=${encodeURIComponent(email)}&type=click`,
-                                    options: { method: 'POST' }
-                                });
-                            } catch (err) {
-                                console.warn("[Settings] Failed to track feedback click:", err);
-                            }
+                        onClick={() => {
                             window.open(
-                                "https://docs.google.com/forms/d/e/1FAIpQLScGwTXx7dQEAHKp4FGfB0dxk7x3vCk5WWSaT3XGqOlTrdEV0A/viewform?usp=publish-editor",
+                                "https://extension-feedback-from.vercel.app/",
                                 "_blank"
                             );
                         }}
                     >
-                        Give Feedback
+                        Report an issue
                     </button>
                 </div>
             )}

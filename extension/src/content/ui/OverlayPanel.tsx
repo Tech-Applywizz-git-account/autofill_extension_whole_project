@@ -1335,8 +1335,6 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                             <h3 style={{ margin: 0, fontSize: '14px' }}>🤖 Autofill Assistant</h3>
                             {statsSummary && (
                                 <div style={{ fontSize: '9px', opacity: 0.9, marginTop: '2px', display: 'flex', flexDirection: 'column', gap: '1px', textAlign: 'center' }}>
-                                    <span>Total feedbacks in last 24 hours: {statsSummary.feedback.recent_24h}</span>
-                                    <span>Total feedbacks: {statsSummary.feedback.total}</span>
                                     <span>Total users in the last 24 hours: {statsSummary.users.recent_24h}</span>
                                     <span>Total users: {statsSummary.users.total}</span>
                                 </div>
