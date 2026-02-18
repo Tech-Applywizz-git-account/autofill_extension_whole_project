@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Job Application Autofill",
-    "version": "1.0.0",
+    "version": "1.2.1",
     "description": "Autofill job applications with deterministic canonical mapping",
     "permissions": [
         "storage",
