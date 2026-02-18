@@ -8,6 +8,7 @@ import { askAI } from '../../core/ai/aiService';
 import { patternStorage } from '../../core/storage/patternStorage';
 import { findQuestionIntent, getValueByIntent } from './questionPatternDatabase';
 import { getCachedResponse, setCachedResponse } from '../../core/storage/aiResponseCache';
+import { AnalyticsTracker } from '../../core/analytics/AnalyticsTracker';
 
 export interface ScannedQuestion {
     questionText: string;
@@ -73,6 +74,9 @@ export class QuestionMapper {
         if (!profile) {
             throw new Error('No profile found. Please complete onboarding.');
         }
+
+        // Start analytics tracking for mapping phase
+        AnalyticsTracker.getInstance().startMapping();
 
         const mappedAnswers: MappedAnswer[] = [];
         const unmappedForAI: ScannedQuestion[] = [];
@@ -204,6 +208,8 @@ export class QuestionMapper {
         console.log(`   🧠 Learned Patterns: ${learnedCount}`);
         console.log(`   🔍 Fuzzy Match: ${fuzzyCount}`);
         console.log(`   🤖 AI Generated: ${aiCount}\n`);
+
+        AnalyticsTracker.getInstance().endMapping(mappedAnswers);
 
         return mappedAnswers;
     }

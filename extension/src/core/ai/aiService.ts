@@ -24,9 +24,14 @@ interface AIQuestionResponse {
 /**
  * Call AWS Bedrock to get an answer for an unmapped question
  */
+import { AnalyticsTracker } from "../analytics/AnalyticsTracker";
+
+// ... existing imports
+
 export async function askAI(request: AIQuestionRequest): Promise<AIQuestionResponse> {
+    AnalyticsTracker.getInstance().incrementAICall();
     try {
-        // Send request to background script which will call AWS Bedrock
+        // ... existing code
         const response: any = await new Promise((resolve) => {
             chrome.runtime.sendMessage(
                 {

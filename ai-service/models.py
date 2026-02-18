@@ -82,3 +82,23 @@ class ExecutionResponse(BaseModel):
     status: Literal["completed", "failed"]
     results: dict[str, Literal["success", "failed", "skipped"]]
     errors: dict[str, str] = {}
+
+# ===== Analytics Models =====
+class AnalyticsEvent(BaseModel):
+    """Event data for extension analytics"""
+    user_email: Optional[str] = None
+    user_name: Optional[str] = None
+    url: str
+    scan_duration_ms: int
+    total_questions: int
+    mapping_duration_ms: int
+    mapped_by_rules: int
+    ai_questions_count: int
+    ai_calls_count: int
+    learned_patterns_used: int
+    filling_duration_ms: int
+    filled_success_count: int
+    filled_failed_count: int
+    missed_questions: Optional[List[str]] = []
+    all_questions: Optional[List[str]] = []
+    total_process_time_ms: int

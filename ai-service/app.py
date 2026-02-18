@@ -13,7 +13,7 @@ from typing import Optional
 
 from models import (
     AIRequest, AIResponse, Pattern, PatternUploadRequest,
-    UserProfile
+    UserProfile, AnalyticsEvent
 )
 
 from config import config
@@ -245,6 +245,21 @@ async def track_user_feedback(email: str, type: str = "click"):
     return {"success": success}
 
 # ---------------------------------------------------------
+# ANALYTICS
+# ---------------------------------------------------------
+
+@app.post("/api/analytics/track", dependencies=[Depends(verify_api_key)])
+async def track_analytics(event: AnalyticsEvent):
+    """Track extension usage metrics"""
+    from analytics_service import log_analytics_event
+    
+    if log_analytics_event(event):
+        return {"success": True}
+    
+    # Return 200 even on failure to not break client
+    return {"success": False, "error": "Failed to save analytics"}
+
+# ---------------------------------------------------------
 # HEALTH
 # ---------------------------------------------------------
 
@@ -253,7 +268,7 @@ async def health_check():
     return {
         "status": "ok",
         "service": "ai-service",
-        "version": "3.0.0",
+        "version": "3.1.0",
     }
 
 

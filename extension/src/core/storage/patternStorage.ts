@@ -102,6 +102,8 @@ export class PatternStorage {
         // Check if pattern already exists
         const existing = patterns.find(p =>
             p.intent === pattern.intent &&
+            p.questionPattern &&
+            pattern.questionPattern &&
             p.questionPattern.toLowerCase() === pattern.questionPattern.toLowerCase()
         );
 

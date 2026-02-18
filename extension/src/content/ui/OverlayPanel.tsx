@@ -6,6 +6,7 @@ import { patternStorage } from "../../core/storage/patternStorage";
 import { fillField } from "../actions/fieldFiller";
 import { FormScanner } from "../scanner/formScanner";
 import { CONFIG } from "../../config";
+import { AnalyticsTracker } from "../../core/analytics/AnalyticsTracker";
 
 // CSS Styles specifically for the Shadow DOM injection
 const STYLES = `
@@ -629,6 +630,10 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
         fieldsRef.current = fields;
     }, [fields]);
 
+    // Analytics tracker instance
+    const trackerRef = useRef(AnalyticsTracker.getInstance());
+    const tracker = trackerRef.current;
+
     // Helper to perform fetch via background script to bypass CORS
     const proxyFetch = async (url: string, options: any = {}): Promise<any> => {
         return new Promise((resolve, reject) => {
@@ -720,6 +725,8 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
             } else if (status === 'complete') {
                 setAIStatus(`${current}/${total} complete: ${truncate(answer, 20)}`);
                 setAILog(prev => [...prev, { question, answer }]);
+                // Track AI call
+                tracker.incrementAICall();
             }
         };
 
@@ -729,7 +736,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
             window.removeEventListener('AI_COUNT_UPDATE', handleAICountUpdate);
             window.removeEventListener('AI_PROGRESS', handleAIProgress);
         };
-    }, [])
+    }, [tracker])
 
     // Listen for pattern sync notifications
     useEffect(() => {
@@ -862,6 +869,10 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
         setViewState("DETAILS"); // Open Detection List immediately
 
         try {
+            // Reset and start analytics tracking
+            tracker.reset();
+            tracker.startScan();
+
             // Record scan start time
             const scanStart = new Date();
             setPerformanceMetrics({ scanStarted: scanStart });
@@ -878,16 +889,23 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
             const questions = scanResponse.questions;
             console.log(`[Ext] ✓ Found ${questions.length} questions across all frames`);
 
+            // End scan tracking
+            tracker.endScan(questions);
+
             // Record scan complete time
             const scanComplete = new Date();
             setPerformanceMetrics(prev => ({ ...prev, scanCompleted: scanComplete }));
 
             // Send to QuestionMapper (via background script)
             console.log('[Ext] 🧠 Mapping...');
+            tracker.startMapping();
             setIsMapping(true);
             const map = await chrome.runtime.sendMessage({ action: 'mapAnswers', questions: questions });
             setIsMapping(false);
             if (!map.success) { alert('❌ Mapping failed: ' + map.error); return; }
+
+            // End mapping tracking
+            tracker.endMapping(map.data);
 
             // Record mapping complete time
             const mappingComplete = new Date();
@@ -935,6 +953,9 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
 
             // AUTOMATION: Automatically trigger autofill run
             console.log('[Ext] ⚡ Automatically starting autofill run...');
+
+            // Start filling tracking
+            tracker.startFilling();
 
             // Record fill start time
             const fillStart = new Date();
@@ -1031,6 +1052,9 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                                 ));
                             }
 
+                            // Track fill result
+                            tracker.trackFillResult(questionText, ok);
+
                             // Update UI progress
                             setFillProgress({ current: processedFieldNames.size, total: totalMapped });
                         }
@@ -1097,6 +1121,9 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                 const fillComplete = new Date();
                 setPerformanceMetrics(prev => ({ ...prev, fillCompleted: fillComplete }));
 
+                // End filling tracking
+                tracker.endFilling();
+
                 console.log('[Ext] ✅ Autofill complete - check console for detailed results');
                 setIsFilling(false);
 
@@ -1112,7 +1139,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                 }));
 
                 // Allow UI to render timestamp before showing notification
-                setTimeout(() => {
+                setTimeout(async () => {
                     const currentFields = fieldsRef.current;
                     if (result.successes > 0 || result.failures > 0) {
                         // Find questions that failed or were required but not filled
@@ -1125,6 +1152,9 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                             ...result,
                             missedQuestions: Array.from(new Set(missed)) // Deduplicate
                         });
+
+                        // Submit analytics data
+                        await tracker.submit();
 
                         // Automatically switch to missed filter in the side panel
                         if (result.failures > 0) {

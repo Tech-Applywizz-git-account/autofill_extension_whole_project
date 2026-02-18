@@ -78,6 +78,15 @@ async function runAutofill(payload: FillPayload) {
     const detected = detectFieldsInCurrentDOM();
     console.log(`   ✓ Detected ${detected.length} fields in current tab\n`);
 
+    // Pre-flight check: Do we have ANY matches in this frame?
+    // If not, this is likely an iframe (ads, tracking) that shouldn't participate
+    const potentialMatches = payload.fields.filter(rf => bestMatchField(detected, rf.questionText, rf.canonicalKey));
+
+    if (potentialMatches.length === 0) {
+        console.log(`${LOG_PREFIX} ⏭️ No matching fields in this frame. Skipping autofill & analytics.`);
+        return;
+    }
+
     const results: any[] = [];
     let successes = 0;
     let failures = 0;
