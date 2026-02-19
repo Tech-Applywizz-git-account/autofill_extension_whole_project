@@ -971,16 +971,189 @@ export class QuestionMapper {
      * ⚡ PARALLEL PROCESSING - all AI calls happen simultaneously
      * 💾 CACHED - Checks cache first to avoid redundant API calls
      */
+    // private async requestAIAnswers(questions: ScannedQuestion[], profile: any): Promise<MappedAnswer[]> {
+    //     console.log(`⚡ Processing ${questions.length} AI question(s) in PARALLEL...`);
+    //     const startTime = Date.now();
+    //     console.log(`⏱️  AI request started at ${new Date().toLocaleTimeString()}\n`);
+
+    //     let cacheHits = 0;
+    //     let cacheMisses = 0;
+
+    //     // Create all AI request promises at once (parallel execution)
+    //     const aiPromises = questions.map(async (q, index) => {
+    //         try {
+    //             // 💾 PHASE 1: Check cache first
+    //             const cached = await getCachedResponse(q.questionText, q.fieldType, q.options);
+    //             if (cached) {
+    //                 cacheHits++;
+    //                 console.log(`   💾 [${index + 1}/${questions.length}] Cache HIT: "${q.questionText}" (${Math.round((Date.now() - cached.timestamp) / (60 * 1000))} min old)`);
+
+    //                 // Dispatch event for UI
+    //                 window.dispatchEvent(new CustomEvent('AI_PROGRESS', {
+    //                     detail: {
+    //                         current: index + 1,
+    //                         total: questions.length,
+    //                         question: q.questionText,
+    //                         status: 'complete',
+    //                         answer: cached.answer,
+    //                         cached: true
+    //                     }
+    //                 }));
+
+    //                 return {
+    //                     selector: q.selector,
+    //                     questionText: q.questionText,
+    //                     answer: cached.answer,
+    //                     source: 'AI' as const,
+    //                     confidence: cached.confidence,
+    //                     required: q.required,
+    //                     fieldType: q.fieldType,
+    //                     options: q.options || undefined,
+    //                     canonicalKey: cached.intent
+    //                 } as MappedAnswer;
+    //             }
+
+    //             // 📡 PHASE 2: Cache miss - call AI
+    //             cacheMisses++;
+
+    //             // Dispatch START event for UI
+    //             window.dispatchEvent(new CustomEvent('AI_PROGRESS', {
+    //                 detail: {
+    //                     current: index + 1,
+    //                     total: questions.length,
+    //                     question: q.questionText,
+    //                     status: 'processing'
+    //                 }
+    //             }));
+
+    //             console.log(`   📤 [${index + 1}/${questions.length}] Cache MISS - Asking AI: "${q.questionText}"`);
+    //             if (q.options && q.options.length > 0 && q.options.length <= 20) {
+    //                 console.log(`      Options provided: [${q.options.slice(0, 3).join(', ')}${q.options.length > 3 ? '...' : ''}]`);
+    //             }
+
+    //             const aiResponse = await askAI({
+    //                 question: q.questionText,
+    //                 fieldType: q.fieldType,
+    //                 // Limit options sent to AI - only send if <= 20 options
+    //                 // This prevents overwhelming the prompt with long lists (like Country)
+    //                 // but ensures we send options for small sets (Gender, Race, etc.)
+    //                 options: (q.options && q.options.length <= 20) ? q.options : [],
+    //                 userProfile: profile
+    //             });
+
+    //             if (aiResponse.answer) {
+    //                 const intentInfo = aiResponse.intent
+    //                     ? `, intent: ${aiResponse.intent}${aiResponse.isNewIntent ? ' (NEW)' : ''}`
+    //                     : '';
+    //                 console.log(`   📥 [${index + 1}/${questions.length}] AI Response: "${aiResponse.answer}" (${(aiResponse.confidence * 100).toFixed(0)}% confidence${intentInfo})`);
+
+    //                 // CRITICAL: Validate AI answer against available options
+    //                 let finalAnswer = aiResponse.answer;
+    //                 if (q.options && q.options.length > 0) {
+    //                     // Check if AI answer exists in options (exact match)
+    //                     const exactMatch = q.options.find(opt =>
+    //                         opt.toLowerCase().trim() === aiResponse.answer.toLowerCase().trim()
+    //                     );
+
+    //                     if (!exactMatch) {
+    //                         console.warn(`      ⚠️ AI answer "${aiResponse.answer}" not in options, trying fuzzy match...`);
+
+    //                         // Try fuzzy matching to find closest option
+    //                         const fuzzyMatch = this.fuzzyMatchOption(aiResponse.answer, q.options);
+    //                         if (fuzzyMatch) {
+    //                             console.log(`      ✅ Fuzzy matched "${aiResponse.answer}" → "${fuzzyMatch}"`);
+    //                             finalAnswer = fuzzyMatch;
+    //                         } else {
+    //                             console.error(`      ❌ AI answer "${aiResponse.answer}" not found in options for "${q.questionText}"`);
+    //                             return null; // Skip this question if we can't match
+    //                         }
+    //                     } else {
+    //                         finalAnswer = exactMatch; // Use the exact match from options
+    //                         console.log(`      ✓ Exact match found in options`);
+    //                     }
+    //                 }
+
+    //                 // 💾 PHASE 3: Store in cache for future use
+    //                 await setCachedResponse(
+    //                     q.questionText,
+    //                     q.fieldType,
+    //                     q.options,
+    //                     {
+    //                         answer: finalAnswer,
+    //                         confidence: aiResponse.confidence || 0.8,
+    //                         intent: aiResponse.intent
+    //                     }
+    //                 );
+
+    //                 // Dispatch COMPLETE event for UI
+    //                 window.dispatchEvent(new CustomEvent('AI_PROGRESS', {
+    //                     detail: {
+    //                         current: index + 1,
+    //                         total: questions.length,
+    //                         question: q.questionText,
+    //                         status: 'complete',
+    //                         answer: finalAnswer
+    //                     }
+    //                 }));
+
+    //                 return {
+    //                     selector: q.selector,
+    //                     questionText: q.questionText,
+    //                     answer: finalAnswer,  // Use validated answer
+    //                     source: 'AI' as const,
+    //                     confidence: aiResponse.confidence || 0.8,
+    //                     required: q.required,
+    //                     fieldType: q.fieldType,
+    //                     options: q.options || undefined,
+    //                     canonicalKey: aiResponse.intent,  // Pass intent to learning method
+    //                     ...(aiResponse.isNewIntent && { isNewIntent: aiResponse.isNewIntent, suggestedIntentName: aiResponse.suggestedIntentName })
+    //                 } as MappedAnswer;
+    //             } else {
+    //                 console.warn(`   ⚠️ [${index + 1}/${questions.length}] AI returned no answer for: \"${q.questionText}\"`);
+    //                 return null;
+    //             }
+    //         } catch (error) {
+    //             console.error(`   ❌ [${index + 1}/${questions.length}] AI error for \"${q.questionText}\":`, error);
+    //             return null;
+    //         }
+    //     });
+
+    //     // Wait for ALL AI requests to complete simultaneously
+    //     const results = await Promise.all(aiPromises);
+
+    //     // Filter out null results
+    //     const aiAnswers: MappedAnswer[] = results.filter((answer) => answer !== null) as MappedAnswer[];
+
+    //     const endTime = Date.now();
+    //     const duration = ((endTime - startTime) / 1000).toFixed(1);
+
+    //     console.log(`\n⚡ Parallel AI processing complete in ${duration}s`);
+    //     console.log(`📊 Cache Statistics:`);
+    //     console.log(`   💾 Cache Hits: ${cacheHits}/${questions.length} (${((cacheHits / questions.length) * 100).toFixed(0)}%)`);
+    //     console.log(`   📡 API Calls: ${cacheMisses}/${questions.length} (${((cacheMisses / questions.length) * 100).toFixed(0)}%)`);
+    //     console.log(`✅ Successfully answered: ${aiAnswers.length}/${questions.length} questions`);
+    //     if (aiAnswers.length < questions.length) {
+    //         console.log(`⚠️  Failed to answer: ${questions.length - aiAnswers.length} question(s)`);
+    //     }
+
+    //     return aiAnswers;
+    // }
+
+
+
     private async requestAIAnswers(questions: ScannedQuestion[], profile: any): Promise<MappedAnswer[]> {
-        console.log(`⚡ Processing ${questions.length} AI question(s) in PARALLEL...`);
+        console.log(`⚡ Processing ${questions.length} AI question(s) with concurrency limit...`);
         const startTime = Date.now();
         console.log(`⏱️  AI request started at ${new Date().toLocaleTimeString()}\n`);
 
         let cacheHits = 0;
         let cacheMisses = 0;
 
-        // Create all AI request promises at once (parallel execution)
-        const aiPromises = questions.map(async (q, index) => {
+        const CONCURRENCY_LIMIT = 3;
+        const MAX_RETRIES = 3;
+        const BASE_DELAY_MS = 1000;
+
+        const processQuestion = async (q: ScannedQuestion, index: number): Promise<MappedAnswer | null> => {
             try {
                 // 💾 PHASE 1: Check cache first
                 const cached = await getCachedResponse(q.questionText, q.fieldType, q.options);
@@ -988,7 +1161,6 @@ export class QuestionMapper {
                     cacheHits++;
                     console.log(`   💾 [${index + 1}/${questions.length}] Cache HIT: "${q.questionText}" (${Math.round((Date.now() - cached.timestamp) / (60 * 1000))} min old)`);
 
-                    // Dispatch event for UI
                     window.dispatchEvent(new CustomEvent('AI_PROGRESS', {
                         detail: {
                             current: index + 1,
@@ -1013,10 +1185,9 @@ export class QuestionMapper {
                     } as MappedAnswer;
                 }
 
-                // 📡 PHASE 2: Cache miss - call AI
+                // 📡 PHASE 2: Cache miss - call AI (with retry)
                 cacheMisses++;
 
-                // Dispatch START event for UI
                 window.dispatchEvent(new CustomEvent('AI_PROGRESS', {
                     detail: {
                         current: index + 1,
@@ -1031,103 +1202,185 @@ export class QuestionMapper {
                     console.log(`      Options provided: [${q.options.slice(0, 3).join(', ')}${q.options.length > 3 ? '...' : ''}]`);
                 }
 
-                const aiResponse = await askAI({
-                    question: q.questionText,
-                    fieldType: q.fieldType,
-                    // Limit options sent to AI - only send if <= 20 options
-                    // This prevents overwhelming the prompt with long lists (like Country)
-                    // but ensures we send options for small sets (Gender, Race, etc.)
-                    options: (q.options && q.options.length <= 20) ? q.options : [],
-                    userProfile: profile
-                });
+                // Retry loop
+                let aiResponse: any = null;
+                for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+                    try {
+                        const response = await askAI({
+                            question: q.questionText,
+                            fieldType: q.fieldType,
+                            options: (q.options && q.options.length <= 20) ? q.options : [],
+                            userProfile: profile
+                        });
 
-                if (aiResponse.answer) {
-                    const intentInfo = aiResponse.intent
-                        ? `, intent: ${aiResponse.intent}${aiResponse.isNewIntent ? ' (NEW)' : ''}`
-                        : '';
-                    console.log(`   📥 [${index + 1}/${questions.length}] AI Response: "${aiResponse.answer}" (${(aiResponse.confidence * 100).toFixed(0)}% confidence${intentInfo})`);
+                        // Treat empty/null answer as a retryable failure
+                        if (!response?.answer) {
+                            throw new Error(`AI returned empty answer (attempt ${attempt})`);
+                        }
 
-                    // CRITICAL: Validate AI answer against available options
-                    let finalAnswer = aiResponse.answer;
-                    if (q.options && q.options.length > 0) {
-                        // Check if AI answer exists in options (exact match)
-                        const exactMatch = q.options.find(opt =>
-                            opt.toLowerCase().trim() === aiResponse.answer.toLowerCase().trim()
-                        );
+                        aiResponse = response;
+                        break; // Success - exit retry loop
 
-                        if (!exactMatch) {
-                            console.warn(`      ⚠️ AI answer "${aiResponse.answer}" not in options, trying fuzzy match...`);
+                    } catch (error: any) {
+                        const isRetryable =
+                            error?.message?.includes('502') ||
+                            error?.message?.includes('503') ||
+                            error?.message?.includes('429') ||
+                            error?.message?.includes('empty answer') ||
+                            error?.status === 502 ||
+                            error?.status === 503 ||
+                            error?.status === 429;
 
-                            // Try fuzzy matching to find closest option
-                            const fuzzyMatch = this.fuzzyMatchOption(aiResponse.answer, q.options);
-                            if (fuzzyMatch) {
-                                console.log(`      ✅ Fuzzy matched "${aiResponse.answer}" → "${fuzzyMatch}"`);
-                                finalAnswer = fuzzyMatch;
-                            } else {
-                                console.error(`      ❌ AI answer "${aiResponse.answer}" not found in options for "${q.questionText}"`);
-                                return null; // Skip this question if we can't match
-                            }
+                        if (isRetryable && attempt < MAX_RETRIES) {
+                            const delay = BASE_DELAY_MS * Math.pow(2, attempt - 1); // 1s, 2s, 4s
+                            console.warn(`   🔄 [${index + 1}/${questions.length}] Attempt ${attempt}/${MAX_RETRIES} failed for "${q.questionText}" (${error.message}). Retrying in ${delay}ms...`);
+                            await new Promise(res => setTimeout(res, delay));
                         } else {
-                            finalAnswer = exactMatch; // Use the exact match from options
-                            console.log(`      ✓ Exact match found in options`);
+                            if (attempt === MAX_RETRIES) {
+                                console.error(`   ❌ [${index + 1}/${questions.length}] All ${MAX_RETRIES} attempts failed for "${q.questionText}"`);
+                            }
+                            throw error;
                         }
                     }
+                }
 
-                    // 💾 PHASE 3: Store in cache for future use
-                    await setCachedResponse(
-                        q.questionText,
-                        q.fieldType,
-                        q.options,
-                        {
-                            answer: finalAnswer,
-                            confidence: aiResponse.confidence || 0.8,
-                            intent: aiResponse.intent
-                        }
-                    );
+                // If we get here and still no aiResponse, bail out
+                if (!aiResponse?.answer) {
+                    console.warn(`   ⚠️ [${index + 1}/${questions.length}] AI returned no answer for: "${q.questionText}"`);
 
-                    // Dispatch COMPLETE event for UI
                     window.dispatchEvent(new CustomEvent('AI_PROGRESS', {
                         detail: {
                             current: index + 1,
                             total: questions.length,
                             question: q.questionText,
-                            status: 'complete',
-                            answer: finalAnswer
+                            status: 'failed'
                         }
                     }));
 
-                    return {
-                        selector: q.selector,
-                        questionText: q.questionText,
-                        answer: finalAnswer,  // Use validated answer
-                        source: 'AI' as const,
-                        confidence: aiResponse.confidence || 0.8,
-                        required: q.required,
-                        fieldType: q.fieldType,
-                        options: q.options || undefined,
-                        canonicalKey: aiResponse.intent,  // Pass intent to learning method
-                        ...(aiResponse.isNewIntent && { isNewIntent: aiResponse.isNewIntent, suggestedIntentName: aiResponse.suggestedIntentName })
-                    } as MappedAnswer;
-                } else {
-                    console.warn(`   ⚠️ [${index + 1}/${questions.length}] AI returned no answer for: \"${q.questionText}\"`);
                     return null;
                 }
+
+                const intentInfo = aiResponse.intent
+                    ? `, intent: ${aiResponse.intent}${aiResponse.isNewIntent ? ' (NEW)' : ''}`
+                    : '';
+                console.log(`   📥 [${index + 1}/${questions.length}] AI Response: "${aiResponse.answer}" (${(aiResponse.confidence * 100).toFixed(0)}% confidence${intentInfo})`);
+
+                // CRITICAL: Validate AI answer against available options
+                let finalAnswer = aiResponse.answer;
+                if (q.options && q.options.length > 0) {
+                    const exactMatch = q.options.find(opt =>
+                        opt.toLowerCase().trim() === aiResponse.answer.toLowerCase().trim()
+                    );
+
+                    if (!exactMatch) {
+                        console.warn(`      ⚠️ AI answer "${aiResponse.answer}" not in options, trying fuzzy match...`);
+
+                        const fuzzyMatch = this.fuzzyMatchOption(aiResponse.answer, q.options);
+                        if (fuzzyMatch) {
+                            console.log(`      ✅ Fuzzy matched "${aiResponse.answer}" → "${fuzzyMatch}"`);
+                            finalAnswer = fuzzyMatch;
+                        } else {
+                            console.error(`      ❌ AI answer "${aiResponse.answer}" not found in options for "${q.questionText}"`);
+
+                            window.dispatchEvent(new CustomEvent('AI_PROGRESS', {
+                                detail: {
+                                    current: index + 1,
+                                    total: questions.length,
+                                    question: q.questionText,
+                                    status: 'failed'
+                                }
+                            }));
+
+                            return null;
+                        }
+                    } else {
+                        finalAnswer = exactMatch;
+                        console.log(`      ✓ Exact match found in options`);
+                    }
+                }
+
+                // 💾 PHASE 3: Store in cache for future use
+                await setCachedResponse(
+                    q.questionText,
+                    q.fieldType,
+                    q.options,
+                    {
+                        answer: finalAnswer,
+                        confidence: aiResponse.confidence || 0.8,
+                        intent: aiResponse.intent
+                    }
+                );
+
+                window.dispatchEvent(new CustomEvent('AI_PROGRESS', {
+                    detail: {
+                        current: index + 1,
+                        total: questions.length,
+                        question: q.questionText,
+                        status: 'complete',
+                        answer: finalAnswer
+                    }
+                }));
+
+                return {
+                    selector: q.selector,
+                    questionText: q.questionText,
+                    answer: finalAnswer,
+                    source: 'AI' as const,
+                    confidence: aiResponse.confidence || 0.8,
+                    required: q.required,
+                    fieldType: q.fieldType,
+                    options: q.options || undefined,
+                    canonicalKey: aiResponse.intent,
+                    ...(aiResponse.isNewIntent && {
+                        isNewIntent: aiResponse.isNewIntent,
+                        suggestedIntentName: aiResponse.suggestedIntentName
+                    })
+                } as MappedAnswer;
+
             } catch (error) {
-                console.error(`   ❌ [${index + 1}/${questions.length}] AI error for \"${q.questionText}\":`, error);
+                console.error(`   ❌ [${index + 1}/${questions.length}] AI error for "${q.questionText}":`, error);
+
+                window.dispatchEvent(new CustomEvent('AI_PROGRESS', {
+                    detail: {
+                        current: index + 1,
+                        total: questions.length,
+                        question: q.questionText,
+                        status: 'failed'
+                    }
+                }));
+
                 return null;
             }
-        });
+        };
 
-        // Wait for ALL AI requests to complete simultaneously
-        const results = await Promise.all(aiPromises);
+        // Process in batches to limit concurrency and avoid 502s
+        const aiAnswers: MappedAnswer[] = [];
 
-        // Filter out null results
-        const aiAnswers: MappedAnswer[] = results.filter((answer) => answer !== null) as MappedAnswer[];
+        for (let i = 0; i < questions.length; i += CONCURRENCY_LIMIT) {
+            const batch = questions.slice(i, i + CONCURRENCY_LIMIT);
+            const batchNum = Math.floor(i / CONCURRENCY_LIMIT) + 1;
+            const totalBatches = Math.ceil(questions.length / CONCURRENCY_LIMIT);
+
+            console.log(`   🔄 Batch ${batchNum}/${totalBatches}: processing ${batch.length} question(s)...`);
+
+            const batchResults = await Promise.all(
+                batch.map((q, batchIndex) => processQuestion(q, i + batchIndex))
+            );
+
+            for (const result of batchResults) {
+                if (result) aiAnswers.push(result);
+            }
+
+            // Small pause between batches to avoid hammering the API
+            if (i + CONCURRENCY_LIMIT < questions.length) {
+                await new Promise(res => setTimeout(res, 500));
+            }
+        }
 
         const endTime = Date.now();
         const duration = ((endTime - startTime) / 1000).toFixed(1);
 
-        console.log(`\n⚡ Parallel AI processing complete in ${duration}s`);
+        console.log(`\n⚡ AI processing complete in ${duration}s`);
         console.log(`📊 Cache Statistics:`);
         console.log(`   💾 Cache Hits: ${cacheHits}/${questions.length} (${((cacheHits / questions.length) * 100).toFixed(0)}%)`);
         console.log(`   📡 API Calls: ${cacheMisses}/${questions.length} (${((cacheMisses / questions.length) * 100).toFixed(0)}%)`);
@@ -1138,7 +1391,6 @@ export class QuestionMapper {
 
         return aiAnswers;
     }
-
     /**
      * Convert mapped answers to Selenium fill plan format
      */
