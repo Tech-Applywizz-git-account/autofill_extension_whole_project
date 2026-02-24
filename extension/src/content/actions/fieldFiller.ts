@@ -231,7 +231,7 @@ export async function fillAllFields(
         results.set(field, result);
 
         // Small delay between fields to avoid overwhelming the page
-        await sleep(300);
+        await sleep(50);
     }
 
     return results;

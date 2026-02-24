@@ -130,9 +130,25 @@ export class FormScanner {
         customDropdowns.forEach(dropdown => {
             if (!this.isVisible(dropdown as HTMLElement)) return;
 
-            // Only add if not already added (avoid duplicates with inputs)
+            // DEDUPLICATION LOGIC:
+            // If the dropdown container has an internal input that we already found,
+            // we should replace that input with the dropdown container in our fields list,
+            // OR skip the container if we prefer the input. 
+            // For production-grade interaction, the CONTAINER is often better for opening,
+            // but the INPUT is better for typing. 
             const input = dropdown.querySelector('input');
-            if (!input || !fields.includes(input as HTMLElement)) {
+            if (input) {
+                const inputIdx = fields.indexOf(input as HTMLElement);
+                if (inputIdx !== -1) {
+                    console.log(`${LOG_PREFIX} 🔄 Merging dropdown container with its internal input`);
+                    // Replace the input with the container (which selectDropdownKeyboardFirst prefers)
+                    fields[inputIdx] = dropdown as HTMLElement;
+                    return;
+                }
+            }
+
+            // If not already merged, add if unique
+            if (!fields.includes(dropdown as HTMLElement)) {
                 fields.push(dropdown as HTMLElement);
             }
         });
@@ -717,41 +733,53 @@ export class FormScanner {
      */
     private getRadioLabel(radio: HTMLInputElement): string | null {
         // Method 1: Check for associated label using for/id
+        let text: string | null = null;
         if (radio.id) {
             const label = document.querySelector(`label[for="${CSS.escape(radio.id)}"]`);
             if (label && label.textContent) {
-                return this.cleanLabelText(label.textContent);
+                text = this.cleanLabelText(label.textContent);
             }
         }
 
         // Method 2: Check parent label (label wrapping input)
-        const parentLabel = radio.closest('label');
-        if (parentLabel && parentLabel.textContent) {
-            return this.cleanLabelText(parentLabel.textContent);
+        if (!text) {
+            const parentLabel = radio.closest('label');
+            if (parentLabel && parentLabel.textContent) {
+                text = this.cleanLabelText(parentLabel.textContent);
+            }
         }
 
         // Method 3: Check aria-label
-        const ariaLabel = radio.getAttribute('aria-label');
-        if (ariaLabel && ariaLabel.trim()) {
-            return ariaLabel.trim();
+        if (!text) {
+            const ariaLabel = radio.getAttribute('aria-label');
+            if (ariaLabel && ariaLabel.trim()) {
+                text = ariaLabel.trim();
+            }
         }
 
         // Method 4: Check next sibling text
-        let nextSibling = radio.nextSibling;
-        while (nextSibling) {
-            if (nextSibling.nodeType === Node.TEXT_NODE && nextSibling.textContent?.trim()) {
-                return nextSibling.textContent.trim();
-            }
-            if (nextSibling.nodeType === Node.ELEMENT_NODE) {
-                const element = nextSibling as Element;
-                if (element.textContent?.trim()) {
-                    return this.cleanLabelText(element.textContent);
+        if (!text) {
+            let nextSibling = radio.nextSibling;
+            while (nextSibling) {
+                if (nextSibling.nodeType === Node.TEXT_NODE && nextSibling.textContent?.trim()) {
+                    text = nextSibling.textContent.trim();
+                    break;
                 }
+                if (nextSibling.nodeType === Node.ELEMENT_NODE) {
+                    const element = nextSibling as Element;
+                    if (element.textContent?.trim()) {
+                        text = this.cleanLabelText(element.textContent);
+                        break;
+                    }
+                }
+                nextSibling = nextSibling.nextSibling;
             }
-            nextSibling = nextSibling.nextSibling;
         }
 
-        return null;
+        if (!text) return null;
+
+
+        return text;
     }
 
     /**

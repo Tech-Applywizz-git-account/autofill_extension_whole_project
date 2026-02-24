@@ -106,6 +106,8 @@ export interface CanonicalProfile {
         previouslyEmployed?: boolean;
         hasRelatives?: boolean;
         governmentBackground?: boolean;
+        howDidYouHear?: string;   // e.g. "LinkedIn", "Indeed", "Employee Referral"
+        referralName?: string;    // Name of the person who referred you (if applicable)
     };
     metadata?: {
         resumeRawText?: string;
@@ -165,6 +167,8 @@ export const EMPTY_PROFILE: CanonicalProfile = {
         previouslyEmployed: false,
         hasRelatives: false,
         governmentBackground: false,
+        howDidYouHear: '',
+        referralName: '',
     },
     metadata: {
         apwId: "",

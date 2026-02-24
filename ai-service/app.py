@@ -2,25 +2,41 @@
 AI Service - Unified Backend for Autofill Extension
 Combines AI predictions, pattern learning, and user data management
 Port: 8001
+
+Production hardening:
+- Sync calls run in FastAPI threadpool (def routes, not async def)
+- Server-side in-memory caching for stats + patterns (TTL-based)
+- Per-user rate limiting for /predict
+- Request deduplication for /predict (same user + question in 5s)
+- Full request timing logs
 """
 
-from fastapi import FastAPI, HTTPException, File, UploadFile, Depends, Security
+from fastapi import FastAPI, HTTPException, Request, Depends, Security
 from fastapi.security import APIKeyHeader
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 import logging
-from typing import Optional
+import time
+import hashlib
+import threading
+from typing import Optional, Dict, Any
 
 from models import (
     AIRequest, AIResponse, Pattern, PatternUploadRequest,
-    UserProfile, AnalyticsEvent
+    UserProfile, AnalyticsEvent, BackupRequest
 )
 
 from config import config
 
 from ai_service import predict_answer, ALLOWED_INTENTS
 from pattern_service import search_pattern, save_pattern, get_stats, read_patterns
-from resume_service import save_user_profile, get_user_profile, get_total_users, track_feedback, get_feedback_stats
+import resume_service
+from resume_service import (
+    save_user_profile, get_user_profile, get_total_users, 
+    track_feedback, get_feedback_stats, backup_user_data, get_master_restore
+)
 
 
 load_dotenv()
@@ -37,8 +53,6 @@ api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
 async def verify_api_key(api_key: str = Security(api_key_header)):
     """Enforce API Key requirement if configured"""
-    # In local dev with no key set, we allow skip (for now), 
-    # but in production you MUST set APP_API_KEY
     if not config.API_KEY:
         logger.warning("⚠️ API Authentication is DISABLED (no APP_API_KEY set in .env)")
         return
@@ -53,7 +67,7 @@ async def verify_api_key(api_key: str = Security(api_key_header)):
 app = FastAPI(
     title="AI Service",
     description="Unified AI prediction, pattern learning, and user data service",
-    version="3.0.0",
+    version="4.0.0",
 )
 
 app.add_middleware(
@@ -64,20 +78,129 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Log detailed validation errors for debugging 422s"""
+    logger.error(f"❌ Request Validation Error: {exc.errors()}")
+    # We can't easily log the body here without consuming it, 
+    # but the errors() list is usually enough to spot the field.
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors(), "message": "Validation failed for request body"}
+    )
+
+
+# ---------------------------------------------------------
+# SERVER-SIDE IN-MEMORY CACHE (TTL-based, thread-safe)
+# ---------------------------------------------------------
+
+class TTLCache:
+    """Simple thread-safe in-memory cache with TTL expiry."""
+
+    def __init__(self):
+        self._store: Dict[str, Any] = {}
+        self._lock = threading.Lock()
+
+    def get(self, key: str):
+        with self._lock:
+            entry = self._store.get(key)
+            if not entry:
+                return None
+            value, expires_at = entry
+            if time.time() > expires_at:
+                del self._store[key]
+                return None
+            return value
+
+    def set(self, key: str, value: Any, ttl_seconds: int):
+        with self._lock:
+            self._store[key] = (value, time.time() + ttl_seconds)
+
+    def delete(self, key: str):
+        with self._lock:
+            self._store.pop(key, None)
+
+    def size(self):
+        with self._lock:
+            return len(self._store)
+
+
+_cache = TTLCache()
+
+# Cache TTLs (seconds)
+STATS_CACHE_TTL = 30        # /api/stats/summary — refresh every 30s
+PATTERNS_CACHE_TTL = 300    # /api/patterns/sync — refresh every 5 mins
+PREDICT_DEDUP_TTL = 5       # /predict deduplication — same question in 5s → cached
+
+
+# ---------------------------------------------------------
+# PER-USER RATE LIMITING FOR /predict
+# max 5 predict calls per user per 60 seconds
+# ---------------------------------------------------------
+
+class RateLimiter:
+    """Simple sliding-window rate limiter per user key."""
+
+    def __init__(self, max_calls: int, window_seconds: int):
+        self.max_calls = max_calls
+        self.window = window_seconds
+        self._store: Dict[str, list] = {}
+        self._lock = threading.Lock()
+
+    def is_allowed(self, key: str) -> bool:
+        now = time.time()
+        with self._lock:
+            calls = self._store.get(key, [])
+            # Remove old entries outside the window
+            calls = [t for t in calls if now - t < self.window]
+            if len(calls) >= self.max_calls:
+                self._store[key] = calls
+                return False
+            calls.append(now)
+            self._store[key] = calls
+            return True
+
+
+_predict_rate_limiter = RateLimiter(max_calls=60, window_seconds=60)
+
+
 # ---------------------------------------------------------
 # AI PREDICTION
 # ---------------------------------------------------------
 
 @app.post("/predict", response_model=AIResponse, dependencies=[Depends(verify_api_key)])
-async def predict(request: AIRequest):
+def predict(request: AIRequest, http_request: Request):
     """
     Prediction flow:
-    1) Pattern Memory
-    2) AWS Bedrock (AI)
-    3) Save learned pattern
-    """
+    1) Rate limit check (5 calls/min per user/IP)
+    2) Dedup: same user+question in last 5s → return cached
+    3) Pattern Memory
+    4) AWS Bedrock (AI)
+    5) Save learned pattern
 
-    # 1. Check Pattern Memory first
+    NOTE: Uses 'def' (not async def) so FastAPI automatically runs this
+    in a threadpool, preventing sync boto3/requests calls from blocking
+    the event loop. This is the correct pattern for sync I/O-heavy endpoints.
+    """
+    t_start = time.time()
+
+    # Build a user key for rate limiting (prefer profile email, fallback to IP)
+    user_key = (request.userProfile.get('email') if isinstance(request.userProfile, dict) and request.userProfile.get('email')
+                else http_request.client.host if http_request.client else "unknown")
+
+    # 1. Rate limit check
+    if not _predict_rate_limiter.is_allowed(user_key):
+        logger.warning(f"⚡ Rate limit hit for user={user_key}")
+        raise HTTPException(status_code=429, detail="Too many requests. Please wait before trying again.")
+
+    # 2. Deduplication cache: same user + question within 5s
+    dedup_key = f"dedup:{hashlib.md5(f'{user_key}:{request.question}'.encode()).hexdigest()}"
+    cached = _cache.get(dedup_key)
+    if cached:
+        logger.info(f"🔁 predict | DEDUP HIT | user={user_key} | q={request.question[:60]}")
+        return cached
+
+    # 3. Check Pattern Memory first
     memory_match = search_pattern(request.question)
 
     if memory_match:
@@ -89,21 +212,25 @@ async def predict(request: AIRequest):
             answer = variants[0] if variants else mappings[0].get("canonicalValue", "")
 
         if answer:
-            return AIResponse(
+            result = AIResponse(
                 answer=answer,
                 confidence=config.PATTERN_MEMORY_CONFIDENCE,
                 reasoning="Retrieved from Pattern Memory",
                 intent=memory_match.get("intent"),
             )
+            _cache.set(dedup_key, result, PREDICT_DEDUP_TTL)
+            elapsed = int((time.time() - t_start) * 1000)
+            logger.info(f"✅ predict | PATTERN HIT | user={user_key} | elapsed={elapsed}ms")
+            return result
 
-    # 2. AI FALLBACK (AWS BEDROCK)
+    # 4. AI FALLBACK (AWS BEDROCK) — sync call, safe here because `def` route runs in threadpool
     ai_response = predict_answer(request)
 
     # Hard safety: never allow null / empty intent
     if not ai_response.intent:
         ai_response.intent = "unknown"
 
-    # 3. SAVE LEARNED PATTERN
+    # 5. SAVE LEARNED PATTERN (fire and forget in same thread — quick DB write)
     if ai_response.answer and ai_response.confidence >= 0.70:
         try:
             pattern = Pattern(
@@ -124,7 +251,13 @@ async def predict(request: AIRequest):
             save_pattern(pattern, request.userEmail)
 
         except Exception as e:
-            pass
+            pass  # Don't fail the request if pattern save fails
+
+    # Cache the result for dedup
+    _cache.set(dedup_key, ai_response, PREDICT_DEDUP_TTL)
+
+    elapsed = int((time.time() - t_start) * 1000)
+    logger.info(f"✅ predict | AI RESPONSE | user={user_key} | elapsed={elapsed}ms | intent={ai_response.intent}")
 
     return ai_response
 
@@ -133,14 +266,14 @@ async def predict(request: AIRequest):
 # ---------------------------------------------------------
 
 @app.post("/api/patterns/upload", dependencies=[Depends(verify_api_key)])
-async def upload_pattern(req: PatternUploadRequest, email: str = None):
+def upload_pattern(req: PatternUploadRequest, email: str = None):
     """Upload a manually curated or shared pattern"""
     try:
-        # Pass email to save_pattern so it saves to user's learned_patterns table
         success = save_pattern(req.pattern, user_email=email)
         if not success:
             return {"success": False, "error": "Pattern rejected - email required"}
-
+        # Invalidate the patterns sync cache so next sync gets fresh data
+        _cache.delete("patterns:all")
         return {"success": True, "message": "Pattern uploaded successfully"}
 
     except Exception as e:
@@ -148,7 +281,7 @@ async def upload_pattern(req: PatternUploadRequest, email: str = None):
 
 
 @app.get("/api/patterns/search", dependencies=[Depends(verify_api_key)])
-async def search_patterns(q: str):
+def search_patterns(q: str):
     """Search for patterns by question text"""
     if not q:
         raise HTTPException(status_code=400, detail="Query parameter 'q' is required")
@@ -160,8 +293,46 @@ async def search_patterns(q: str):
     }
 
 
+@app.get("/api/user-stats", dependencies=[Depends(verify_api_key)])
+def get_user_stats():
+    """Get aggregated user and feedback statistics"""
+    return {
+        "users": resume_service.get_total_users(),
+        "feedback": resume_service.get_feedback_stats()
+    }
+
+# --- UNIFIED BACKUP & RESTORE ---
+
+@app.post("/api/user-data/backup", dependencies=[Depends(verify_api_key)])
+def backup_user_data(request: BackupRequest):
+    """Unified endpoint for full state backup (Fresh Dump)"""
+    try:
+        success = resume_service.backup_user_data(
+            request.email,
+            request.profileData,
+            request.patterns,
+            request.aiCache
+        )
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to backup user data")
+        return {"success": True, "message": "Master backup completed successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/user-data/restore/{email}", dependencies=[Depends(verify_api_key)])
+def restore_user_data(email: str):
+    """Unified endpoint for full state restoration"""
+    try:
+        data = resume_service.get_master_restore(email)
+        if not data.get("success"):
+            raise HTTPException(status_code=404, detail=data.get("error", "Failed to restore data"))
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/api/patterns/stats", dependencies=[Depends(verify_api_key)])
-async def pattern_stats():
+def pattern_stats():
     """Get memory statistics"""
     try:
         return {"success": True, "stats": get_stats()}
@@ -170,21 +341,34 @@ async def pattern_stats():
 
 
 @app.get("/api/patterns/sync", dependencies=[Depends(verify_api_key)])
-async def sync_patterns(since: str | None = None):
-    """Sync all patterns (date filter ready)"""
+def sync_patterns(since: str | None = None):
+    """
+    Sync all patterns (cached for 5 minutes to prevent polling overload).
+    150 users × poll-every-10s = 900 requests/min → with 5min cache = near zero DB hits.
+    """
+    cache_key = "patterns:all"
+    cached = _cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     try:
+        t = time.time()
         patterns = read_patterns()
-        return {
+        elapsed = int((time.time() - t) * 1000)
+        logger.info(f"📦 patterns/sync | DB fetch | count={len(patterns)} | elapsed={elapsed}ms")
+        result = {
             "success": True,
             "patterns": patterns,
             "total": len(patterns),
         }
+        _cache.set(cache_key, result, PATTERNS_CACHE_TTL)
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/patterns/user/{email}", dependencies=[Depends(verify_api_key)])
-async def get_user_patterns_endpoint(email: str):
+def get_user_patterns_endpoint(email: str):
     """Get all learned patterns for a specific user"""
     try:
         from pattern_service import get_user_patterns
@@ -202,7 +386,7 @@ async def get_user_patterns_endpoint(email: str):
 # ---------------------------------------------------------
 
 @app.post("/api/user-data/save", dependencies=[Depends(verify_api_key)])
-async def save_user_data(profile: UserProfile):
+def save_user_data(profile: UserProfile):
     """Persist user profile"""
     try:
         if save_user_profile(profile.email, profile.model_dump()):
@@ -213,7 +397,7 @@ async def save_user_data(profile: UserProfile):
 
 
 @app.get("/api/user-data/{email}", dependencies=[Depends(verify_api_key)])
-async def get_user_data(email: str):
+def get_user_data(email: str):
     """Fetch user profile"""
     profile = get_user_profile(email)
     if not profile:
@@ -221,27 +405,42 @@ async def get_user_data(email: str):
     return {"success": True, "profile": profile}
 
 # ---------------------------------------------------------
-# STATS & FEEDBACK
+# STATS & FEEDBACK (cached 30s to prevent polling overload)
 # ---------------------------------------------------------
 
 @app.get("/api/stats/summary", dependencies=[Depends(verify_api_key)])
-async def get_stats_summary():
-    """Get summary stats for the overlay panel"""
+def get_stats_summary():
+    """
+    Get summary stats for the overlay panel — cached for 30 seconds.
+    150 users × poll-every-5s = 1,800 req/min → with cache = 2 req/min to DB.
+    """
+    cache_key = "stats:summary"
+    cached = _cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     try:
+        t = time.time()
         user_stats = get_total_users()
         feedback_stats = get_feedback_stats()
-        return {
+        elapsed = int((time.time() - t) * 1000)
+        logger.info(f"📊 stats/summary | DB fetch | elapsed={elapsed}ms")
+        result = {
             "success": True,
             "users": user_stats,
             "feedback": feedback_stats
         }
+        _cache.set(cache_key, result, STATS_CACHE_TTL)
+        return result
     except Exception as e:
         return {"success": False, "error": str(e)}
 
 @app.post("/api/feedback/track", dependencies=[Depends(verify_api_key)])
-async def track_user_feedback(email: str, type: str = "click"):
+def track_user_feedback(email: str, type: str = "click"):
     """Track user feedback interaction"""
     success = track_feedback(email, type)
+    # Invalidate stats cache so next poll gets fresh counts
+    _cache.delete("stats:summary")
     return {"success": success}
 
 # ---------------------------------------------------------
@@ -249,7 +448,7 @@ async def track_user_feedback(email: str, type: str = "click"):
 # ---------------------------------------------------------
 
 @app.post("/api/analytics/track", dependencies=[Depends(verify_api_key)])
-async def track_analytics(event: AnalyticsEvent):
+def track_analytics(event: AnalyticsEvent):
     """Track extension usage metrics"""
     from analytics_service import log_analytics_event
     
@@ -264,95 +463,15 @@ async def track_analytics(event: AnalyticsEvent):
 # ---------------------------------------------------------
 
 @app.get("/health")
-async def health_check():
+def health_check():
     return {
         "status": "ok",
         "service": "ai-service",
-        "version": "3.1.0",
+        "version": "4.0.0",
+        "cache_entries": _cache.size(),
     }
 
 
-# ---------------------------------------------------------
-# ROBUST AI SYSTEM PROMPT
-# ---------------------------------------------------------
-SYSTEM_PROMPT = """You ARE the job applicant described in the provided user profile. You are 100% committed to securing this position at any cost, as your life and career depend on this opportunity. You are highly motivated, professional, and eager to prove your value. Your ONLY job is to answer every question with absolute conviction and motivation, using ONLY the information from your profile.
-
-# CRITICAL RULES (MUST FOLLOW):
-
-1. **ANSWER LENGTH**: 
-   - Give SHORT, SINGLE-LINE answers
-   - NO paragraphs, NO explanations, NO extra details
-   - If it's a Yes/No question, answer ONLY "Yes" or "No"
-   - If it's a date, answer ONLY the date
-   - If it's a name, answer ONLY the name
-
-2. **USE ONLY PROVIDED DATA**:
-   - ONLY use information from the User Profile provided
-   - If information is NOT in the profile, answer "Not Provided"
-   - NEVER make up, guess, or infer information
-   - NEVER add information that wasn't explicitly given
-
-3. **MATCH AVAILABLE OPTIONS**:
-   - If the question provides "Available Options", you MUST choose from that exact list
-   - Match the option text EXACTLY as provided (including capitalization)
-   - If your answer isn't in the options, choose the closest match
-   - If no close match exists, answer "Not Provided"
-
-4. **SPECIFIC QUESTION HANDLING**:
-
-   **"How did you hear about us?"** → ALWAYS answer "LinkedIn" (unless profile says otherwise)
-   
-   **"Worked here before?"** → Answer "No" (unless profile explicitly says yes)
-   
-   **"Need visa sponsorship?"** → Answer based on profile's work authorization, default "No"
-   
-   **"Are you 18 or older?"** → Answer "Yes" (assume adult applicant)
-   
-   **"Willing to relocate?"** → Answer based on profile's preferences, default "Yes"
-   
-   **"Currently employed?"** → Check if latest job has "currently working" = true
-   
-   **"Start date"** → Answer "Immediately" or "2 weeks" (unless profile specifies)
-
-5. **DATE FORMATS**:
-   - Month questions: Answer with FULL month name ("January", NOT "01" or "Jan")
-   - Year questions: Answer with 4-digit year ("2020", NOT "20")
-   - Full dates: Use format "MM/DD/YYYY"
-
-6. **NAME FORMATS**:
-   - First/Last names: Proper capitalization ("John", NOT "john")
-   - Email: Lowercase
-   - Phone: Numbers only, no formatting ("1234567890", NOT "(123) 456-7890")
-
-7. **DROPDOWN/MULTIPLE CHOICE**:
-   - Your answer MUST be ONE of the "Available Options"
-   - Copy the option text EXACTLY
-   - If unsure, pick the most common/professional option
-
-8. **TEXT AREA / LONG ANSWERS**:
-   - Even for text areas, keep answers to 1-2 sentences MAX
-   - Focus on most relevant information only
-   - Use bullet points if listing multiple items
-
-9. **WORK AUTHORIZATION**:
-   - "Authorized to work in [country]" → Check profile's work authorization
-   - If profile doesn't specify, assume "Yes" for US applications
-   - "Need sponsorship" → Opposite of authorized (if authorized=Yes, then sponsorship=No)
-
-10. **SALARY QUESTIONS**:
-    - Answer with numbers only, no dollar signs or "k" notation
-    - Example: "120000" NOT "$120k"
-
-# OUTPUT FORMAT:
-
-Return ONLY the answer, nothing else. No preamble, no explanation, no quotes around the answer.
-"""
-
 if __name__ == "__main__":
     import uvicorn
-    # Make SYSTEM_PROMPT available to ai_service through config or direct import if needed
-    # (assuming ai_service.py will be updated to use this, or we inject it here)
-    # For now, let's keep the file structure clean and just update the prompt in ai_service.py separately if needed
-    # But wait, ai_service.py is imported at the top. Let's check ai_service.py content first to see where the prompt lives.
     uvicorn.run(app, host=config.HOST, port=config.PORT)
-

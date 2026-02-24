@@ -8,9 +8,9 @@
    - Deterministic, no AI, no guessing
    ============================================================ */
 
-/* ------------------------
-   GLOBAL UTILITY
-------------------------- */
+import { selectDropdownKeyboardFirst } from './productionDropdown';
+import { isWorkdayPage, isGreenhousePage } from '../utils/platformDetection';
+
 export function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -140,7 +140,12 @@ export async function selectByAria(
         target.dispatchEvent(
             new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true })
         );
-        await sleep(500); // Increased from 300ms - wait for menu to render
+
+        // Wait for menu to render by checking for aria-expanded or activedescendant
+        await waitForCommit(() => {
+            return target.getAttribute("aria-expanded") === "true" ||
+                target.hasAttribute("aria-activedescendant");
+        }, 1000);
 
         for (let i = 0; i < 15; i++) {
             const activeId = target.getAttribute("aria-activedescendant");
@@ -176,7 +181,10 @@ export async function selectByAria(
             target.dispatchEvent(
                 new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true })
             );
-            await sleep(150); // Increased from 100ms - slower navigation for stability
+
+            // Wait for activedescendant to change or update
+            const oldId = activeId;
+            await waitForCommit(() => target.getAttribute("aria-activedescendant") !== oldId, 300);
         }
     } catch (e) {
         console.error("[Autofill] ARIA selection error:", e);
@@ -292,9 +300,7 @@ export async function forceSelectReactDropdown(
         if (success) {
             console.log(`[Autofill] ✅ React dropdown committed: ${value}`);
         } else {
-            console.error(`[Autofill] ❌ Dropdown verification failed: ${value}`);
-            const selectedDiv = control.querySelector(".select__single-value");
-            console.error(`[Autofill] Display shows: ${selectedDiv?.textContent || 'Select...'}`);
+            console.warn(`[Autofill] ❌ Dropdown verification failed: ${value}. This is common if the site has custom validation delays.`);
         }
 
         return success;
@@ -395,12 +401,17 @@ export async function fillGreenhouseDropdown(
             return false;
         }
 
-        // 1️⃣ Open dropdown by clicking control (with increased wait time)
+        // 1️⃣ Open dropdown by clicking control (wait for menu reactively)
         control.scrollIntoView({ block: "center" });
-        await sleep(300); // Increased from 200ms
-
         control.click();
-        await sleep(600); // Increased from 400ms - wait for menu to render
+
+        // Wait for menu with MutationObserver (no fixed sleep)
+        const menuVisible = await waitForElement('.select__menu, [class*="select__menu"], [role="listbox"]', 2000);
+        if (!menuVisible) {
+            console.warn("[Autofill] Dropdown menu did not appear reactively");
+            // brief fallback sleep in case of extreme lag
+            await sleep(300);
+        }
 
         // 2️⃣ Find the menu that appears (with retry logic)
         let menu: HTMLElement | null = null;
@@ -496,18 +507,22 @@ export async function fillGreenhouseDropdown(
    UNIVERSAL DROPDOWN EXECUTION ORDER (JOBRIGHT STYLE)
    CALL THIS FROM YOUR EXISTING selectCustomDropdown()
 ============================================================ */
+
 export async function jobrightSelectDropdown(
     element: HTMLElement,
     optionText: string
 ): Promise<boolean> {
 
-    // 1️⃣ Greenhouse (React-Select)
-    if (isGreenhouseDropdown(element)) {
-        if (await fillGreenhouseDropdown(element as HTMLInputElement, optionText))
-            return true;
+    // 1️⃣ Try Production Keyboard-First Strategy (Optimized for Greenhouse)
+    // WORKDAY: Skip since it has its own specialized handler/filler
+    if (!isWorkdayPage()) {
+        console.log(`[Autofill] 🚀 Using unified production keyboard strategy for: ${optionText}`);
+        const productionSuccess = await selectDropdownKeyboardFirst(element, optionText);
+        if (productionSuccess) return true;
     }
 
-    // 2️⃣ ARIA-based selection (Workday, Lever, iCIMS)
+    // 2️⃣ ARIA-based selection fallback (Original logic)
+    console.warn(`[Autofill] ⚠️ Production strategy failed, trying ARIA fallback...`);
     if (await selectByAria(element, optionText)) return true;
 
     // 3️⃣ Keyboard search fallback

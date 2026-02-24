@@ -216,7 +216,7 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
     {
         patterns: ['school name', 'university name', 'college name', 'school', 'university', 'college', 'institution', 'educational institution'],
         intent: 'education.school',
-        fieldTypes: ['text', 'dropdown'],
+        fieldTypes: ['text', 'dropdown', 'select', 'combobox'],
         priority: 80,
         contextPatterns: ['education'],
         excludePatterns: ['high school']
@@ -230,17 +230,18 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
     {
         patterns: [
             'degree type', 'degree', 'education level', 'highest degree', 'degree earned',
-            'highest education obtained', 'highest level count', 'education attained'
+            'highest education obtained', 'highest level count', 'education attained',
+            'highest level of education', 'level of education', 'educational level'
         ],
         intent: 'education.degree',
-        fieldTypes: ['dropdown', 'text'],
+        fieldTypes: ['dropdown', 'text', 'select', 'combobox', 'radio'],
         priority: 80,
         contextPatterns: ['education']
     },
     {
         patterns: ['major', 'field of study', 'discipline', 'concentration', 'specialization', 'area of study'],
         intent: 'education.major',
-        fieldTypes: ['text', 'dropdown'],
+        fieldTypes: ['text', 'dropdown', 'select', 'combobox'],
         priority: 80,
         contextPatterns: ['education']
     },
@@ -844,8 +845,8 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
             'referral source',
             'how did you learn'
         ],
-        intent: 'customAnswers.howDidYouHear',
-        fieldTypes: ['dropdown', 'text'],
+        intent: 'application.howDidYouHear',
+        fieldTypes: ['dropdown', 'text', 'select', 'radio'],
         priority: 95
     },
 
@@ -860,9 +861,9 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
             'specify platform'
         ],
         intent: 'customAnswers.howDidYouHearDetail',
-        fieldTypes: ['dropdown', 'text'],
+        fieldTypes: ['dropdown', 'text', 'select'],
         priority: 92,
-        cascadeParent: 'customAnswers.howDidYouHear',
+        cascadeParent: 'application.howDidYouHear',
         cascadeValues: ['social media', 'social network', 'social networking']
     },
 
@@ -876,9 +877,9 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
             'specify job board'
         ],
         intent: 'customAnswers.jobBoardDetail',
-        fieldTypes: ['dropdown', 'text'],
+        fieldTypes: ['dropdown', 'text', 'select'],
         priority: 92,
-        cascadeParent: 'customAnswers.howDidYouHear',
+        cascadeParent: 'application.howDidYouHear',
         cascadeValues: ['job board', 'job site', 'online job board']
     },
 
@@ -892,10 +893,10 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
             'referrer name',
             'name of person'
         ],
-        intent: 'customAnswers.referralName',
+        intent: 'application.referralName',
         fieldTypes: ['text'],
         priority: 90,
-        cascadeParent: 'customAnswers.howDidYouHear',
+        cascadeParent: 'application.howDidYouHear',
         cascadeValues: ['employee referral', 'referred by', 'referral', 'current employee']
     },
 

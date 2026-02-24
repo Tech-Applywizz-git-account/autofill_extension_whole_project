@@ -7,6 +7,8 @@ import { fillField } from "../actions/fieldFiller";
 import { FormScanner } from "../scanner/formScanner";
 import { CONFIG } from "../../config";
 import { AnalyticsTracker } from "../../core/analytics/AnalyticsTracker";
+import { getAllCached } from "../../core/storage/aiResponseCache";
+
 
 // CSS Styles specifically for the Shadow DOM injection
 const STYLES = `
@@ -573,6 +575,8 @@ interface PerformanceMetrics {
     scanStarted?: Date;
     scanCompleted?: Date;
     aiQuestionCount?: number;
+    aiCalls?: number;
+    cacheHits?: number;
     mappingCompleted?: Date;
     fillStarted?: Date;
     fillCompleted?: Date;
@@ -611,13 +615,30 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
     const [viewMode, setViewMode] = useState<"fields" | "resume">("fields");
     const [resumeText, setResumeText] = useState<string>("");
     const [fields, setFields] = useState<DetectedField[]>(initialFields);
-    const [completionResult, setCompletionResult] = useState<{ successes: number; failures: number; missedQuestions: string[] } | null>(null);
+
+    // Sync internal fields state with props (Required when orchestrator rescans)
+    useEffect(() => {
+        if (initialFields && initialFields.length > 0) {
+            setFields(initialFields);
+        }
+    }, [initialFields]);
+
+    interface CompletionResult {
+        successes: number;
+        failures: number;
+        missedQuestions: string[];
+    }
+    const [completionResult, setCompletionResult] = useState<CompletionResult | null>(null);
+    const [isSyncing, setIsSyncing] = useState(false);
     const [isFilling, setIsFilling] = useState(false);
     const [isMapping, setIsMapping] = useState(false);
-    const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics>({});
+    const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics>({
+        aiCalls: 0,
+        cacheHits: 0
+    });
     const [fillProgress, setFillProgress] = useState<{ current: number; total: number } | null>(null);
     const [aiStatus, setAIStatus] = useState<string>("");
-    const [aiLog, setAILog] = useState<{ question: string; answer: string }[]>([]);
+    const [aiLog, setAILog] = useState<{ question: string; answer: string; cached?: boolean }[]>([]);
     const [statsSummary, setStatsSummary] = useState<{
         users: { total: number; recent_24h: number };
         feedback: { total: number; recent_24h: number };
@@ -718,15 +739,24 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
         const handleAIProgress = (e: any) => {
             const detail = e.detail;
             if (!detail) return;
-            const { current, total, question, status, answer } = detail;
+            const { current, total, question, status, answer, cached } = detail;
 
             if (status === 'processing') {
-                setAIStatus(`Processing ${current}/${total}: ${truncate(question, 30)}...`);
+                setAIStatus(`Resolving ${current}/${total}: ${truncate(question, 30)}...`);
             } else if (status === 'complete') {
-                setAIStatus(`${current}/${total} complete: ${truncate(answer, 20)}`);
-                setAILog(prev => [...prev, { question, answer }]);
-                // Track AI call
-                tracker.incrementAICall();
+                setAIStatus(`${current}/${total} resolved`);
+                setAILog(prev => [...prev, { question, answer, cached }]);
+
+                setPerformanceMetrics(prev => ({
+                    ...prev,
+                    aiCalls: (prev.aiCalls || 0) + (cached ? 0 : 1),
+                    cacheHits: (prev.cacheHits || 0) + (cached ? 1 : 0)
+                }));
+
+                // Track AI call in tracker (only if not cached)
+                if (!cached) {
+                    tracker.incrementAICall();
+                }
             }
         };
 
@@ -875,7 +905,13 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
 
             // Record scan start time
             const scanStart = new Date();
-            setPerformanceMetrics({ scanStarted: scanStart });
+            setPerformanceMetrics({
+                scanStarted: scanStart,
+                aiCalls: 0,
+                cacheHits: 0
+            });
+            setAILog([]);
+            setAIStatus("");
 
             console.log('[Ext] 🔍 Broadcasting scan to all frames...');
 
@@ -1313,6 +1349,52 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
         }
     };
 
+    const handleManualSync = async () => {
+        try {
+            console.log('[Ext] ☁️ Starting Master Cloud Sync...');
+            const profile = await loadProfile();
+            if (!profile?.personal.email) {
+                alert('⚠️ Please log in/complete your profile first!');
+                return;
+            }
+
+            setIsSyncing(true);
+
+            // 1. Gather all local data
+            const localPatterns = await patternStorage.getLocalPatterns();
+            const aiCache = await getAllCached();
+
+            // 2. Call Unified Backup Endpoint
+            const response = await chrome.runtime.sendMessage({
+                action: 'proxyFetch',
+                url: `${CONFIG.API.AI_SERVICE}/api/user-data/backup`,
+                options: {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: profile.personal.email,
+                        profileData: profile,
+                        patterns: localPatterns,
+                        aiCache: aiCache
+                    })
+                }
+            });
+
+            if (response && response.success) {
+                alert('✅ Master Sync Complete! Your profile, patterns, and cache are safely stored in the cloud.');
+                console.log('[Ext] ✅ Master Sync Successful');
+            } else {
+                throw new Error(response?.error || 'Sync failed');
+            }
+        } catch (err: any) {
+            console.error('[Ext] ❌ Master Sync Error:', err);
+            alert('❌ Sync failed: ' + err.message);
+        } finally {
+            setIsSyncing(false);
+        }
+    };
+
+
 
     return (
         <div
@@ -1343,7 +1425,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                         <div className="close-x" onClick={() => setViewState("ICON")}>×</div>
                     </div>
                     <div className="menu-content">
-                        {isWorkdayUrl && (
+                        {/* {isWorkdayUrl && (
                             <a
                                 href={window.location.href}
                                 target="_blank"
@@ -1358,9 +1440,10 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                             >
                                 <span className="btn-icon">🏢</span> Workday Application
                             </a>
-                        )}
+                        )} */}
                         <button
                             className="run-autofill-btn"
+                            disabled={isFilling || isSyncing}
                             onClick={handleScan}
                         >
                             <span className="btn-icon">🔍</span> Scan Application
@@ -1531,11 +1614,25 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                                 console.error('[Ext] Fill error:', error);
                                 setIsFilling(false);
                             }
-                        }} disabled={isFilling || isMapping}>
-                            {isMapping ? '🧠 Mapping answers...' : (isFilling ? '⚡ Autofill Started...' : '⚡ Run Autofill Manually')}
+                        }} disabled={isFilling || isMapping || isSyncing}>
+                            {isMapping ? '🧠 Mapping answers...' : (isFilling ? '⚡ Autofill Started...' : (isSyncing ? '⏳ Cloud Syncing...' : '⚡ Run Autofill Manually'))}
                         </button>
                         <button className="view-details-btn" onClick={() => setViewState("DETAILS")}>
                             View Detection Details
+                        </button>
+                        <button
+                            className="run-autofill-btn"
+                            disabled={isFilling || isSyncing}
+                            onClick={handleManualSync}
+                            style={{
+                                marginTop: '5px',
+                                background: isSyncing ? '#e0e0e0' : '#f0f4ff',
+                                color: isSyncing ? '#666' : '#3f51b5',
+                                border: '1px solid #d0d7f7'
+                            }}
+                        >
+                            <span className="btn-icon">{isSyncing ? '⏳' : '☁️'}</span>
+                            {isSyncing ? 'Cloud Syncing...' : 'Sync to Cloud (Backup)'}
                         </button>
                     </div>
                 </div>
@@ -1632,9 +1729,9 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                                             )}
                                             {performanceMetrics.aiQuestionCount !== undefined && (
                                                 <div className="perf-item">
-                                                    <span className="perf-label">├─ Asking AI:</span>
+                                                    <span className="perf-label">├─ Resolving Questions:</span>
                                                     <span className="perf-value">
-                                                        {performanceMetrics.aiQuestionCount} {performanceMetrics.aiQuestionCount === 1 ? 'question' : 'questions'}
+                                                        {performanceMetrics.aiQuestionCount} ({performanceMetrics.aiCalls} AI + {performanceMetrics.cacheHits} Cache)
                                                     </span>
                                                 </div>
                                             )}
@@ -1648,7 +1745,9 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                                                 <div style={{ marginLeft: '20px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                                     {aiLog.map((log, idx) => (
                                                         <div key={idx} style={{ fontSize: '10px', color: '#666' }}>
-                                                            <span style={{ color: '#888', marginRight: '4px' }}>❓ {truncate(log.question, 15)}:</span>
+                                                            <span style={{ color: '#888', marginRight: '4px' }}>
+                                                                {log.cached ? '💾' : '🤖'} {truncate(log.question, 15)}:
+                                                            </span>
                                                             <span style={{ color: '#00d084', fontWeight: 'bold' }}>{truncate(log.answer, 20)}</span>
                                                         </div>
                                                     ))}
@@ -1763,11 +1862,11 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                         )}
                     </div>
 
-                    <div className="panel-footer">
+                    {/* <div className="panel-footer">
                         <button className="run-autofill-btn mini" onClick={handleRunAutofill}>
                             ⚡ Rerun Autofill
                         </button>
-                    </div>
+                    </div> */}
 
                     {notification && (
                         <div style={{
@@ -1809,7 +1908,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                                         <div style={{ fontWeight: '600', marginBottom: '4px', borderBottom: '1px solid #eee', paddingBottom: '2px' }}>
                                             Missed Questions:
                                         </div>
-                                        {completionResult.missedQuestions.map((q, i) => (
+                                        {completionResult.missedQuestions.map((q: string, i: number) => (
                                             <div key={i} className="missed-question-item" title={q}>
                                                 • {q}
                                             </div>
@@ -1853,9 +1952,11 @@ const FieldItem: React.FC<{ field: DetectedField; onUpdate: (val: string) => voi
         }
 
         // 2. Update profile if canonical key is available
-        if (field.canonicalKey) {
+        const isUnknown = !field.canonicalKey || field.canonicalKey.toLowerCase() === 'unknown';
+
+        if (!isUnknown) {
             try {
-                await updateProfileField(field.canonicalKey, editValue);
+                await updateProfileField(field.canonicalKey!, editValue);
                 console.log(`Updated profile field: ${field.canonicalKey}`);
             } catch (err) {
                 console.error("Failed to update profile from assistant:", err);
@@ -1876,23 +1977,27 @@ const FieldItem: React.FC<{ field: DetectedField; onUpdate: (val: string) => voi
             }
         }
 
-        // 3. Persist to Learned Patterns for future recognition
-        try {
-            await patternStorage.addPattern({
-                questionPattern: field.questionText,
-                intent: field.canonicalKey || `custom.${field.questionText.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
-                canonicalKey: field.canonicalKey || "",
-                fieldType: field.fieldType,
-                confidence: 1.0,
-                source: 'manual',
-                answerMappings: [{
-                    canonicalValue: editValue,
-                    variants: [editValue]
-                }]
-            });
-            console.log(`[Ext] Learned mapping for: ${field.questionText}`);
-        } catch (err) {
-            console.warn("[Ext] Failed to learn pattern:", err);
+        // 3. Persist to Learned Patterns for future recognition (only if it's a known intent)
+        if (!isUnknown) {
+            try {
+                await patternStorage.addPattern({
+                    questionPattern: field.questionText,
+                    intent: field.canonicalKey!,
+                    canonicalKey: field.canonicalKey!,
+                    fieldType: field.fieldType,
+                    confidence: 1.0,
+                    source: 'manual',
+                    answerMappings: [{
+                        canonicalValue: editValue,
+                        variants: [editValue]
+                    }]
+                });
+                console.log(`[Ext] Learned mapping for: ${field.questionText}`);
+            } catch (err) {
+                console.warn("[Ext] Failed to learn pattern:", err);
+            }
+        } else {
+            console.log(`[Ext] Skipping pattern learning for unknown intent: ${field.questionText}`);
         }
 
         onUpdate(editValue);
@@ -1921,10 +2026,11 @@ const FieldItem: React.FC<{ field: DetectedField; onUpdate: (val: string) => voi
                 {!isEditing && field.filledValue && (
                     <span className={`field-status ${field.filled ? "filled" : "suggested"}`}>
                         {field.filled && <span style={{ marginRight: '4px' }}>✓</span>}
-                        {field.source === 'canonical' ? "📋 Profile: " :
-                            field.source === 'fuzzy' ? "🔍 Fuzzy: " :
-                                field.source === 'learned' ? "🧠 Learned: " :
-                                    "⚡ AI: "}
+                        {field.source === 'canonical' || field.source === 'hardcoded' || field.source === 'hardcoded_override' ? "📋 Profile: " :
+                            field.source === 'learned' ? "🧠 Learned: " :
+                                field.source === 'fuzzy' ? "🔍 Fuzzy: " :
+                                    field.source === 'injected_skills' ? "🎨 Skill: " :
+                                        "⚡ AI: "}
                         {field.filledValue === true || field.filledValue === "true" ? "Yes" :
                             field.filledValue === false || field.filledValue === "false" ? "No" :
                                 truncate(String(field.filledValue || ""), 30)}

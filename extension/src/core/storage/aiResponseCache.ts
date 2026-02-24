@@ -231,6 +231,31 @@ export async function getCacheStats(): Promise<{ totalEntries: number; oldestEnt
 }
 
 /**
+ * Get all cached responses for backup
+ */
+export async function getAllCached(): Promise<Record<string, CachedResponse>> {
+    try {
+        const result = await chrome.storage.local.get(CACHE_STORAGE_KEY);
+        return result[CACHE_STORAGE_KEY] || {};
+    } catch (error) {
+        console.error('[AICache] Error getting all cached labels:', error);
+        return {};
+    }
+}
+
+/**
+ * Replace entire cache (used for restore)
+ */
+export async function replaceCache(cacheData: Record<string, CachedResponse>): Promise<void> {
+    try {
+        await chrome.storage.local.set({ [CACHE_STORAGE_KEY]: cacheData });
+        console.log(`[AICache] 📥 Restored ${Object.keys(cacheData).length} cache entries`);
+    } catch (error) {
+        console.error('[AICache] Error replacing cache:', error);
+    }
+}
+
+/**
  * Clear entire cache (for testing or reset)
  */
 export async function clearAllCache(): Promise<void> {

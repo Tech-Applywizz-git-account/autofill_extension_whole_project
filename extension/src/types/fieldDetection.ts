@@ -50,7 +50,7 @@ export interface DetectedField {
     skipReason?: string;
     filledValue?: any;
     fileName?: string;
-    source?: 'AI' | 'canonical' | 'fuzzy' | 'learned';
+    source?: 'AI' | 'canonical' | 'fuzzy' | 'learned' | 'hardcoded' | 'hardcoded_override' | 'injected_skills';
 }
 
 export interface FieldDetectionResult {

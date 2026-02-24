@@ -20,17 +20,19 @@ class AIResponse(BaseModel):
 
 # ===== Pattern Models =====
 class Pattern(BaseModel):
-    """Learned question-answer pattern"""
-    questionPattern: str
-    intent: str
-    canonicalKey: str | None = None
-    fieldType: str
-    confidence: float
-    source: str = "AI"
-    answerMappings: List[dict] | None = None
-    usageCount: int = 1
-    createdAt: str | None = None
-    lastUsed: str | None = None
+    """Learned question-answer pattern - Ultra resilient for production backup"""
+    id: Optional[str] = None
+    questionPattern: Optional[str] = ""
+    intent: Optional[str] = "unknown"
+    canonicalKey: Optional[str] = None
+    fieldType: Optional[str] = "text"
+    confidence: Optional[float] = 1.0
+    source: Optional[str] = "AI"
+    answerMappings: Optional[List[dict]] = None
+    usageCount: Optional[int] = 1
+    createdAt: Optional[str] = None
+    lastUsed: Optional[str] = None
+    synced: Optional[bool] = None
 
 class PatternSearchRequest(BaseModel):
     """Pattern search query"""
@@ -47,6 +49,13 @@ class UserProfile(BaseModel):
     profile_data: dict
     resume_base64: str | None = None
     cover_letter_base64: str | None = None
+
+class BackupRequest(BaseModel):
+    """Unified backup request for profile, patterns, and AI cache"""
+    email: str
+    profileData: dict
+    patterns: Optional[List[Pattern]] = []
+    aiCache: Optional[dict] = {}
 
 class ResumeParseRequest(BaseModel):
     """Resume parsing request (for future)"""

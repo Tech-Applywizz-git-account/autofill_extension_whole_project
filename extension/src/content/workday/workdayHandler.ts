@@ -54,9 +54,9 @@ export async function handleWorkdayApplication(payload?: any): Promise<void> {
         await processWorkdayPass(false);
 
         // ==================== PHASE 2: DELTA SCAN & FILL ====================
-        console.log(`\n${LOG_PREFIX} ═════════════════════════════════════════`);
-        console.log(`${LOG_PREFIX} PHASE 2: DELTA SCAN (Clicking Add Buttons)`);
-        console.log(`${LOG_PREFIX} ═════════════════════════════════════════\n`);
+        // console.log(`\n${LOG_PREFIX} ═════════════════════════════════════════`);
+        // console.log(`${LOG_PREFIX} PHASE 2: DELTA SCAN (Clicking Add Buttons)`);
+        // console.log(`${LOG_PREFIX} ═════════════════════════════════════════\n`);
 
         // Pass 2: Scan WITH clicking Add buttons
         // Ideally we would only process NEW fields, but our deduplication logic handles this naturally
@@ -65,7 +65,7 @@ export async function handleWorkdayApplication(payload?: any): Promise<void> {
         // The filler already checks `STATE.filledFields` to skip filled ones!
         // The Deduplication logic checks `SESSION_STATE.mappedQuestions` to skip mapping known ones.
 
-        await processWorkdayPass(true);
+        // await processWorkdayPass(true);
 
         console.log(`${LOG_PREFIX} ═════════════════════════════════════════`);
         console.log(`${LOG_PREFIX} ✅ WORKDAY AUTOFILL COMPLETE (Both Passes)`);

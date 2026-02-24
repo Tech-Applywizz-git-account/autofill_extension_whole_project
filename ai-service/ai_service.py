@@ -6,14 +6,21 @@ Key guarantees:
 - Never returns placeholder answers ("I don't know", "Not provided", "N/A", "Free text input", etc.)
 - Confidence always >= 0.70 when returning a usable answer
 - Intent is always non-null and normalized to an allowed intent
+- boto3 client is initialized ONCE globally at startup (not per request)
 """
 
 import json
 import os
 import re
+import time
+import uuid
 import boto3
+import logging
+from botocore.config import Config
 from typing import Optional, Dict, Any, List
 from models import AIRequest, AIResponse
+
+logger = logging.getLogger("ai-service")
 
 # ---------------------------------------------------------
 # ROBUST AI SYSTEM PROMPT
@@ -153,6 +160,47 @@ FORBIDDEN_ANSWER_PATTERNS = [
 ]
 
 
+# ---------------------------------------------------------
+# GLOBAL BOTO3 CLIENT — Initialized ONCE at startup
+# This avoids creating a new client per request (~100-300ms overhead each time)
+# ---------------------------------------------------------
+def _create_bedrock_client():
+    """Create global Bedrock client with sane timeouts."""
+    aws_region = os.environ.get("AWS_REGION", "us-east-1")
+    aws_access_key = os.environ.get("AWS_ACCESS_KEY_ID")
+    aws_secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
+
+    if not aws_access_key or not aws_secret_key:
+        logger.warning("⚠️ AWS credentials not set — Bedrock client will not be available")
+        return None
+
+    boto_config = Config(
+        read_timeout=90,         # max wait for Bedrock response
+        connect_timeout=10,      # max wait to establish connection
+        retries={"max_attempts": 1, "mode": "standard"},  # 1 retry max to avoid doubling load
+    )
+
+    return boto3.client(
+        service_name="bedrock-runtime",
+        region_name=aws_region,
+        aws_access_key_id=aws_access_key,
+        aws_secret_access_key=aws_secret_key,
+        config=boto_config,
+    )
+
+
+# Single global client instance
+_bedrock_client = _create_bedrock_client()
+
+
+def get_bedrock_client():
+    """Return the global Bedrock client, reinitializing only if not yet available."""
+    global _bedrock_client
+    if _bedrock_client is None:
+        _bedrock_client = _create_bedrock_client()
+    return _bedrock_client
+
+
 def _normalize_intent(intent: Optional[str], question: str) -> str:
     """Normalize / infer intent safely to prevent memory pollution."""
     if not intent:
@@ -209,7 +257,7 @@ def _repair_answer(question: str, options: Optional[List[str]], intent: str) -> 
     if intent == "personal.desiredSalary" or "salary" in q or "compensation" in q:
         return "I am looking for a competitive salary that reflects the responsibilities of the role and market standards. I am highly motivated and flexible, as my priority is securing this opportunity to contribute to your team."
 
-    # “Anything else” fallback
+    # "Anything else" fallback
     if intent == "personal.additionalInfo" or "anything else" in q or "additional" in q:
         return ("I am incredibly excited about this opportunity and am 100% committed to making a significant impact. "
                 "I am a fast learner, extremely dependable, and will go above and beyond to ensure success in this role. "
@@ -228,27 +276,22 @@ def _repair_answer(question: str, options: Optional[List[str]], intent: str) -> 
 
 def predict_answer(request: AIRequest) -> AIResponse:
     """
-    Predict answer using AWS Bedrock (Amazon Nova)
+    Predict answer using AWS Bedrock (Amazon Nova).
+    This is a SYNCHRONOUS function — call via FastAPI threadpool (def route) or run_in_threadpool.
+    Logs latency for both Bedrock and overall execution.
     """
-    try:
-        aws_region = os.environ.get("AWS_REGION", "us-east-1")
-        aws_access_key = os.environ.get("AWS_ACCESS_KEY_ID")
-        aws_secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
+    request_id = str(uuid.uuid4())[:8]
+    t_start = time.time()
 
-        if not aws_access_key or not aws_secret_key:
+    try:
+        bedrock = get_bedrock_client()
+        if bedrock is None:
             return AIResponse(
                 answer="",
                 confidence=0.0,
                 reasoning="AWS Credentials Missing",
                 intent="unknown",
             )
-
-        bedrock = boto3.client(
-            service_name="bedrock-runtime",
-            region_name=aws_region,
-            aws_access_key_id=aws_access_key,
-            aws_secret_access_key=aws_secret_key,
-        )
 
         options_block = ""
         if request.options and len(request.options) > 0:
@@ -290,14 +333,16 @@ RESPONSE FORMAT (JSON ONLY, NO EXTRA TEXT):
             }
         )
 
-        model_id = "us.amazon.nova-lite-v1:0"
+        model_id = os.environ.get("BEDROCK_MODEL_ID", "us.amazon.nova-lite-v1:0")
 
+        t_bedrock_start = time.time()
         response = bedrock.invoke_model(
             body=body,
             modelId=model_id,
             accept="application/json",
             contentType="application/json",
         )
+        bedrock_ms = int((time.time() - t_bedrock_start) * 1000)
 
         response_body = json.loads(response["body"].read())
         content_text = response_body["output"]["message"]["content"][0]["text"]
@@ -309,6 +354,8 @@ RESPONSE FORMAT (JSON ONLY, NO EXTRA TEXT):
         except json.JSONDecodeError:
             intent = _normalize_intent(None, request.question)
             ans = _repair_answer(request.question, request.options, intent)
+            total_ms = int((time.time() - t_start) * 1000)
+            logger.info(f"[{request_id}] predict_answer | bedrock={bedrock_ms}ms total={total_ms}ms | JSON_PARSE_ERROR → fallback")
             return AIResponse(
                 answer=ans,
                 confidence=0.78,
@@ -331,6 +378,8 @@ RESPONSE FORMAT (JSON ONLY, NO EXTRA TEXT):
 
         if _is_forbidden_answer(raw_answer):
             repaired = _repair_answer(request.question, request.options, intent)
+            total_ms = int((time.time() - t_start) * 1000)
+            logger.info(f"[{request_id}] predict_answer | bedrock={bedrock_ms}ms total={total_ms}ms | FORBIDDEN_ANSWER → repaired")
             return AIResponse(
                 answer=repaired,
                 confidence=max(conf, 0.75),
@@ -374,6 +423,9 @@ RESPONSE FORMAT (JSON ONLY, NO EXTRA TEXT):
         if intent not in ALLOWED_INTENTS:
             intent = "unknown"
 
+        total_ms = int((time.time() - t_start) * 1000)
+        logger.info(f"[{request_id}] predict_answer | bedrock={bedrock_ms}ms total={total_ms}ms | intent={intent}")
+
         return AIResponse(
             answer=raw_answer,
             confidence=conf,
@@ -382,6 +434,8 @@ RESPONSE FORMAT (JSON ONLY, NO EXTRA TEXT):
         )
 
     except Exception as e:
+        total_ms = int((time.time() - t_start) * 1000)
+        logger.error(f"[{request_id}] predict_answer FAILED | total={total_ms}ms | error={str(e)}")
         return AIResponse(
             answer="",
             confidence=0.0,

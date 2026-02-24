@@ -36,49 +36,62 @@ export async function selectDropdownKeyboardFirst(
         await sleep(300); // Increased from 100ms
         console.log(`${LOG_PREFIX} ✅ Focused input`);
 
-        // Step 2: Open with Space/Enter (NOT click!)
+        // Step 2: Open menu deliberately
         const opened = await openDropdownWithKeyboard(input);
         if (!opened) {
-            console.warn(`${LOG_PREFIX} ❌ Failed to open menu with keyboard`);
+            console.warn(`${LOG_PREFIX} ❌ Failed to open menu`);
             return false;
         }
 
-        // Step 3: MutationObserver waits for menu
-        console.log(`${LOG_PREFIX} ⏳ Waiting for dropdown menu...`);
-        const menuAppeared = await waitForDropdownMenu(2000); // Increased from 1000ms
-        if (!menuAppeared) {
-            console.warn(`${LOG_PREFIX} ❌ Menu did not appear after keyboard open`);
-            return false;
+        // Step 3: Wait for OPTIONS, not just menu container
+        console.log(`${LOG_PREFIX} ⏳ Waiting for options to populate...`);
+        const optionsReady = await waitForOptions(2000);
+        if (!optionsReady) {
+            console.warn(`${LOG_PREFIX} ❌ Menu container appeared but no options found`);
         }
-        console.log(`${LOG_PREFIX} ✅ Menu appeared`);
 
         // Step 3.5: Check for a dedicated SEARCH input inside the menu
-        // (Common in Greenhouse, Select2, etc. where the trigger is not the search box)
         const menuSearchInput = findMenuSearchInput();
         if (menuSearchInput) {
-            console.log(`${LOG_PREFIX} 🔍 Found search input in menu! Switching focus.`);
+            console.log(`${LOG_PREFIX} 🔍 Switching focus to menu search input`);
             input = menuSearchInput;
             input.focus();
-            await sleep(200); // Increased from 50ms
+            await sleep(50);
         }
 
         // Step 4: Type to filter options
         await typeToFilter(input, value);
-        await sleep(1200); // Increased to 1.2s - Wait for options to load after fast typing
 
-        // Step 5: ArrowDown to navigate (Crucial for React-Select)
-        console.log(`${LOG_PREFIX} ⬇️ Pressing ArrowDown to highlight option`);
-        dispatchKeyEvent(input, 'ArrowDown', 'ArrowDown');
-        await sleep(300); // Wait for highlight
+        // Wait for specific options to appear (Wait-then-Instant)
+        console.log(`${LOG_PREFIX} ⏳ Waiting for matching option: "${value}"`);
+        const matchingIndex = await waitForFilteredOptions(value, 2000);
+
+        if (matchingIndex === -1) {
+            console.warn(`${LOG_PREFIX} ⚠️ Matching option didn't appear in list after filter`);
+        } else {
+            console.log(`${LOG_PREFIX} ✅ Match found at index: ${matchingIndex}`);
+        }
+
+        // Step 5: ArrowDown to navigate (Conditional)
+        console.log(`${LOG_PREFIX} 🔍 Checking if option is already focused...`);
+        const alreadyFocused = isAnyOptionFocused();
+
+        if (alreadyFocused) {
+            console.log(`${LOG_PREFIX} ✨ First option already focused/highlighted by filter - skipping ArrowDown`);
+        } else {
+            console.log(`${LOG_PREFIX} ⬇️ No focus detected - pressing ArrowDown once to focus list`);
+            dispatchKeyEvent(input, 'ArrowDown', 'ArrowDown');
+            await sleep(100);
+        }
 
         // Step 6: Enter to commit
         let committed = await commitSelection(input);
 
         // Fallback: If Enter didn't close the menu, try Tab
         if (!committed) {
-            console.warn(`${LOG_PREFIX} ⚠️ Enter failed, trying Tab...`);
+            console.warn(`${LOG_PREFIX} ⚠️ Enter failed or menu stayed open (multi-select?), trying Tab...`);
             dispatchKeyEvent(input, 'Tab', 'Tab');
-            await sleep(300);
+            await sleep(100);
             committed = !(await isMenuOpen());
         }
 
@@ -94,7 +107,7 @@ export async function selectDropdownKeyboardFirst(
 
         if (!committed) {
             // One last check: maybe it selected but menu didn't close immediately?
-            await sleep(100);
+            await sleep(50);
             if (verifySelection(element, value)) {
                 console.log(`${LOG_PREFIX} ✅ Verified selection despite menu not closing cleanly`);
                 return true;
@@ -105,13 +118,11 @@ export async function selectDropdownKeyboardFirst(
         }
 
         // Step 7: Strict verification
-        await sleep(75); // Wait for state update
+        await sleep(50); // Wait for state update
         const verified = verifySelection(element, value);
 
         if (verified) {
             console.log(`${LOG_PREFIX} ✅ Selection verified: ${value}`);
-            // Force a bit more time for UI to settle and runner to not race ahead
-            await sleep(500);
             return true;
         } else {
             console.warn(`${LOG_PREFIX} ❌ Verification failed for: ${value}`);
@@ -179,42 +190,29 @@ function findMenuSearchInput(): HTMLInputElement | null {
  * This is more reliable than clicking for React dropdowns
  */
 async function openDropdownWithKeyboard(input: HTMLInputElement): Promise<boolean> {
-    console.log(`${LOG_PREFIX} 🔓 Opening with keyboard...`);
+    console.log(`${LOG_PREFIX} 🔓 Attempting to open menu...`);
 
-    // Try Space key first (works for most dropdowns)
+    // 1. Try Space (Primary for Greenhouse/React-Select/ARIA)
     dispatchKeyEvent(input, ' ', 'Space');
-    await sleep(40);
-
-    if (await isMenuOpen()) {
-        console.log(`${LOG_PREFIX} ✅ Opened with Space`);
+    if (await waitForDropdownMenu(800)) {
+        console.log(`${LOG_PREFIX} ✅ Menu opened via Space`);
         return true;
     }
 
-    // Try Enter key
-    dispatchKeyEvent(input, 'Enter', 'Enter');
-    await sleep(40);
-
-    if (await isMenuOpen()) {
-        console.log(`${LOG_PREFIX} ✅ Opened with Enter`);
-        return true;
-    }
-
-    // Try ArrowDown (some dropdowns open on arrow)
+    // 2. Try ArrowDown (Fallback)
+    console.log(`${LOG_PREFIX} ⚠️ Space failed, trying ArrowDown fallback`);
     dispatchKeyEvent(input, 'ArrowDown', 'ArrowDown');
-    await sleep(40);
-
-    if (await isMenuOpen()) {
-        console.log(`${LOG_PREFIX} ✅ Opened with ArrowDown`);
+    if (await waitForDropdownMenu(800)) {
+        console.log(`${LOG_PREFIX} ✅ Menu opened via ArrowDown`);
         return true;
     }
 
+    // 3. Last Fallback: Click the control container
     console.warn(`${LOG_PREFIX} ⚠️ Keyboard open failed, trying click fallback`);
-    // Fallback: click the control
     const control = input.closest('.select__control') || input.parentElement;
     if (control) {
         (control as HTMLElement).click();
-        await sleep(40);
-        return isMenuOpen();
+        return await waitForDropdownMenu(1000);
     }
 
     return false;
@@ -232,27 +230,99 @@ async function isMenuOpen(): Promise<boolean> {
  */
 function waitForDropdownMenu(timeout: number): Promise<boolean> {
     return new Promise((resolve) => {
-        // Check if menu already exists
         if (getDropdownMenu()) {
             resolve(true);
             return;
         }
-
         const observer = new MutationObserver(() => {
             if (getDropdownMenu()) {
                 observer.disconnect();
                 resolve(true);
             }
         });
-
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-
+        observer.observe(document.body, { childList: true, subtree: true });
         setTimeout(() => {
             observer.disconnect();
             resolve(!!getDropdownMenu());
+        }, timeout);
+    });
+}
+
+/**
+ * Wait for options to actually appear inside the menu
+ */
+function waitForOptions(timeout: number): Promise<boolean> {
+    return new Promise((resolve) => {
+        const hasOptions = () => {
+            const menu = getDropdownMenu();
+            if (!menu) return false;
+            // Count options - exclude "Select..." placeholders if possible
+            const opts = Array.from(menu.querySelectorAll('[role="option"], .select__option, .dropdown-item, li'));
+            return opts.length > 0;
+        };
+
+        if (hasOptions()) {
+            resolve(true);
+            return;
+        }
+
+        const observer = new MutationObserver(() => {
+            if (hasOptions()) {
+                observer.disconnect();
+                resolve(true);
+            }
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        setTimeout(() => {
+            observer.disconnect();
+            resolve(hasOptions());
+        }, timeout);
+    });
+}
+
+/**
+ * Wait for a specific value to appear in the options list after filtering
+ * Returns the index (0-based) of the first matching option, or -1 if no match found
+ */
+function waitForFilteredOptions(expectedValue: string, timeout: number): Promise<number> {
+    const target = expectedValue.toLowerCase();
+
+    return new Promise((resolve) => {
+        const getMatchIndex = () => {
+            const menu = getDropdownMenu();
+            if (!menu) return -1;
+
+            // Query all valid option elements
+            const opts = Array.from(menu.querySelectorAll('[role="option"], .select__option, .dropdown-item, li'));
+
+            // Find index of first match
+            return opts.findIndex(opt => {
+                const text = opt.textContent?.toLowerCase() || '';
+                return text.includes(target);
+            });
+        };
+
+        const initialIndex = getMatchIndex();
+        if (initialIndex !== -1) {
+            resolve(initialIndex);
+            return;
+        }
+
+        const observer = new MutationObserver(() => {
+            const index = getMatchIndex();
+            if (index !== -1) {
+                observer.disconnect();
+                resolve(index);
+            }
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        setTimeout(() => {
+            observer.disconnect();
+            resolve(getMatchIndex());
         }, timeout);
     });
 }
@@ -286,6 +356,32 @@ function getDropdownMenu(): Element | null {
     }
 
     return null;
+}
+
+/**
+ * Check if any option in the open menu is currently focused or highlighted
+ * Works for ARIA (aria-selected, aria-activedescendant) and Greenhouse (focussed/is-focused)
+ */
+function isAnyOptionFocused(): boolean {
+    const menu = getDropdownMenu();
+    if (!menu) return false;
+
+    // 1. Check Greenhouse/React-Select focus classes
+    const focusedClassMatch = menu.querySelector('[class*="focussed"], [class*="focused"], .select__option--is-focused');
+    if (focusedClassMatch) return true;
+
+    // 2. Check ARIA activedescendant on the input (common for iCIMS/Workday/generic)
+    // Find inputs associated with this menu (usually preceding it or holding focus)
+    const inputs = document.querySelectorAll('input[aria-owns], input[aria-controls], input[role="combobox"]');
+    for (const input of Array.from(inputs)) {
+        if (input.getAttribute('aria-activedescendant')) return true;
+    }
+
+    // 3. Check aria-selected or hover states inside menu
+    const selectedAria = menu.querySelector('[aria-selected="true"]');
+    if (selectedAria) return true;
+
+    return false;
 }
 
 /**
@@ -336,16 +432,24 @@ async function commitSelection(input: HTMLInputElement): Promise<boolean> {
 function verifySelection(element: HTMLElement, expectedValue: string): boolean {
     const expectedLower = expectedValue.toLowerCase();
 
-    // Method 1: Check .select__single-value (React-Select)
-    const control = element.closest('.select__control');
+    // Method 1: Check .select__single-value or .select__multi-value (React-Select)
+    const control = element.closest('.select__control') || element.parentElement?.closest('.select__control');
     if (control) {
+        // Check single value
         const singleValue = control.querySelector('.select__single-value');
         if (singleValue) {
             const displayedText = singleValue.textContent?.trim().toLowerCase() || '';
-            console.log(`${LOG_PREFIX} 🔍 Displayed value: "${displayedText}"`);
+            console.log(`${LOG_PREFIX} 🔍 Displayed single value: "${displayedText}"`);
+            if (displayedText.includes(expectedLower) || expectedLower.includes(displayedText)) return true;
+        }
 
-            if (displayedText.includes(expectedLower) || expectedLower.includes(displayedText)) {
-                return true;
+        // Check multi-value (tags)
+        const multiValues = control.querySelectorAll('.select__multi-value__label');
+        if (multiValues.length > 0) {
+            for (const val of Array.from(multiValues)) {
+                const text = val.textContent?.trim().toLowerCase() || '';
+                console.log(`${LOG_PREFIX} 🔍 Checking multi-value tag: "${text}"`);
+                if (text.includes(expectedLower) || expectedLower.includes(text)) return true;
             }
         }
     }
@@ -359,17 +463,18 @@ function verifySelection(element: HTMLElement, expectedValue: string): boolean {
         }
     }
 
-    // Method 3: Check input value
+    // Method 3: Check input value (if it holds the selection)
     const input = findDropdownInput(element);
-    if (input && input.value) {
+    if (input && input.value && !input.readOnly) {
         const inputValue = input.value.trim().toLowerCase();
-        if (inputValue.includes(expectedLower) || expectedLower.includes(inputValue)) {
+        if (inputValue === expectedLower || (inputValue.length > 3 && inputValue.includes(expectedLower))) {
             return true;
         }
     }
 
     // Method 4: Check if any visible text in container matches
-    if (element.textContent?.toLowerCase().includes(expectedLower)) {
+    const containerText = element.textContent?.toLowerCase() || '';
+    if (containerText.includes(expectedLower)) {
         return true;
     }
 

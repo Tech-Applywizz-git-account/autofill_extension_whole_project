@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { CanonicalProfile, EMPTY_PROFILE } from "../../types/canonicalProfile";
 import { Gender, Race, YesNoDecline, SexualOrientation } from "../../types/canonicalEnums";
-import { saveProfile, restoreProfile } from "../../core/storage/profileStorage";
+import { saveProfile, restoreProfile, restoreMasterData } from "../../core/storage/profileStorage";
 import { patternStorage } from "../../core/storage/patternStorage";
 import { mapMultiSourceToProfile } from "../../core/mapping/apiMapper";
 import LandingPage from "./LandingPage";
@@ -143,15 +143,13 @@ const Onboarding: React.FC = () => {
     const handleExistingUser = async (email: string) => {
         setFetching(true);
         try {
-            const restoredProfile = await restoreProfile(email);
-            if (restoredProfile) {
-                setProfile(restoredProfile);
-                // Also restore patterns
-                await patternStorage.restorePatterns(email);
-                alert("Welcome back! Your data has been restored.");
+            const result = await restoreMasterData(email);
+            if (result && result.profile) {
+                setProfile(result.profile);
+                alert("Welcome back! Your profile, patterns, and AI cache have been fully restored.");
                 window.close(); // Close onboarding as they are already set up
             } else {
-                alert("No profile found for this email. Please start as a new user.");
+                alert("No backup found for this email. Please start as a new user.");
                 setStep(1);
             }
         } catch (error) {

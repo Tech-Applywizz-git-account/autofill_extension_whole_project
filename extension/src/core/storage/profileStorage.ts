@@ -207,3 +207,45 @@ export async function restoreProfile(email: string): Promise<CanonicalProfile | 
         return null;
     }
 }
+/**
+ * Restore ALL master data from Supabase (Unified)
+ */
+export async function restoreMasterData(email: string): Promise<{
+    profile: CanonicalProfile;
+    patterns: any[];
+    aiCache: any;
+} | null> {
+    try {
+        console.log(`[ProfileStorage] 🔄 Master restoring all data for ${email}...`);
+        const result = await proxyFetch(`${AI_SERVICE_URL}/api/user-data/restore/${encodeURIComponent(email)}`);
+
+        if (result && result.profileData) {
+            const profile = result.profileData as CanonicalProfile;
+            const patterns = result.patterns || [];
+            const aiCache = result.aiCache || {};
+
+            console.log(`[ProfileStorage] 📥 Master data received: ${patterns.length} patterns, ${Object.keys(aiCache).length} cache entries`);
+
+            // 1. Save Profile
+            await chrome.storage.local.set({
+                [STORAGE_KEY]: profile,
+                [VERSION_KEY]: CURRENT_VERSION,
+            });
+
+            // 2. Save Patterns
+            const { patternStorage } = await import("./patternStorage");
+            await patternStorage.replaceLocalPatterns(patterns);
+
+            // 3. Save AI Cache
+            const { replaceCache } = await import("./aiResponseCache");
+            await replaceCache(aiCache);
+
+            console.log("[ProfileStorage] ✅ Master restore complete");
+            return { profile, patterns, aiCache };
+        }
+        return null;
+    } catch (error) {
+        console.error("[ProfileStorage] Master restore error:", error);
+        return null;
+    }
+}

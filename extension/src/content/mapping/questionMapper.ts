@@ -7,6 +7,7 @@ import { loadProfile } from '../../core/storage/profileStorage';
 import { askAI } from '../../core/ai/aiService';
 import { patternStorage } from '../../core/storage/patternStorage';
 import { findQuestionIntent, getValueByIntent } from './questionPatternDatabase';
+import { resolveHardcoded } from './hardcodedAnswerEngine';
 import { getCachedResponse, setCachedResponse } from '../../core/storage/aiResponseCache';
 import { AnalyticsTracker } from '../../core/analytics/AnalyticsTracker';
 
@@ -18,7 +19,7 @@ export interface ScannedQuestion {
     selector: string;
 }
 
-export type MappedSource = 'canonical' | 'learned' | 'fuzzy' | 'AI' | 'injected_skills' | 'hardcoded_override';
+export type MappedSource = 'canonical' | 'learned' | 'fuzzy' | 'AI' | 'injected_skills' | 'hardcoded_override' | 'hardcoded';
 
 export interface MappedAnswer {
     selector: string;
@@ -81,19 +82,71 @@ export class QuestionMapper {
         const mappedAnswers: MappedAnswer[] = [];
         const unmappedForAI: ScannedQuestion[] = [];
 
+        // ─────────────────────────────────────────────────────────────────────
+        // Phase -1: HARDCODED ENGINE — deterministic, zero AI, zero network
+        // Every common job-platform question is answered directly from profile.
+        // If resolved, the question never reaches Phase 0, learned patterns, or AI.
+        // ─────────────────────────────────────────────────────────────────────
+        console.log(`\n⚡ Phase -1: Hardcoded answer engine (instant, zero AI)...\n`);
+        const phase0Candidates: ScannedQuestion[] = [];
+        for (const q of uniqueQuestions) {
+            const hResult = resolveHardcoded(q.questionText, q.fieldType, q.options || undefined, profile);
+            if (hResult !== null) {
+                mappedAnswers.push({
+                    selector: q.selector,
+                    questionText: q.questionText,
+                    answer: hResult.answer,
+                    source: 'hardcoded',
+                    confidence: hResult.confidence,
+                    required: q.required,
+                    fieldType: q.fieldType,
+                    options: q.options || undefined,
+                    canonicalKey: hResult.intent
+                });
+                console.log(`  ⚡ [HARDCODED] "${q.questionText}" → "${hResult.answer}" (${hResult.intent})`);
+            } else {
+                phase0Candidates.push(q);
+            }
+        }
+        console.log(`  ✅ Hardcoded resolved ${uniqueQuestions.length - phase0Candidates.length}/${uniqueQuestions.length} questions. ${phase0Candidates.length} remaining.\n`);
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Phase 0: Pattern DB — intent patterns from questionPatternDatabase.ts
+        // ─────────────────────────────────────────────────────────────────────
         console.log(`🎯 Phase 0: Checking predefined question patterns...\n`);
 
         // Phase 0: Try predefined question patterns (fastest - instant recognition)
-        for (const q of uniqueQuestions) {
+        for (const q of phase0Candidates) {
             const match = findQuestionIntent(q.questionText, q.fieldType);
             if (match) {
                 const intent = match.intent;
-                const value = getValueByIntent(profile, intent);
+                let value = getValueByIntent(profile, intent);
                 // Debug log to trace "No" values
                 if (value === 'No' || value === 'No Experience') {
                     console.warn(`  ⚠️ Debug: Intent "${intent}" returned "${value}" from profile`);
                 }
-                if (value) {
+                if (value !== null && value !== undefined && value !== '') {
+                    // For boolean values, convert to Yes/No
+                    if (typeof value === 'boolean') {
+                        value = this.booleanToYesNo(value, q.options || undefined);
+                    } else {
+                        value = String(value);
+                    }
+
+                    // For dropdown/radio/checkbox fields, validate against available options
+                    // This is critical: raw profile values may not exactly match dropdown text
+                    if (q.options && q.options.length > 0) {
+                        const optionMatch = this.matchInOptions(value, q.options, 1.0);
+                        if (optionMatch) {
+                            value = optionMatch.answer; // Use the exact option text
+                        } else {
+                            // Value not in options - fall through to learned/fuzzy/AI
+                            console.log(`  ⚠️ Phase 0: "${q.questionText}" → "${value}" not in options, falling through`);
+                            unmappedForAI.push(q);
+                            continue;
+                        }
+                    }
+
                     // Successfully matched using predefined pattern
                     mappedAnswers.push({
                         selector: q.selector,
@@ -106,11 +159,11 @@ export class QuestionMapper {
                         options: q.options || undefined,
                         canonicalKey: intent
                     });
-                    console.log(`  ⚡ "${q.questionText}" → ${intent} (predefined pattern: "${match.pattern}")`);
+                    console.log(`  ⚡ "${q.questionText}" → ${intent} (predefined pattern: "${match.pattern}", value: "${value}")`);
                     continue; // Skip to next question
                 }
             }
-            // No predefined pattern match - will try canonical/learned/fuzzy
+            // No predefined pattern match or no profile value - will try canonical/learned/fuzzy
             unmappedForAI.push(q);
         }
 
@@ -299,7 +352,7 @@ export class QuestionMapper {
     private async tryLearned(question: ScannedQuestion, profile: any): Promise<{ answer: string; source: 'learned'; confidence: number } | null> {
         const pattern = await patternStorage.findPattern(question.questionText);
 
-        if (!pattern) {
+        if (!pattern || pattern.intent.toLowerCase() === 'unknown') {
             return null;
         }
 
@@ -813,6 +866,102 @@ export class QuestionMapper {
         // Sexual Orientation (NEW - prevent AI calls)
         if ((qLower.includes('sexual orientation') || qLower.includes('sexual identity')) && profile.eeo?.sexualOrientation) {
             return this.matchInOptions(profile.eeo.sexualOrientation, question.options || undefined, 1.0);
+        }
+
+        // ===== EDUCATION QUESTIONS =====
+        // Get first education entry (most recent / highest degree)
+        const edu = Array.isArray(profile.education) && profile.education.length > 0 ? profile.education[0] : null;
+
+        if (edu) {
+            // School name
+            if ((qLower === 'school' || qLower.includes('school name') || qLower.includes('university') ||
+                qLower.includes('college') || qLower.includes('institution')) &&
+                !qLower.includes('high school') && edu.school) {
+                return validateWithOptions(edu.school);
+            }
+
+            // High school
+            if ((qLower.includes('high school') || qLower.includes('secondary school')) && edu.school) {
+                return validateWithOptions(edu.school);
+            }
+
+            // Degree type
+            if ((qLower === 'degree' || qLower.includes('degree type') || qLower.includes('degree level') ||
+                qLower.includes('education level') || qLower.includes('highest degree') ||
+                qLower.includes('highest education') || qLower.includes('education attained')) && edu.degree) {
+                return validateWithOptions(edu.degree);
+            }
+
+            // Major / Field of Study
+            if ((qLower === 'major' || qLower.includes('field of study') || qLower.includes('discipline') ||
+                qLower.includes('concentration') || qLower.includes('area of study')) && edu.major) {
+                return validateWithOptions(edu.major);
+            }
+
+            // GPA
+            if ((qLower.includes('gpa') || qLower.includes('grade point')) && edu.gpa) {
+                return validateWithOptions(edu.gpa);
+            }
+
+            // Graduation / End date
+            if ((qLower.includes('graduation') || qLower.includes('completion date') || qLower.includes('graduated')) && edu.endDate) {
+                return validateWithOptions(edu.endDate);
+            }
+        }
+
+        // ===== WORK EXPERIENCE QUESTIONS =====
+        // Get first (most recent) experience entry
+        const exp = Array.isArray(profile.experience) && profile.experience.length > 0 ? profile.experience[0] : null;
+
+        if (exp) {
+            // Company name — only in experience context (check for experience/employment-related keywords in question
+            // or check that question doesn't also match education context keywords)
+            if ((qLower === 'company' || qLower === 'company name' || qLower === 'employer' ||
+                qLower.includes('employer name') || qLower.includes('organization name') ||
+                (qLower.includes('company') && !qLower.includes('school') && !qLower.includes('university'))) && exp.company) {
+                return validateWithOptions(exp.company);
+            }
+
+            // Job title
+            if ((qLower === 'title' || qLower === 'job title' || qLower === 'position' ||
+                qLower.includes('job title') || qLower.includes('position title') || qLower.includes('your title') ||
+                qLower.includes('job role')) && exp.title) {
+                return validateWithOptions(exp.title);
+            }
+
+            // Work location
+            if ((qLower.includes('work location') || qLower.includes('job location') ||
+                qLower.includes('office location')) && exp.location) {
+                return validateWithOptions(exp.location);
+            }
+
+            // Currently working
+            if ((qLower.includes('currently working') || qLower.includes('current position') ||
+                qLower.includes('still working') || qLower.includes('currently employed')) &&
+                exp.currentlyWorking !== undefined) {
+                const answer = this.booleanToYesNo(exp.currentlyWorking, question.options || undefined);
+                return { answer, source: 'canonical', confidence: 1.0 };
+            }
+        }
+
+        // ===== HOW DID YOU HEAR / REFERRAL SOURCE =====
+        if (qLower.includes('how did you hear') || qLower.includes('where did you hear') ||
+            qLower.includes('how did you find') || qLower.includes('referral source') ||
+            qLower.includes('source of application') || qLower.includes('how did you learn')) {
+            // Check dedicated application.howDidYouHear field first
+            const howHeard = profile.application?.howDidYouHear ||
+                profile.customAnswers?.['howDidYouHear'] ||
+                profile.customAnswers?.['how did you hear about us'];
+            if (howHeard) {
+                return validateWithOptions(howHeard);
+            }
+        }
+
+        // Referral name
+        if ((qLower.includes('referred by') || qLower.includes('who referred you') ||
+            qLower.includes('referral name') || qLower.includes('referrer name')) &&
+            profile.application?.referralName) {
+            return validateWithOptions(profile.application.referralName);
         }
 
         return null;

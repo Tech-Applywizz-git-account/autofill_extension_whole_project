@@ -108,33 +108,40 @@ export async function selectRadioByLabel(
 
         // Strategy 1: Exact match (case-insensitive)
         for (const radio of radios) {
-            const label = getRadioLabel(radio);
-            if (label && normalizeText(label) === normalizeText(labelText)) {
-                console.log(`[selectRadioByLabel] ✅ Exact match found: "${label}"`);
-                return await clickRadio(radio, label);
+            const labelContent = getRadioLabel(radio);
+            if (labelContent && normalizeText(labelContent) === normalizeText(labelText)) {
+                console.log(`[selectRadioByLabel] ✅ Exact match found: "${labelContent}"`);
+                return await clickRadio(radio, labelContent);
             }
         }
 
-        // Strategy 2: Partial match (label contains target or vice versa)
-        for (const radio of radios) {
-            const label = getRadioLabel(radio);
-            if (label) {
-                const normalizedLabel = normalizeText(label);
-                const normalizedTarget = normalizeText(labelText);
-
-                if (normalizedLabel.includes(normalizedTarget) || normalizedTarget.includes(normalizedLabel)) {
-                    console.log(`[selectRadioByLabel] ✅ Partial match found: "${label}" (target: "${labelText}")`);
+        // Strategy 2: Partial/Meaning match
+        const target = normalizeText(labelText);
+        if (target === 'yes' || target === 'no') {
+            // BE CAREFUL: Don't let 'no' match 'no - but relocating'
+            // Only match if the label is EXACTLY yes/no or starts with it followed by punctuation
+            for (const radio of radios) {
+                const label = normalizeText(getRadioLabel(radio) || "");
+                if (label === target || label.startsWith(target + " ") || label.startsWith(target + ",") || label.startsWith(target + ".")) {
+                    console.log(`[selectRadioByLabel] ✅ Strict boolean match found: "${label}"`);
+                    return await clickRadio(radio, label);
+                }
+            }
+        } else {
+            // Longer descriptive labels
+            for (const radio of radios) {
+                const label = normalizeText(getRadioLabel(radio) || "");
+                if (label.includes(target) || target.includes(label)) {
+                    console.log(`[selectRadioByLabel] ✅ Partial match found: "${label}"`);
                     return await clickRadio(radio, label);
                 }
             }
         }
 
-        // Strategy 3: Fuzzy match using value attribute
+        // Strategy 3: Value match
         for (const radio of radios) {
-            if (radio.value && normalizeText(radio.value) === normalizeText(labelText)) {
-                const label = getRadioLabel(radio) || radio.value;
-                console.log(`[selectRadioByLabel] ✅ Value match found: "${label}"`);
-                return await clickRadio(radio, label);
+            if (radio.value && normalizeText(radio.value) === target) {
+                return await clickRadio(radio, radio.value);
             }
         }
 
@@ -152,33 +159,45 @@ export async function selectRadioByLabel(
  */
 async function clickRadio(radio: HTMLInputElement, labelText: string): Promise<boolean> {
     try {
-        // Get label element for React-safe clicking
         const labelElement = getLabelElement(radio);
-        const target = labelElement ?? radio;
 
-        // Dispatch full mouse event sequence
-        target.dispatchEvent(
-            new MouseEvent("mousedown", { bubbles: true, cancelable: true })
-        );
-        target.dispatchEvent(
-            new MouseEvent("mouseup", { bubbles: true, cancelable: true })
-        );
-        target.dispatchEvent(
-            new MouseEvent("click", { bubbles: true, cancelable: true })
-        );
+        // Strategy: Greenhouse/Workday often hide the real input. 
+        // We should click the LABEL or the visible container.
+        const greenhouseWrapper = radio.closest('.radio_button, .radio-button-container, [class*="radio"]');
+        const target = greenhouseWrapper || labelElement || radio;
 
-        // Wait for state to commit
-        const success = await waitForCommit(() => radio.checked, 500);
+        console.log(`[clickRadio] 🖱️ Clicking radio for: "${labelText}"`, {
+            checkedBefore: radio.checked,
+            targetTag: target.tagName,
+            targetClass: target.className
+        });
+
+        // Event sequence for React-Select/Custom components
+        target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }));
+        target.dispatchEvent(new MouseEvent("mouseup", { bubbles: true, cancelable: true }));
+        (target as HTMLElement).click();
+
+        // Fallback: Click the label and input directly if they are different from target
+        if (!radio.checked) {
+            if (labelElement && labelElement !== target) labelElement.click();
+            if (radio !== target) radio.click();
+        }
+
+        // Wait for selection to commit
+        const success = await waitForCommit(() => radio.checked, 800);
 
         if (success) {
-            console.log(`[selectRadioByLabel] ✅ Radio button selected and verified: ${labelText}`);
+            console.log(`[selectRadioByLabel] ✅ Radio selected: ${labelText}`);
             return true;
         } else {
-            console.warn(`[selectRadioByLabel] ⚠️ Radio button clicked but not verified: ${labelText}`);
-            return radio.checked; // Return current state even if verification timed out
+            console.warn(`[selectRadioByLabel] ⚠️ Radio NOT selected after click: ${labelText}`);
+            // Last resort: force checked (though this won't trigger React state usually)
+            // radio.checked = true;
+            // radio.dispatchEvent(new Event('change', { bubbles: true }));
+            return radio.checked;
         }
     } catch (error) {
-        console.error("[selectRadioByLabel] Error clicking radio:", error);
+        console.error("[clickRadio] ❌ Error:", error);
         return false;
     }
 }
@@ -207,18 +226,25 @@ export async function setCheckbox(
         const currentState = element.checked;
 
         if (currentState !== checked) {
-            // Click to toggle
-            const label = getLabelElement(element);
-            if (label) {
-                label.click();
-            } else {
-                element.click();
-            }
+            console.log(`[setCheckbox] 🔘 Toggling checkbox to ${checked}`);
 
-            await sleep(50);
+            // For Greenhouse/Workday styled checkboxes, click the label or parent container
+            const label = getLabelElement(element);
+            const greenhouseWrapper = element.closest('.checkbox, .checkbox-container, [class*="checkbox"]');
+
+            const target = greenhouseWrapper || label || element;
+
+            target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+            target.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
+            (target as HTMLElement).click();
+
+            // Verification with wait
+            await waitForCommit(() => element.checked === checked, 500);
         }
 
-        return element.checked === checked;
+        const success = element.checked === checked;
+        console.log(`[setCheckbox] ${success ? '✅' : '❌'} Result: ${element.checked}`);
+        return success;
     } catch (error) {
         console.error("Failed to set checkbox:", error);
         return false;
@@ -587,16 +613,18 @@ function normalizeText(text: string): string {
 
 function getRadioLabel(radio: HTMLInputElement): string | null {
     const label = getLabelElement(radio);
+    let text: string | null = null;
+
     if (label) {
-        return label.textContent?.trim() || null;
+        text = label.textContent?.trim() || null;
+    } else {
+        const ariaLabel = radio.getAttribute("aria-label");
+        if (ariaLabel) text = ariaLabel.trim();
     }
 
-    const ariaLabel = radio.getAttribute("aria-label");
-    if (ariaLabel) {
-        return ariaLabel.trim();
-    }
+    if (!text) return null;
 
-    return null;
+    return text;
 }
 
 export function getLabelElement(element: HTMLElement): HTMLLabelElement | null {

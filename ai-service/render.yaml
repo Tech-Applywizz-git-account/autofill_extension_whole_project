@@ -3,9 +3,20 @@ services:
     name: ai-autofill-service
     env: python
     region: oregon
-    plan: free
+    # ⬆️ IMPORTANT: Upgrade to at least "starter" (1 vCPU / 1GB RAM) for stability with 150+ users
+    plan: starter
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    startCommand: >
+      gunicorn app:app
+      --worker-class uvicorn.workers.UvicornWorker
+      --bind 0.0.0.0:$PORT
+      --workers 2
+      --threads 4
+      --timeout 180
+      --graceful-timeout 30
+      --keep-alive 5
+      --max-requests 500
+      --max-requests-jitter 100
     envVars:
       - key: AWS_ACCESS_KEY_ID
         sync: false  # Manually set in Render dashboard

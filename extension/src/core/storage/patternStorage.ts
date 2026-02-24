@@ -7,6 +7,7 @@
  * - Intent validation (canonical whitelist)
  * - Forbidden answer filtering
  * - 70-85% reduction in AI calls
+ * - Client-side caching for global patterns (5 min TTL) — prevents self-DDoS
  */
 
 import { PatternMatcher } from './patternMatcher';
@@ -14,6 +15,13 @@ import { loadProfile } from './profileStorage';
 import { CONFIG } from '../../config';
 
 const AI_SERVICE_URL = CONFIG.API.AI_SERVICE; // Or your production URL
+
+// -------------------------------------------------------------------
+// CLIENT-SIDE CACHE — prevents /api/patterns/sync from being hit
+// on every question lookup (was causing 1800+ req/min with 150 users)
+// -------------------------------------------------------------------
+const GLOBAL_PATTERNS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+let globalPatternsCache: { patterns: LearnedPattern[], fetchedAt: number } | null = null;
 
 export interface LearnedPattern {
     id: string;
@@ -94,6 +102,13 @@ export class PatternStorage {
     }
 
     /**
+     * Replace all local patterns (used for restore)
+     */
+    async replaceLocalPatterns(patterns: LearnedPattern[]): Promise<void> {
+        await this.saveLocalPatterns(patterns);
+    }
+
+    /**
      * Add a new pattern
      */
     async addPattern(pattern: Omit<LearnedPattern, 'id' | 'createdAt' | 'usageCount' | 'lastUsed'>): Promise<void> {
@@ -152,15 +167,25 @@ export class PatternStorage {
     }
 
     /**
-     * Fetch global patterns from AI Service
+     * Fetch global patterns from AI Service.
+     * 
+     * ✅ Client-side cached for 5 minutes — prevents per-question network calls
+     * which were previously causing a DDoS-like effect on the backend.
      */
     async fetchGlobalPatterns(): Promise<LearnedPattern[]> {
+        // Return from cache if still fresh
+        const now = Date.now();
+        if (globalPatternsCache && (now - globalPatternsCache.fetchedAt) < GLOBAL_PATTERNS_CACHE_TTL_MS) {
+            console.log(`[PatternStorage] ⚡ Using cached global patterns (${globalPatternsCache.patterns.length} patterns, age=${Math.round((now - globalPatternsCache.fetchedAt) / 1000)}s)`);
+            return globalPatternsCache.patterns;
+        }
+
         try {
-            console.log('[PatternStorage] 🌐 Fetching global patterns from AI Service...');
+            console.log('[PatternStorage] 🌐 Fetching fresh global patterns from AI Service...');
             const data = await proxyFetch(`${AI_SERVICE_URL}/api/patterns/sync`);
             const patterns = data.patterns || [];
 
-            return patterns.map((p: any) => ({
+            const mapped: LearnedPattern[] = patterns.map((p: any) => ({
                 id: `global_${p.id}`,
                 questionPattern: p.question_pattern || p.questionPattern,
                 intent: p.intent,
@@ -174,9 +199,15 @@ export class PatternStorage {
                 source: 'AI' as const,
                 synced: true
             }));
+
+            // Update cache
+            globalPatternsCache = { patterns: mapped, fetchedAt: now };
+            console.log(`[PatternStorage] ✅ Cached ${mapped.length} global patterns for 5 minutes`);
+            return mapped;
         } catch (error) {
             console.error('[PatternStorage] Error fetching global patterns:', error);
-            return [];
+            // Return stale cache if available rather than empty
+            return globalPatternsCache?.patterns ?? [];
         }
     }
 

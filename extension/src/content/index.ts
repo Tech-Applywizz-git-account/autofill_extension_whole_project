@@ -4,6 +4,7 @@ import { loadProfile } from "../core/storage/profileStorage";
 import { QuestionMapper } from "./mapping/questionMapper";
 import { initAutofillRunner } from "./autofillRunner";
 import { FormScanner } from "./scanner/formScanner";
+import { scanGreenhouseApp } from "./greenhouseScannerDemo";
 
 /**
  * Production content script with scan-and-fill architecture
@@ -45,6 +46,11 @@ window.fetch = function (...args) {
             try {
                 // Only render overlay in the top-level frame
                 if (window === window.top) {
+                    // DEMO: Automatically scan and log Greenhouse fields if on a Greenhouse page
+                    if (window.location.hostname.includes("greenhouse.io")) {
+                        scanGreenhouseApp();
+                    }
+
                     // Render overlay panel with empty fields (icon state)
                     // User will trigger scan manually via "Scan Application" button
                     const noOpAutoFill = async () => {

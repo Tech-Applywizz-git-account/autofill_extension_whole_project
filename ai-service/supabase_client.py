@@ -57,6 +57,10 @@ class SupabaseTable:
         self.params[column] = f"eq.{value}"
         return self
 
+    def delete(self):
+        self.method = "DELETE"
+        return self
+
     def gte(self, column: str, value: Any):
         self.params[column] = f"gte.{value}"
         return self
@@ -64,9 +68,11 @@ class SupabaseTable:
     def execute(self) -> SupabaseResponse:
         try:
             if self.method == "GET":
-                response = requests.get(self.url, headers=self.headers, params=self.params)
+                response = requests.get(self.url, headers=self.headers, params=self.params, timeout=15)
             elif self.method == "POST":
-                response = requests.post(self.url, headers=self.headers, params=self.params, json=self.json_data)
+                response = requests.post(self.url, headers=self.headers, params=self.params, json=self.json_data, timeout=15)
+            elif self.method == "DELETE":
+                response = requests.delete(self.url, headers=self.headers, params=self.params, timeout=15)
             else:
                 return SupabaseResponse(error=f"Unsupported method: {self.method}")
 
