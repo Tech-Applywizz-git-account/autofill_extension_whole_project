@@ -244,7 +244,7 @@ def _repair_answer(question: str, options: Optional[List[str]], intent: str) -> 
     """
     q = (question or "").lower()
 
-    # If options exist, pick safest professional option
+    # If options exist, pick safest professionall  option
     if options:
         pref = ["Prefer not to say", "Decline to answer", "Decline to state", "Prefer not to disclose"]
         for p in pref:

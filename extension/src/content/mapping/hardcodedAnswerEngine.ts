@@ -17,7 +17,7 @@
  *
  * Usage:
  *   import { resolveHardcoded } from './hardcodedAnswerEngine';
- *   const answer = resolveHardcoded(questionText, fieldType, options, profile);
+ *   const answer = resolveHardcoded(quesftionText, fieldType, options, profile);
  *   if (answer !== null) { /* use it directly — no AI needed *\/ }
  */
 
