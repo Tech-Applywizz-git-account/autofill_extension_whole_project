@@ -9,6 +9,7 @@ export enum JobPlatform {
     ICIMS = "icims",
     LEVER = "lever",
     BAMBOOHR = "bamboohr",
+    ASHBY = "ashby",
     GENERIC = "generic"
 }
 
@@ -46,6 +47,11 @@ export function detectPlatform(): JobPlatform {
     // BambooHR detection
     if (hostname.includes("bamboohr.com") || url.includes("bamboohr")) {
         return JobPlatform.BAMBOOHR;
+    }
+
+    // Ashby detection
+    if (hostname.includes("ashbyhq.com") || url.includes("ashby")) {
+        return JobPlatform.ASHBY;
     }
 
     return JobPlatform.GENERIC;
@@ -145,6 +151,22 @@ export function getPlatformSelectors(): {
                 radioGroup: [
                     'input[type="radio"]',
                     '[role="radiogroup"]'
+                ]
+            };
+
+        case JobPlatform.ASHBY:
+            return {
+                combobox: [
+                    '[class*="Dropdown_container"]',
+                    '[role="combobox"]'
+                ],
+                dropdown: [
+                    '[role="listbox"]',
+                    '[class*="Dropdown_menu"]'
+                ],
+                radioGroup: [
+                    '[class*="Radio_container"]',
+                    'input[type="radio"]'
                 ]
             };
 

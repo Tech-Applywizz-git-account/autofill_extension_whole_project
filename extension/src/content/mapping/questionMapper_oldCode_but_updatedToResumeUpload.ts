@@ -83,49 +83,13 @@ export class QuestionMapper {
         const unmappedForAI: ScannedQuestion[] = [];
 
         // ─────────────────────────────────────────────────────────────────────
-        // Phase -2: CUSTOM ANSWERS — User manual overrides take absolute priority
-        // ─────────────────────────────────────────────────────────────────────
-        console.log(`\n⭐ Phase -2: Checking custom manual overrides...\n`);
-        const phaseNeg1Candidates: ScannedQuestion[] = [];
-        for (const q of uniqueQuestions) {
-            if (profile.customAnswers && profile.customAnswers[q.questionText]) {
-                const customAnswer = profile.customAnswers[q.questionText];
-                console.log(`  ⭐ [CUSTOM] "${q.questionText}" → "${customAnswer}"`);
-
-                // Validate against options if this is a dropdown/radio
-                let finalAnswer = customAnswer;
-                if (q.options && q.options.length > 0) {
-                    const matched = (this as any).matchInOptions(customAnswer, q.options, 1.0);
-                    if (matched) {
-                        finalAnswer = matched.answer;
-                        console.log(`     ✓ Validated against options: "${finalAnswer}"`);
-                    }
-                }
-
-                mappedAnswers.push({
-                    selector: q.selector,
-                    questionText: q.questionText,
-                    answer: finalAnswer,
-                    source: 'hardcoded_override',
-                    confidence: 1.0,
-                    required: q.required,
-                    fieldType: q.fieldType,
-                    options: q.options || undefined
-                });
-            } else {
-                phaseNeg1Candidates.push(q);
-            }
-        }
-        console.log(`  ✅ Custom overrides resolved ${uniqueQuestions.length - phaseNeg1Candidates.length}/${uniqueQuestions.length} questions.\n`);
-
-        // ─────────────────────────────────────────────────────────────────────
         // Phase -1: HARDCODED ENGINE — deterministic, zero AI, zero network
         // Every common job-platform question is answered directly from profile.
         // If resolved, the question never reaches Phase 0, learned patterns, or AI.
         // ─────────────────────────────────────────────────────────────────────
         console.log(`\n⚡ Phase -1: Hardcoded answer engine (instant, zero AI)...\n`);
         const phase0Candidates: ScannedQuestion[] = [];
-        for (const q of phaseNeg1Candidates) {
+        for (const q of uniqueQuestions) {
             const hResult = resolveHardcoded(q.questionText, q.fieldType, q.options || undefined, profile);
             if (hResult !== null) {
                 mappedAnswers.push({
@@ -144,7 +108,7 @@ export class QuestionMapper {
                 phase0Candidates.push(q);
             }
         }
-        console.log(`  ✅ Hardcoded resolved ${phaseNeg1Candidates.length - phase0Candidates.length}/${phaseNeg1Candidates.length} questions. ${phase0Candidates.length} remaining.\n`);
+        console.log(`  ✅ Hardcoded resolved ${uniqueQuestions.length - phase0Candidates.length}/${uniqueQuestions.length} questions. ${phase0Candidates.length} remaining.\n`);
 
         // ─────────────────────────────────────────────────────────────────────
         // Phase 0: Pattern DB — intent patterns from questionPatternDatabase.ts
@@ -165,9 +129,9 @@ export class QuestionMapper {
                     let fileName: string | undefined = undefined;
 
                     // SPECIAL HANDLING FOR FILE OBJECTS
-                    if (value && typeof value === 'object' && (value.base64 || value.url)) {
-                        fileName = value.fileName || 'resume.pdf';
-                        const base64Data = value.base64 || '';
+                    if (value && typeof value === 'object' && ((value as any).base64 || (value as any).url)) {
+                        fileName = (value as any).fileName || 'resume.pdf';
+                        const base64Data = (value as any).base64 || '';
                         value = base64Data.startsWith('data:') ? base64Data : `data:application/pdf;base64,${base64Data}`;
                     } else if (typeof value === 'boolean') {
                         // For boolean values, convert to Yes/No
@@ -200,10 +164,9 @@ export class QuestionMapper {
                         required: q.required,
                         fieldType: q.fieldType,
                         options: q.options || undefined,
-                        canonicalKey: intent,
-                        fileName: fileName // Pass the original filename
+                        canonicalKey: intent
                     });
-                    console.log(`  ⚡ "${q.questionText}" → ${intent} (predefined pattern: "${match.pattern}", value: "${fileName || value}")`);
+                    console.log(`  ⚡ "${q.questionText}" → ${intent} (predefined pattern: "${match.pattern}", value: "${value}")`);
                     continue; // Skip to next question
                 }
             }
@@ -335,7 +298,26 @@ export class QuestionMapper {
      * Try canonical, learned, and fuzzy matching
      */
     private async tryMapping(question: ScannedQuestion, profile: any): Promise<{ answer: string; source: 'canonical' | 'learned' | 'fuzzy'; confidence: number; fileName?: string } | null> {
-        // (Manual overrides (customAnswers) now handled in Phase -2 of processQuestions)
+
+        // 0. Check custom answers FIRST (user-edited values take highest priority)
+        if (profile.customAnswers && profile.customAnswers[question.questionText]) {
+            const customAnswer = profile.customAnswers[question.questionText];
+            console.log(`     ⭐ Custom answer found: "${customAnswer}"`);
+
+            // Validate against options if this is a dropdown/radio
+            if (question.options && question.options.length > 0) {
+                const matched = this.matchInOptions(customAnswer, question.options, 1.0);
+                if (matched) {
+                    console.log(`     ✓ Custom answer validated against options`);
+                    return { ...matched, source: 'canonical' }; // Return as canonical for consistency
+                } else {
+                    console.log(`     ⚠️ Custom answer not in options - will try canonical matching`);
+                }
+            } else {
+                // Text field, return custom answer directly
+                return { answer: customAnswer, source: 'canonical', confidence: 1.0 };
+            }
+        }
 
         // 1. Try canonical matching
         console.log(`     🎯 Trying canonical mapping...`);

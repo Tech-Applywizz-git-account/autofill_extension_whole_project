@@ -206,8 +206,6 @@ const RULES: HardcodedRule[] = [
             'are you authorized to work in the united states',
             'eligible to work in the united states',
             'authorized to work in the us',
-            'are you currently able to meet this requirement',          // onsite yes question
-            'are you able to meet this requirement',
             'are you able to work in the united states',
             'legal right to work in the united states',
             'do you have the legal right to work',
@@ -803,13 +801,32 @@ const RULES: HardcodedRule[] = [
         resolver: (p) => p.personal?.lastName || null
     },
     {
+        patterns: ['full name', 'fullname', 'name full', 'name✱', 'your name', 'complete name'],
+        excludes: ['first', 'last', 'middle', 'preferred', 'emergency', 'reference'],
+        intent: 'personal.fullName',
+        resolver: (p) => {
+            if (p.personal?.fullName) return p.personal.fullName;
+            if (p.personal?.firstName && p.personal?.lastName) {
+                return `${p.personal.firstName} ${p.personal.lastName}`;
+            }
+            return null;
+        }
+    },
+    {
         patterns: ['full name', 'your name', 'legal name'],
         excludes: ['first', 'last', 'reference', 'emergency'],
         intent: 'personal.fullName',
         resolver: (p) => {
             const f = p.personal?.firstName, l = p.personal?.lastName;
-            if (f && l) return `${f} ${l}`;
-            return f || l || null;
+            let name = null;
+            if (f && l) name = `${f} ${l}`;
+            else name = f || l || null;
+
+            // SAFETY: If name looks like a URL, it's likely mis-mapped in profile or caught by a generic rule
+            if (name && (name.startsWith('http') || name.includes('.com/') || name.includes('linkedin.com'))) {
+                return null;
+            }
+            return name;
         }
     },
     {
@@ -842,7 +859,7 @@ const RULES: HardcodedRule[] = [
         resolver: (p) => p.personal?.portfolio || p.social?.website || null
     },
     {
-        patterns: ['city', 'current city', 'location city', 'please list your current city'],
+        patterns: ['city', 'current city', 'Location', 'location city', 'please list your current city'],
         excludes: ['state', 'country', 'zip', 'postal'],
         intent: 'personal.city',
         resolver: (p, opts) => {

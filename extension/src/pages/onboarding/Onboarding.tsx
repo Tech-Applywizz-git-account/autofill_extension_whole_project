@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CanonicalProfile, EMPTY_PROFILE } from "../../types/canonicalProfile";
 import { Gender, Race, YesNoDecline, SexualOrientation } from "../../types/canonicalEnums";
-import { saveProfile, restoreProfile, restoreMasterData } from "../../core/storage/profileStorage";
+import { saveProfile, restoreProfile, restoreMasterData, loadProfile } from "../../core/storage/profileStorage";
 import { patternStorage } from "../../core/storage/patternStorage";
 import { mapMultiSourceToProfile } from "../../core/mapping/apiMapper";
 import LandingPage from "./LandingPage";
@@ -135,6 +135,23 @@ const Onboarding: React.FC = () => {
     const [profile, setProfile] = useState<CanonicalProfile>(EMPTY_PROFILE);
     const [fetching, setFetching] = useState(false);
     const [apwId, setApwId] = useState("");
+
+    // Support Edit Mode
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get('mode');
+
+        if (mode === 'edit') {
+            const loadExistingProfile = async () => {
+                const existing = await loadProfile();
+                if (existing) {
+                    setProfile(existing);
+                    setStep(1); // Jump straight to personal info
+                }
+            };
+            loadExistingProfile();
+        }
+    }, []);
 
     const handleNewUser = () => {
         setStep(1);

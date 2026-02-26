@@ -41,6 +41,13 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
         excludePatterns: ['last', 'middle', 'preferred', 'emergency', 'reference']
     },
     {
+        patterns: ['full name', 'fullname', 'name full', 'name✱', 'name *', 'your name', 'complete name'],
+        intent: 'personal.fullName',
+        fieldTypes: ['text'],
+        priority: 100,
+        excludePatterns: ['middle', 'preferred', 'emergency', 'reference']
+    },
+    {
         patterns: ['middle name', 'middle initial'],
         intent: 'personal.middleName',
         fieldTypes: ['text'],
@@ -412,13 +419,10 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
 
     {
         patterns: [
-            'authorized to work',
-            'work authorization',
-            'legally authorized',
-            'authorized to work in',
-            'work permit',
-            'eligible to work',
-            'legal right to work'
+            'are you able to work in the united states',
+            'legal right to work in the united states',
+            'do you have the legal right to work',
+            'are you currently authorized to work',
         ],
         intent: 'workAuthorization.authorizedUS',
         fieldTypes: ['radio', 'dropdown'],

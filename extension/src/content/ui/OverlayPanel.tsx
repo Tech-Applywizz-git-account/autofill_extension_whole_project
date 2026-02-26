@@ -1,7 +1,9 @@
+// extension/src/content/ui/OverlayPanel.tsx
 import React, { useState, useEffect, useRef } from "react";
 import { createRoot, Root } from "react-dom/client";
 import { DetectedField, QuestionSection, FieldType } from "../../types/fieldDetection";
-import { updateProfileField, loadProfile } from "../../core/storage/profileStorage";
+import { updateProfileField, loadProfile, saveProfile } from "../../core/storage/profileStorage";
+import { EMPTY_PROFILE } from "../../types/canonicalProfile";
 import { patternStorage } from "../../core/storage/patternStorage";
 import { fillField } from "../actions/fieldFiller";
 import { FormScanner } from "../scanner/formScanner";
@@ -177,14 +179,50 @@ const STYLES = `
   font-size: 16px;
 }
 
+.header-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
 .header-actions .action-btn {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.header-actions .action-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.scan-header-btn {
+  background: white !important;
+  color: #00b371 !important;
+  border: none !important;
+  padding: 4px 12px !important;
+  border-radius: 6px !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  height: 28px;
+}
+
+.scan-header-btn:hover {
+  background: #f0fdf4 !important;
+  transform: translateY(-1px);
 }
 
 .view-tabs {
@@ -236,8 +274,33 @@ const STYLES = `
 .stat {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-size: 12px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  padding: 4px 8px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #eee;
+}
+
+.stat-label {
+  font-weight: 600;
+  color: #495057;
+  min-width: 80px;
+}
+
+.stat-value {
+  color: #00b371;
+  font-weight: bold;
+}
+
+.stat-percent {
+  background: #00d084;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
 }
 
 .section-filter {
@@ -320,9 +383,12 @@ const STYLES = `
 
 .field-details {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   color: #868e96;
   font-size: 10px;
+  align-items: center;
+  margin-top: 6px;
 }
 
 .confidence.high {
@@ -445,6 +511,89 @@ const STYLES = `
   font-weight: 500;
 }
 
+/* Settings View Styles */
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.settings-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.settings-item:hover {
+  border-color: #00d084;
+  background: #fdfdfd;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+
+.settings-item.danger:hover {
+  border-color: #fa5252;
+  background: #fffafa;
+}
+
+.settings-item-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #212529;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-item-desc {
+  font-size: 11px;
+  color: #6c757d;
+  line-height: 1.5;
+}
+
+.settings-item-btn {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #00d084;
+  text-align: right;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.settings-item.danger .settings-item-btn {
+  color: #fa5252;
+}
+
+.gear-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  padding: 4px;
+  cursor: pointer;
+  opacity: 0.85;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.gear-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.15);
+  transform: rotate(45deg);
+}
+
 .completion-backdrop {
   position: fixed;
   top: 0;
@@ -563,6 +712,34 @@ const STYLES = `
   85% { opacity: 1; transform: translate(-50%, 0); }
   100% { opacity: 0; transform: translate(-50%, -20px); }
 }
+
+/* Settings Animations */
+.settings-item.active {
+  opacity: 0.7;
+  pointer-events: none;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.98); }
+  100% { transform: scale(1); }
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0,0,0,0.1);
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 `;
 
 interface OverlayPanelProps {
@@ -583,7 +760,7 @@ interface PerformanceMetrics {
     fillProgress?: { current: number; total: number };
 }
 
-type ViewState = "ICON" | "MENU" | "DETAILS";
+type ViewState = "ICON" | "MENU" | "DETAILS" | "SETTINGS";
 
 // Helper functions for performance tracking
 const formatTime = (date: Date): string => {
@@ -630,6 +807,8 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
     }
     const [completionResult, setCompletionResult] = useState<CompletionResult | null>(null);
     const [isSyncing, setIsSyncing] = useState(false);
+    const [isClearingCache, setIsClearingCache] = useState(false);
+    const [isClearingAll, setIsClearingAll] = useState(false);
     const [isFilling, setIsFilling] = useState(false);
     const [isMapping, setIsMapping] = useState(false);
     const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics>({
@@ -802,7 +981,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
             if (viewState === "MENU") {
                 panelWidth = 220;
                 panelHeight = 200; // Approximate height
-            } else if (viewState === "DETAILS") {
+            } else if (viewState === "DETAILS" || viewState === "SETTINGS") {
                 panelWidth = 400;
                 panelHeight = Math.min(window.innerHeight * 0.8, 600); // 80vh max
             }
@@ -1352,10 +1531,29 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
     const handleManualSync = async () => {
         try {
             console.log('[Ext] ☁️ Starting Master Cloud Sync...');
-            const profile = await loadProfile();
+            let profile = await loadProfile();
+
+            // If email is missing, ask the user to provide it
             if (!profile?.personal.email) {
-                alert('⚠️ Please log in/complete your profile first!');
-                return;
+                const userEmail = prompt('⚠️ Your profile is incomplete. Please enter your email to "log in" and backup your data to the cloud:');
+
+                if (!userEmail || !userEmail.includes('@')) {
+                    alert('❌ Cloud Sync cancelled: A valid email is required to associate your backup.');
+                    return;
+                }
+
+                // Update local profile with the provided email
+                const updatedProfile = profile ? {
+                    ...profile,
+                    personal: { ...profile.personal, email: userEmail }
+                } : {
+                    ...EMPTY_PROFILE,
+                    personal: { ...EMPTY_PROFILE.personal, email: userEmail }
+                };
+
+                await saveProfile(updatedProfile);
+                profile = updatedProfile;
+                console.log('[Ext] 👤 Profile updated with email for Cloud Sync:', userEmail);
             }
 
             setIsSyncing(true);
@@ -1422,7 +1620,10 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                                 </div>
                             )}
                         </div>
-                        <div className="close-x" onClick={() => setViewState("ICON")}>×</div>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <button className="gear-btn" onClick={() => setViewState("SETTINGS")} title="Settings">⚙️</button>
+                            <div className="close-x" onClick={() => setViewState("ICON")}>×</div>
+                        </div>
                     </div>
                     <div className="menu-content">
                         {/* {isWorkdayUrl && (
@@ -1448,7 +1649,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                         >
                             <span className="btn-icon">🔍</span> Scan Application
                         </button>
-                        <button className="run-autofill-btn" onClick={async () => {
+                        {/* <button className="run-autofill-btn" onClick={async () => {
                             const stored = (window as any).__AWL_MAPPED__;
                             if (!stored) {
                                 alert('⚠️ Run "Scan Application" first!');
@@ -1616,11 +1817,11 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                             }
                         }} disabled={isFilling || isMapping || isSyncing}>
                             {isMapping ? '🧠 Mapping answers...' : (isFilling ? '⚡ Autofill Started...' : (isSyncing ? '⏳ Cloud Syncing...' : '⚡ Run Autofill Manually'))}
-                        </button>
+                        </button> */}
                         <button className="view-details-btn" onClick={() => setViewState("DETAILS")}>
                             View Detection Details
                         </button>
-                        <button
+                        {/* <button
                             className="run-autofill-btn"
                             disabled={isFilling || isSyncing}
                             onClick={handleManualSync}
@@ -1633,7 +1834,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                         >
                             <span className="btn-icon">{isSyncing ? '⏳' : '☁️'}</span>
                             {isSyncing ? 'Cloud Syncing...' : 'Sync to Cloud (Backup)'}
-                        </button>
+                        </button> */}
                     </div>
                 </div>
             )}
@@ -1641,21 +1842,40 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
             {viewState === "DETAILS" && (
                 <div className="details-panel">
                     <div className="autofill-header">
-                        <div className="drag-handle">⠿</div>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <h3 style={{ margin: 0 }}>🤖 Autofill Assistant</h3>
+                        <div className="drag-handle" style={{ marginRight: '4px' }}>⠿</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                            <h3 style={{ margin: 0, fontSize: '13px', fontWeight: '700', whiteSpace: 'nowrap' }}>🤖 Autofill Assistant</h3>
                             {statsSummary && (
-                                <div style={{ fontSize: '9px', opacity: 0.9, marginTop: '2px', display: 'flex', flexDirection: 'column', gap: '1px' }}>
-                                    <span>Total feedbacks in last 24 hours: {statsSummary.feedback.recent_24h}</span>
-                                    <span>Total feedbacks: {statsSummary.feedback.total}</span>
-                                    <span>Total users in the last 24 hours: {statsSummary.users.recent_24h}</span>
-                                    <span>Total users: {statsSummary.users.total}</span>
+                                <div style={{ fontSize: '9px', opacity: 0.9, marginTop: '1px', display: 'flex', gap: '5px' }}>
+                                    <span>👥 {statsSummary.users.total} Users</span>
+                                    <span>🧾 {statsSummary.feedback.total} Feedbacks</span>
+                                    <span>💬 {statsSummary.feedback.recent_24h} Feedback</span>
+
                                 </div>
                             )}
                         </div>
                         <div className="header-actions">
-                            <button onClick={() => setViewState("ICON")} className="action-btn">
+                            <button
+                                className="action-btn"
+                                onClick={() => setViewState("SETTINGS")}
+                                title="Settings"
+                            >
+                                ⚙️
+                            </button>
+                            <button
+                                onClick={() => setViewState("ICON")}
+                                className="action-btn"
+                                title="Minimize to Icon"
+                            >
                                 −
+                            </button>
+                            <button
+                                onClick={handleClose}
+                                className="action-btn"
+                                style={{ background: 'rgba(255, 59, 48, 0.2)', border: '1px solid rgba(255, 59, 48, 0.3)' }}
+                                title="Close Completely"
+                            >
+                                ×
                             </button>
                         </div>
                     </div>
@@ -1667,12 +1887,12 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                         >
                             Detection List
                         </button>
-                        <button
+                        {/* <button
                             className={viewMode === "resume" ? "active" : ""}
                             onClick={() => setViewMode("resume")}
                         >
                             View Resume
-                        </button>
+                        </button> */}
                     </div>
 
                     <div className="autofill-content">
@@ -1927,6 +2147,122 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                     )}
                 </div>
             )}
+
+            {viewState === "SETTINGS" && (
+                <div className="details-panel">
+                    <div className="autofill-header">
+                        <div className="drag-handle" style={{ marginRight: '8px' }}>⠿</div>
+                        <h3 style={{ margin: 0, fontSize: '14px', flex: 1 }}>⚙️ Settings & Tools</h3>
+                        <div className="header-actions">
+                            <button
+                                onClick={() => setViewState("DETAILS")}
+                                className="action-btn"
+                                title="Back to Detection"
+                            >
+                                ←
+                            </button>
+                            <button
+                                onClick={() => setViewState("ICON")}
+                                className="action-btn"
+                                title="Minimize"
+                            >
+                                −
+                            </button>
+                            <button
+                                onClick={handleClose}
+                                className="action-btn"
+                                style={{ background: 'rgba(255, 59, 48, 0.2)', border: '1px solid rgba(255, 59, 48, 0.3)' }}
+                                title="Close"
+                            >
+                                ×
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="autofill-content">
+                        <div className="settings-list">
+                            <span style={{ textAlign: 'center', fontSize: '14px' }}>For these all cards, confirmation box will show</span>
+                            <div className="settings-item" onClick={() => {
+                                if (confirm("Do you want to edit your profile? This will open your current info in a new tab.")) {
+                                    window.open(chrome.runtime.getURL('onboarding.html?mode=edit'), '_blank');
+                                }
+                            }}>
+                                <div className="settings-item-title">👤 Edit Profile</div>
+                                <div className="settings-item-desc">Modify your personal info, experience, and skills pre-filled with your current data.</div>
+                                <div className="settings-item-btn">Configure Profile →</div>
+                            </div>
+
+                            <div className="settings-item" onClick={() => {
+                                if (confirm("Report an Issue? This will open our feedback form in a new tab.")) {
+                                    window.open("https://extension-feedback-from.vercel.app/", '_blank');
+                                }
+                            }}>
+                                <div className="settings-item-title">📧 Report an Issue</div>
+                                <div className="settings-item-desc">Encountered a bug or have a suggestion? Reach out to our technical team.</div>
+                                <div className="settings-item-btn">Get Support →</div>
+                            </div>
+
+                            <div className={`settings-item ${isSyncing ? 'active' : ''}`} onClick={() => {
+                                if (isSyncing) return;
+                                if (confirm("Start Cloud Sync? This will backup your profile, patterns, and AI cache to the cloud.")) {
+                                    handleManualSync();
+                                }
+                            }}>
+                                <div className="settings-item-title">☁️ Cloud Sync - Backup your data</div>
+                                <div className="settings-item-desc">Independently backup your profile, patterns, and AI cache to the cloud to use from any device through email.</div>
+                                <div className="settings-item-btn">
+                                    {isSyncing ? <><span className="spinner" style={{ marginRight: '8px' }}></span> Syncing...</> : 'Sync Now →'}
+                                </div>
+                            </div>
+
+                            {/* <div className={`settings-item ${isClearingCache ? 'active' : ''}`} onClick={async () => {
+                                if (isClearingCache) return;
+                                if (confirm("Are you sure you want to clear the AI cache? This will refresh all AI answers.")) {
+                                    setIsClearingCache(true);
+                                    try {
+                                        const { clearAllCache } = await import("../../core/storage/aiResponseCache");
+                                        await clearAllCache();
+                                        alert("AI Cache cleared successfully! ✨");
+                                    } finally {
+                                        setIsClearingCache(false);
+                                    }
+                                }
+                            }}>
+                                <div className="settings-item-title">🧠 Clear AI Cache</div>
+                                <div className="settings-item-desc">Wipe stored AI answers to force fresh responses and re-learning of questions.
+                                    Before doing this, first backup your data using the "Master Cloud Sync" button.
+                                </div>
+                                <div className="settings-item-btn">
+                                    {isClearingCache ? <><span className="spinner" style={{ marginRight: '8px' }}></span> Clearing...</> : 'Clear Cache →'}
+                                </div>
+                            </div> */}
+
+
+
+                            {/* <div className={`settings-item danger ${isClearingAll ? 'active' : ''}`} onClick={async () => {
+                                if (isClearingAll) return;
+                                if (confirm("⚠️ CRITICAL: Are you sure you want to clear ALL data? This includes your profile, patterns, and cloud link. This cannot be undone.")) {
+                                    setIsClearingAll(true);
+                                    chrome.storage.local.clear(() => {
+                                        alert("All local data cleared successfully. Reloading extension...");
+                                        window.location.reload();
+                                    });
+                                }
+                            }}>
+                                <div className="settings-item-title">🗑️ Clear All Data</div>
+                                <div className="settings-item-desc">Permanently delete all profile data and extension settings only from this device, doesn't effects on DB data, even after doing this operation we have this user data in database. you can restore with email</div>
+                                <div className="settings-item-btn">
+                                    {isClearingAll ? <><span className="spinner" style={{ marginRight: '8px' }}></span> Wiping...</> : 'Wipe Everything →'}
+                                </div>
+                            </div> */}
+                        </div>
+                    </div>
+
+                    <div className="panel-footer" style={{ textAlign: 'center', fontSize: '10px', color: '#999', marginTop: '20px', paddingBottom: '10px' }}>
+                        Job Application Autofill v1.3.0
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -1954,27 +2290,37 @@ const FieldItem: React.FC<{ field: DetectedField; onUpdate: (val: string) => voi
         // 2. Update profile if canonical key is available
         const isUnknown = !field.canonicalKey || field.canonicalKey.toLowerCase() === 'unknown';
 
-        if (!isUnknown) {
-            try {
-                await updateProfileField(field.canonicalKey!, editValue);
-                console.log(`Updated profile field: ${field.canonicalKey}`);
-            } catch (err) {
-                console.error("Failed to update profile from assistant:", err);
-            }
-        } else {
-            // Store as custom answer for this question text
-            try {
-                const profile = await loadProfile();
-                if (profile) {
-                    const customAnswers = { ...profile.customAnswers, [field.questionText]: editValue };
-                    const updatedProfile = { ...profile, customAnswers };
-                    const { saveProfile } = await import("../../core/storage/profileStorage");
-                    await saveProfile(updatedProfile);
-                    console.log(`Stored custom answer for: ${field.questionText}`);
+        try {
+            const currentProfile = await loadProfile();
+            if (currentProfile) {
+                // ALWAYS store as custom answer to ensure Phase -2 (Manual Override) picks it up next time.
+                // This is crucial because hardcoded rules (Phase -1) often ignore profile values,
+                // and the only way to bypass them is via Phase -2.
+                const customAnswers = { ...currentProfile.customAnswers, [field.questionText]: editValue };
+                let updatedProfile = { ...currentProfile, customAnswers };
+
+                // Also update the specific canonical field if known
+                if (!isUnknown) {
+                    console.log(`[Ext] Updating specific profile field: ${field.canonicalKey}`);
+                    // We'll use a local update logic here to be safe
+                    const keys = field.canonicalKey!.split('.');
+                    let current = updatedProfile as any;
+                    for (let i = 0; i < keys.length - 1; i++) {
+                        if (current[keys[i]]) current = current[keys[i]];
+                        else break;
+                    }
+                    const lastKey = keys[keys.length - 1];
+                    if (current && typeof current === 'object') {
+                        current[lastKey] = editValue;
+                    }
                 }
-            } catch (err) {
-                console.error("Failed to store custom answer:", err);
+
+                const { saveProfile } = await import("../../core/storage/profileStorage");
+                await saveProfile(updatedProfile);
+                console.log(`[Ext] Manual choice stored in customAnswers (Phase -2) for: ${field.questionText}`);
             }
+        } catch (err) {
+            console.error("Failed to store manual override:", err);
         }
 
         // 3. Persist to Learned Patterns for future recognition (only if it's a known intent)

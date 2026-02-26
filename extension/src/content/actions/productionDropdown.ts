@@ -157,10 +157,17 @@ function findDropdownInput(element: HTMLElement): HTMLInputElement | null {
     }
 
     // Try: find input in parent .select__control
-    const control = element.closest('.select__control');
+    const control = element.closest('.select__control') || element.closest('[class*="select"]');
     if (control) {
         input = control.querySelector<HTMLInputElement>('input');
         if (input) return input;
+    }
+
+    // NEW: If the element itself is focusable and looks like a dropdown trigger, return it
+    const role = element.getAttribute('role');
+    const tabIndex = element.getAttribute('tabindex');
+    if (role === 'combobox' || role === 'button' || role === 'select' || tabIndex === '0') {
+        return element as unknown as HTMLInputElement; // Type casting for convenience in caller
     }
 
     return null;

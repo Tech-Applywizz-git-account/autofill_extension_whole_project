@@ -6,7 +6,6 @@
 
 import { jobrightSelectDropdown } from "./dropdownInteractions";
 import { isGreenhousePage, isBambooHRPage } from "../utils/platformDetection";
-import { getQuestionText } from "../utils/questionDetection";
 
 /**
  * Type text into an input field character-by-character
@@ -162,13 +161,10 @@ async function clickRadio(radio: HTMLInputElement, labelText: string): Promise<b
     try {
         const labelElement = getLabelElement(radio);
 
-        // Strategy: Greenhouse/Workday/Ashby often hide the real input. 
+        // Strategy: Greenhouse/Workday often hide the real input. 
         // We should click the LABEL or the visible container.
         const greenhouseWrapper = radio.closest('.radio_button, .radio-button-container, [class*="radio"]');
-        const ashbyWrapper = radio.closest('[class*="Radio_container"], [class*="Radio_box"]');
-        const customControl = radio.parentElement?.querySelector('span[class*="custom-radio"], span[class*="radio-label"], [class*="RadioButton_checkmark"]');
-
-        const target = ashbyWrapper || greenhouseWrapper || customControl || labelElement || radio;
+        const target = greenhouseWrapper || labelElement || radio;
 
         console.log(`[clickRadio] 🖱️ Clicking radio for: "${labelText}"`, {
             checkedBefore: radio.checked,
@@ -232,18 +228,11 @@ export async function setCheckbox(
         if (currentState !== checked) {
             console.log(`[setCheckbox] 🔘 Toggling checkbox to ${checked}`);
 
-            // Broadened list of containers to click (added Ashby and generic patterns)
+            // For Greenhouse/Workday styled checkboxes, click the label or parent container
             const label = getLabelElement(element);
             const greenhouseWrapper = element.closest('.checkbox, .checkbox-container, [class*="checkbox"]');
-            const ashbyWrapper = element.closest('[class*="Checkbox_container"], [class*="Checkbox_box"]');
-            const customControl = element.parentElement?.querySelector('span[class*="custom-checkbox"], span[class*="checkbox-label"], [class*="box"], [class*="checkmark"]');
 
-            const target = ashbyWrapper || greenhouseWrapper || customControl || label || element;
-
-            console.log(`[setCheckbox] 🖱️ Clicking target for checkbox`, {
-                targetTag: target.tagName,
-                targetClass: target.className
-            });
+            const target = greenhouseWrapper || label || element;
 
             target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
             target.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
@@ -338,9 +327,48 @@ export async function selectMultiCheckbox(
     }
 }
 
+// Helper function to get question text for a checkbox (group question)
 function getCheckboxQuestionText(checkbox: HTMLInputElement): string | null {
-    const text = getQuestionText(checkbox);
-    return text || null;
+    // This is the same logic as formScanner.getQuestionText()
+    // Check aria-label
+    const ariaLabel = checkbox.getAttribute('aria-label');
+    if (ariaLabel && ariaLabel.trim()) {
+        return ariaLabel.trim();
+    }
+
+    // Check associated label
+    if (checkbox.id) {
+        const label = document.querySelector(`label[for="${CSS.escape(checkbox.id)}"]`);
+        if (label && label.textContent) {
+            return label.textContent.trim();
+        }
+    }
+
+    // Check parent label
+    const parentLabel = checkbox.closest('label');
+    if (parentLabel && parentLabel.textContent) {
+        return parentLabel.textContent.trim();
+    }
+
+    // Check for fieldset legend (common for checkbox groups)
+    const fieldset = checkbox.closest('fieldset');
+    if (fieldset) {
+        const legend = fieldset.querySelector('legend');
+        if (legend && legend.textContent) {
+            return legend.textContent.trim();
+        }
+    }
+
+    // Check parent container with role="group"
+    const group = checkbox.closest('[role="group"]');
+    if (group) {
+        const label = group.querySelector('label, legend, .label, [class*="label"]');
+        if (label && label.textContent) {
+            return label.textContent.trim();
+        }
+    }
+
+    return null;
 }
 
 // Helper function to get the specific option label for a checkbox
@@ -487,7 +515,6 @@ export async function triggerFileUpload(
             }
             console.log(`[Autofill] ✅ Found file input via custom uploader search`);
         }
-
         // PLATFORM SPECIAL HANDLING (Greenhouse, BambooHR)
         // These platforms often hide the real file input and show a styled button
         const isGreenhouse = isGreenhousePage();
@@ -533,7 +560,7 @@ export async function triggerFileUpload(
                     const fileInputs = document.querySelectorAll('input[type="file"]');
                     if (fileInputs.length > 0) {
                         // Use the most likely one (first for resume, or nearest to trigger)
-                        fileInput = fileInputs[0] as HTMLInputElement;
+                        element = fileInputs[0] as HTMLInputElement;
                     }
                 }
             }
@@ -634,24 +661,5 @@ function verifyInputValue(
     expectedValue: string
 ): boolean {
     const actualValue = element.value;
-
-    // 1. Strict equality first
-    if (actualValue === expectedValue) return true;
-
-    // 2. Fuzzy verification for phone numbers and numeric fields
-    // This handles cases where user provides "2134567809" but field formats to "(213) 456-7809"
-    const isNumericType = element.type === 'tel' || element.type === 'number' ||
-        element.id.toLowerCase().includes('phone') ||
-        element.name.toLowerCase().includes('phone');
-
-    if (isNumericType) {
-        const normActual = actualValue.replace(/\D/g, "");
-        const normExpected = expectedValue.replace(/\D/g, "");
-        if (normActual.length > 0 && normActual === normExpected) {
-            console.log(`[verifyInputValue] ✅ Fuzzy match for phone/number: "${actualValue}" matches "${expectedValue}"`);
-            return true;
-        }
-    }
-
-    return false;
+    return actualValue === expectedValue;
 }

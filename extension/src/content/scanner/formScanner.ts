@@ -11,6 +11,7 @@
  */
 
 import { extractDropdownOptions } from './dropdownScanner';
+import { getQuestionText } from '../utils/questionDetection';
 
 const LOG_PREFIX = "[FormScanner]";
 
@@ -95,16 +96,23 @@ export class FormScanner {
         console.log(`${LOG_PREFIX} 🔍 Scanning document...`);
 
         // Find all input fields (text, email, tel, file, etc.)
-        const inputs = doc.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"])');
+        // EXCLUDE radio and checkbox here - we group them specifically later
+        const inputs = doc.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="radio"]):not([type="checkbox"])');
         inputs.forEach(input => {
             const htmlInput = input as HTMLInputElement;
             const isFile = htmlInput.type === 'file';
 
-            // For file inputs, we are more lenient with visibility because platforms like Greenhouse
-            // often use "visually-hidden" techniques that might fail our strict isVisible check.
-            // As long as it's not display: none, we should consider it.
-            if (this.isVisible(htmlInput) || (isFile && getComputedStyle(htmlInput).display !== 'none')) {
+            // VISIBILITY RELAXATION FOR FILE INPUTS
+            // ATS platforms (Greenhouse, ASK, Jobvite) often hide real file inputs with opacity: 0
+            // or by moving them off-screen. As long as it's not display: none, we treat it as a candidate.
+            if (this.isVisible(htmlInput)) {
                 fields.push(htmlInput);
+            } else if (isFile) {
+                const style = getComputedStyle(htmlInput);
+                if (style.display !== 'none' && style.visibility !== 'hidden') {
+                    console.log(`${LOG_PREFIX} 📎 Found hidden file input (relaxing visibility): ${htmlInput.id || htmlInput.name}`);
+                    fields.push(htmlInput);
+                }
             }
         });
 
@@ -190,7 +198,7 @@ export class FormScanner {
             // Try fieldset first (most semantic), then divs with common field classes
             let container: HTMLElement | null = input.closest('fieldset');
             if (!container) {
-                container = input.closest('.field, .form-field, .question, .form-group, [role="group"]');
+                container = input.closest('[role="group"], .field, .form-field, .question, .form-group, [class*="Question"], [class*="Field"]');
             }
             if (!container) {
                 // Fallback: use parent element
@@ -205,20 +213,25 @@ export class FormScanner {
             }
         });
 
-        console.log(`${LOG_PREFIX} 📋 Found ${checkboxContainerGroups.size} checkbox container(s)`);
-
-        // For each container, determine if it's a group or standalone checkbox
+        // Add one representative checkbox from each group
         checkboxContainerGroups.forEach((checkboxes, container) => {
-            console.log(`${LOG_PREFIX} 📋 Container has ${checkboxes.length} checkbox(es)`);
+            if (checkboxes.length > 0) {
+                fields.push(checkboxes[0]); // Add first checkbox as representative
+            }
+        });
 
-            if (checkboxes.length > 1) {
-                // Multi-select group - add only the first checkbox as representative
-                console.log(`${LOG_PREFIX} ✅ Multi-select checkbox group detected`);
-                fields.push(checkboxes[0]);
-            } else {
-                // Standalone checkbox - add it
-                console.log(`${LOG_PREFIX} ✅ Standalone checkbox detected`);
-                fields.push(checkboxes[0]);
+        // Find custom upload buttons that might not be inputs (click-to-find-input types)
+        const uploadButtons = doc.querySelectorAll('button, [role="button"], .upload-btn, .attach-btn');
+        uploadButtons.forEach(btn => {
+            if (!this.isVisible(btn as HTMLElement)) return;
+            const text = btn.textContent?.toLowerCase() || '';
+            if (text.includes('upload') || text.includes('attach') || text.includes('resume')) {
+                // If this is a button-only uploader (common in ASK Consulting), add it if no direct file input found
+                const hasFileInput = btn.querySelector('input[type="file"]') || btn.parentElement?.querySelector('input[type="file"]');
+                if (!hasFileInput) {
+                    console.log(`${LOG_PREFIX} 📎 Found potential custom upload trigger: "${text.trim()}"`);
+                    fields.push(btn as HTMLElement);
+                }
             }
         });
 
@@ -341,202 +354,12 @@ export class FormScanner {
      * Uses multiple fallback strategies for reliability
      */
     private getQuestionText(element: HTMLElement): string {
-        // SPECIAL HANDLING FOR CHECKBOXES
-        // For checkboxes, prioritize the GROUP question (fieldset/legend) over individual checkbox labels
-        // This ensures multi-select checkbox groups are properly detected
-        if (element instanceof HTMLInputElement && element.type === 'checkbox') {
-            console.log(`${LOG_PREFIX} 🔍 Checkbox detected, looking for group question...`);
-
-            // Find the parent container
-            let container: HTMLElement | null = element.closest('fieldset');
-            if (!container) {
-                container = element.closest('.field, .form-field, .question, .form-group, [role="group"]');
-            }
-            if (!container) {
-                // Fallback: use parent element
-                container = element.parentElement;
-            }
-
-            if (container) {
-                console.log(`${LOG_PREFIX} 📦 Found container: ${container.tagName}.${container.className}`);
-
-                // Strategy 1: Check for fieldset legend
-                const fieldset = element.closest('fieldset');
-                if (fieldset) {
-                    const legend = fieldset.querySelector('legend');
-                    if (legend && legend.textContent) {
-                        const legendText = this.cleanLabelText(legend.textContent);
-                        if (legendText.length > 5) {
-                            console.log(`${LOG_PREFIX} ✅ Found group question from legend: "${legendText}"`);
-                            return legendText;
-                        }
-                    }
-                }
-
-                // Strategy 2: Look for any text in container that looks like a question
-                // A question usually:
-                // - Contains a "?"
-                // - Is longer than 20 characters
-                // - Appears BEFORE the checkboxes
-                // - Is in a heading, label, or div
-
-                const containerText = container.textContent || '';
-                console.log(`${LOG_PREFIX} 📝 Container text length: ${containerText.length}`);
-
-                // Find all potential question elements in order
-                const potentialQuestions: Array<{ element: Element, text: string }> = [];
-
-                // Check headings first
-                const headings = container.querySelectorAll('h1, h2, h3, h4, h5, h6, legend, .field-label, .question-label, label:not([for])');
-                headings.forEach(heading => {
-                    if (heading.textContent && !heading.contains(element)) {
-                        const text = this.cleanLabelText(heading.textContent);
-                        if (text.length > 10) {
-                            potentialQuestions.push({ element: heading, text });
-                        }
-                    }
-                });
-
-                // Also check for divs/spans with substantial text before the checkbox
-                const allTextElements = container.querySelectorAll('div, span, p');
-                allTextElements.forEach(el => {
-                    if (el.textContent && !el.contains(element) && el.querySelector('input[type="checkbox"]') === null) {
-                        const text = this.cleanLabelText(el.textContent);
-                        // Must be substantial text and look like a question
-                        if (text.length > 20 && (text.includes('?') || text.endsWith('*'))) {
-                            potentialQuestions.push({ element: el, text });
-                        }
-                    }
-                });
-
-                console.log(`${LOG_PREFIX} 📋 Found ${potentialQuestions.length} potential question(s)`);
-
-                // Use the first one that looks like a question
-                for (const { text } of potentialQuestions) {
-                    // Skip if it's just the checkbox label itself
-                    const checkboxLabel = this.getCheckboxLabel(element);
-                    if (checkboxLabel && text.includes(checkboxLabel)) {
-                        continue;
-                    }
-
-                    console.log(`${LOG_PREFIX} ✅ Found group question: "${text}"`);
-                    return text;
-                }
-
-                // Strategy 3: If container has multiple checkboxes and text contains "?", extract the question part
-                const checkboxCount = container.querySelectorAll('input[type="checkbox"]').length;
-                if (checkboxCount > 1 && containerText.includes('?')) {
-                    // Extract text up to and including the first "?"
-                    const questionMatch = containerText.match(/^(.+?\?)/);
-                    if (questionMatch) {
-                        const questionText = this.cleanLabelText(questionMatch[1]);
-                        if (questionText.length > 10) {
-                            console.log(`${LOG_PREFIX} ✅ Extracted question from container text: "${questionText}"`);
-                            return questionText;
-                        }
-                    }
-                }
-
-                console.log(`${LOG_PREFIX} ⚠️ No group question found in container, using individual label`);
-            } else {
-                console.log(`${LOG_PREFIX} ⚠️ No container found for checkbox`);
-            }
-
-            // Fall through to normal label detection for standalone checkboxes
-        }
-
-        // STANDARD LABEL DETECTION (for all other fields and standalone checkboxes)
-
-        // Method 1: Check aria-label
-        const ariaLabel = element.getAttribute('aria-label');
-        if (ariaLabel && ariaLabel.trim()) {
-            return ariaLabel.trim();
-        }
-
-        // Method 2: Check associated label using for/id
-        if (element.id) {
-            const label = document.querySelector(`label[for="${CSS.escape(element.id)}"]`);
-            if (label && label.textContent) {
-                return this.cleanLabelText(label.textContent);
-            }
-        }
-
-        // Method 3: Check parent label (label wrapping input)
-        const parentLabel = element.closest('label');
-        if (parentLabel && parentLabel.textContent) {
-            return this.cleanLabelText(parentLabel.textContent);
-        }
-
-        // Method 4: Check aria-labelledby
-        const labelledBy = element.getAttribute('aria-labelledby');
-        if (labelledBy) {
-            const labelElement = document.getElementById(labelledBy);
-            if (labelElement && labelElement.textContent) {
-                return this.cleanLabelText(labelElement.textContent);
-            }
-        }
-
-        // Method 5: Check previous sibling (common pattern: <label>Text</label><input>)
-        let prevSibling = element.previousElementSibling;
-        while (prevSibling) {
-            if (prevSibling.tagName === 'LABEL' && prevSibling.textContent) {
-                return this.cleanLabelText(prevSibling.textContent);
-            }
-            // Also check divs/spans that act as labels
-            if ((prevSibling.tagName === 'DIV' || prevSibling.tagName === 'SPAN') &&
-                prevSibling.textContent &&
-                prevSibling.textContent.trim().length > 0 &&
-                prevSibling.textContent.trim().length < 100) {
-                return this.cleanLabelText(prevSibling.textContent);
-            }
-            prevSibling = prevSibling.previousElementSibling;
-        }
-
-        // Method 6: Check closest container with common field wrapper classes
-        const container = element.closest('[role="group"], .field, .form-field, .question, .form-group, fieldset');
-        if (container && container.textContent) {
-            // Special handling for file inputs: check for legend in fieldset
-            if (element instanceof HTMLInputElement && element.type === 'file') {
-                const fieldset = element.closest('fieldset');
-                if (fieldset) {
-                    const legend = fieldset.querySelector('legend');
-                    if (legend && legend.textContent) {
-                        return this.cleanLabelText(legend.textContent);
-                    }
-                }
-            }
-
-            // Get first line as question text
-            const lines = container.textContent.trim().split('\n');
-            if (lines.length > 0 && lines[0].trim()) {
-                return this.cleanLabelText(lines[0]);
-            }
-        }
-
-        // Method 7: Check name or id attribute as last resort
-        const name = element.getAttribute('name');
-        let finalText = '';
-
-        if (name) {
-            // Convert names like "first_name" to "First Name"
-            finalText = name.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim();
-        }
-
-        // IMPROVEMENT: If the found text is generic (e.g., "Attach"), look harder for context
-        if (!finalText || this.isGenericLabel(finalText) || (element.textContent && this.isGenericLabel(element.textContent))) {
-            // If we found a generic label earlier (methods 1-6), check if we can find something better
-            // If we haven't found anything yet, definitely look for context
-            const contextLabel = this.findContextLabel(element);
-            if (contextLabel) {
-                return contextLabel;
-            }
-        }
-
-        return finalText;
+        return getQuestionText(element);
     }
 
     /**
      * Check if a label is too generic to be useful
+     * @deprecated Use version from questionDetection.ts if possible, kept here for internal context utils
      */
     private isGenericLabel(text: string): boolean {
         const lower = text.toLowerCase().trim();

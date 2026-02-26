@@ -3,6 +3,8 @@
  * Field detection and matching by questionText similarity
  */
 
+import { getQuestionText } from './utils/questionDetection';
+
 const LOG_PREFIX = "[FieldMatching]";
 
 export type Detected = {
@@ -18,25 +20,45 @@ export type Detected = {
  */
 export function detectFieldsInCurrentDOM(): Detected[] {
     const out: Detected[] = [];
+    const handledGroups = new Set<string>(); // Track names or container hashes for grouped inputs
 
     // 1) Native inputs/textareas/selects
     const inputs = Array.from(document.querySelectorAll<HTMLElement>('input, textarea, select'));
 
     for (const el of inputs) {
         const tag = el.tagName.toLowerCase();
-        const type = (el as HTMLInputElement).type?.toLowerCase?.() ?? "";
+        const inputEl = el as HTMLInputElement;
+        const type = inputEl.type?.toLowerCase?.() ?? "";
 
-        // Special case: file inputs are often hidden/styled away, so we allow them
-        // if they are not display:none (or even if they are, we can still fill them)
-        // Let's at least allow them if they are not display:none, or if they have a label.
-        // Actually, most invisible file inputs are still detectable if we don't skip them.
-        if (tag === "input" && type === "file") {
-            // Skip ONLY IF display is none AND it has no visible label/container
-            // But to be safe and simple: just allow file inputs to bypass visibility check
-            // because they are almost always "invisible" while we need to fill them.
-        } else {
+        // Skip hidden/invisible elements (except files)
+        if (tag !== "input" || type !== "file") {
             if (!isVisible(el)) continue;
         }
+
+        // --- GROUPING LOGIC FOR RADIOS/CHECKBOXES ---
+        if (tag === "input" && (type === "radio" || type === "checkbox")) {
+            const name = inputEl.name;
+            const groupKey = name
+                ? `${type}_name_${name}`
+                : `${type}_container_${getContainerHash(el)}`;
+
+            if (handledGroups.has(groupKey)) {
+                // Already added this group via a previous sibling/anchor
+                continue;
+            }
+            handledGroups.add(groupKey);
+
+            out.push({
+                questionText: getQuestionTextFor(el) ?? "",
+                element: el,
+                kind: type === "radio" ? "RADIO" : "CHECKBOX",
+                id: el.id,
+                name: name
+            });
+            continue;
+        }
+
+        // --- STANDARD FIELDS ---
 
         // File
         if (tag === "input" && type === "file") {
@@ -45,31 +67,7 @@ export function detectFieldsInCurrentDOM(): Detected[] {
                 element: el,
                 kind: "FILE",
                 id: el.id,
-                name: (el as HTMLInputElement).name
-            });
-            continue;
-        }
-
-        // Checkbox
-        if (tag === "input" && type === "checkbox") {
-            out.push({
-                questionText: getQuestionTextFor(el) ?? "",
-                element: el,
-                kind: "CHECKBOX",
-                id: el.id,
-                name: (el as HTMLInputElement).name
-            });
-            continue;
-        }
-
-        // Radio
-        if (tag === "input" && type === "radio") {
-            out.push({
-                questionText: getQuestionTextFor(el) ?? "",
-                element: el,
-                kind: "RADIO",
-                id: el.id,
-                name: (el as HTMLInputElement).name
+                name: inputEl.name
             });
             continue;
         }
@@ -80,8 +78,8 @@ export function detectFieldsInCurrentDOM(): Detected[] {
                 questionText: getQuestionTextFor(el) ?? "",
                 element: el,
                 kind: "DATE",
-                id: (el as HTMLInputElement).id,
-                name: (el as HTMLInputElement).name
+                id: inputEl.id,
+                name: inputEl.name
             });
             continue;
         }
@@ -116,8 +114,8 @@ export function detectFieldsInCurrentDOM(): Detected[] {
                 questionText: getQuestionTextFor(el) ?? "",
                 element: el,
                 kind: "TEXT",
-                id: (el as HTMLInputElement).id,
-                name: (el as HTMLInputElement).name
+                id: inputEl.id,
+                name: inputEl.name
             });
             continue;
         }
@@ -149,6 +147,19 @@ export function detectFieldsInCurrentDOM(): Detected[] {
     console.log(`${LOG_PREFIX} Detected ${filtered.length} fields:`, filtered.map(f => ({ text: f.questionText.substring(0, 30), kind: f.kind })));
 
     return filtered;
+}
+
+/**
+ * Helper to get a semi-stable identifier for a container to group anonymous controls
+ */
+function getContainerHash(el: HTMLElement): string {
+    const container = el.closest('fieldset, [role="group"], .field, .form-group') || el.parentElement;
+    if (!container) return Math.random().toString(); // Fallback
+
+    // Use a combination of class and index if possible
+    const className = container.className || 'no-class';
+    const index = Array.from(document.querySelectorAll(`.${className.split(' ')[0]}`)).indexOf(container);
+    return `${className}_${index}`;
 }
 
 /**
@@ -185,26 +196,8 @@ export function bestMatchField(fields: Detected[], qText: string, canonicalKey?:
  * Get question text for an element
  */
 function getQuestionTextFor(el: HTMLElement): string | null {
-    // 1. Label element
-    const lbl = getLabelFor(el);
-    if (lbl?.textContent?.trim()) return lbl.textContent.trim();
-
-    // 2. aria-label
-    const aria = el.getAttribute("aria-label");
-    if (aria?.trim()) return aria.trim();
-
-    // 3. Closest field container
-    const container = el.closest('[role="group"], .field, .form-field, .question, .input-group') as HTMLElement | null;
-    if (container) {
-        const t = container.innerText?.trim();
-        if (t) return t.split("\n")[0].trim();
-    }
-
-    // 4. Placeholder
-    const placeholder = (el as HTMLInputElement).placeholder;
-    if (placeholder?.trim()) return placeholder.trim();
-
-    return null;
+    const text = getQuestionText(el);
+    return text || null;
 }
 
 function getLabelFor(el: HTMLElement): HTMLLabelElement | null {

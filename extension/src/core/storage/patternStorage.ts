@@ -83,7 +83,18 @@ export class PatternStorage {
     async getLocalPatterns(): Promise<LearnedPattern[]> {
         try {
             const result = await chrome.storage.local.get('learnedPatterns');
-            return result.learnedPatterns || [];
+            const patterns = (result.learnedPatterns || []) as LearnedPattern[];
+
+            // Cleanup: Filter out any corrupt patterns that are missing critical fields
+            const validPatterns = patterns.filter(p => p && p.questionPattern && p.intent);
+
+            if (validPatterns.length !== patterns.length) {
+                console.warn(`[PatternStorage] 🧹 Cleaned up ${patterns.length - validPatterns.length} corrupt local patterns`);
+                // Silently save back the cleaned list
+                this.saveLocalPatterns(validPatterns).catch(() => { });
+            }
+
+            return validPatterns;
         } catch (error) {
             console.error('[PatternStorage] Error getting local patterns:', error);
             return [];
@@ -112,6 +123,12 @@ export class PatternStorage {
      * Add a new pattern
      */
     async addPattern(pattern: Omit<LearnedPattern, 'id' | 'createdAt' | 'usageCount' | 'lastUsed'>): Promise<void> {
+        // Validation: Don't save corrupt patterns
+        if (!pattern.questionPattern || !pattern.intent) {
+            console.error('[PatternStorage] ❌ Attempted to save corrupt pattern:', pattern);
+            return;
+        }
+
         const patterns = await this.getLocalPatterns();
 
         // Check if pattern already exists

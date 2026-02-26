@@ -149,14 +149,14 @@ INTENT_NORMALIZATION = {
 
 
 FORBIDDEN_ANSWER_PATTERNS = [
-    r"\\bnot provided\\b",
-    r"\\bi don't know\\b",
-    r"\\bdo not know\\b",
-    r"\\bn/?a\\b",
-    r"\\bfree text input\\b",
-    r"\\bno additional information\\b",
-    r"\\bnothing to add\\b",
-    r"\\bnot sure\\b",
+    r"\bnot provided\b",
+    r"\bi don't know\b",
+    r"\bdo not know\b",
+    r"\bn/?a\b",
+    r"\bfree text input\b",
+    r"\bno additional information\b",
+    r"\bnothing to add\b",
+    r"\bnot sure\b",
 ]
 
 
@@ -274,6 +274,48 @@ def _repair_answer(question: str, options: Optional[List[str]], intent: str) -> 
             "adaptability. This position is my absolute priority, and I am ready to prove my worth to the team.")
 
 
+def _sanitize_profile(profile: dict) -> dict:
+    """Strip large binary fields from user profile to avoid exceeding Bedrock token limits."""
+    if not isinstance(profile, dict):
+        return profile
+
+    # Keys that contain large binary data (base64 encoded files)
+    STRIP_KEYS = {
+        'resume_base64', 'cover_letter_base64', 'resumeBase64', 'coverLetterBase64',
+        'resume_data', 'coverLetter_data', 'file_data', 'fileData',
+        'base64', 'resumeFile', 'coverLetterFile',
+    }
+
+    def _clean(obj, depth=0):
+        if depth > 5:  # Prevent infinite recursion
+            return "..."
+        if isinstance(obj, dict):
+            cleaned = {}
+            for k, v in obj.items():
+                # Skip known binary keys
+                if k.lower().replace('_', '').replace('-', '') in {s.lower().replace('_', '') for s in STRIP_KEYS}:
+                    continue
+                # Skip any string value > 500 chars (likely base64 or encoded data)
+                if isinstance(v, str) and len(v) > 500:
+                    continue
+                cleaned[k] = _clean(v, depth + 1)
+            return cleaned
+        elif isinstance(obj, list):
+            # Only keep first 3 items of arrays to save tokens
+            return [_clean(item, depth + 1) for item in obj[:3]]
+        return obj
+
+    cleaned = _clean(profile)
+
+    # Final safety: cap total JSON length at 4000 characters
+    result = json.dumps(cleaned, indent=2)
+    if len(result) > 4000:
+        result = result[:4000] + "\n... (truncated)"
+        return json.loads(json.dumps(cleaned)[:3990] + "}")
+
+    return cleaned
+
+
 def predict_answer(request: AIRequest) -> AIResponse:
     """
     Predict answer using AWS Bedrock (Amazon Nova).
@@ -296,19 +338,22 @@ def predict_answer(request: AIRequest) -> AIResponse:
         options_block = ""
         if request.options and len(request.options) > 0:
             options_block = (
-                "\\n\\nAVAILABLE OPTIONS (CHOOSE EXACTLY ONE, COPY EXACTLY):\\n"
-                + "\\n".join([f"- {o}" for o in request.options])
+                "\n\nAVAILABLE OPTIONS (CHOOSE EXACTLY ONE, COPY EXACTLY):\n"
+                + "\n".join([f"- {o}" for o in request.options])
             )
         else:
-            options_block = "\\n\\nThis question requires a written response."
+            options_block = "\n\nThis question requires a written response."
 
-        allowed_intents_block = "\\n".join([f"- {i}" for i in sorted(ALLOWED_INTENTS)])
+        allowed_intents_block = "\n".join([f"- {i}" for i in sorted(ALLOWED_INTENTS)])
+
+        # Sanitize profile to remove large binary fields (base64 resume, etc.)
+        safe_profile = _sanitize_profile(request.userProfile)
 
         prompt = f"""
 {SYSTEM_PROMPT}
 
 USER PROFILE (may be incomplete):
-{json.dumps(request.userProfile, indent=2)}
+{json.dumps(safe_profile, indent=2)}
 
 QUESTION:
 {request.question}
