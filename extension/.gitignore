@@ -1,7 +1,6 @@
 # Extension specific ignores
 node_modules/
 build/
-*.log
 .env
 
 # OS
