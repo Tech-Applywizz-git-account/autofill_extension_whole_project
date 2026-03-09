@@ -166,7 +166,7 @@ const Onboarding: React.FC = () => {
                 alert("Welcome back! Your profile, patterns, and AI cache have been fully restored.");
                 window.close(); // Close onboarding as they are already set up
             } else {
-                alert("No backup found for this email. Please start as a new user.");
+                alert("You are a new user. Please complete the onboarding form.");
                 setStep(1);
             }
         } catch (error) {
@@ -360,6 +360,8 @@ const StepPersonal: React.FC<{
 
     return (
         <div className="step">
+            <button className="back-btn justify-end" onClick={onBack} style={{ flex: 1, background: '#f5f5f5', color: '#666', border: '1px solid #ddd', borderRadius: '8px', padding: '10px', cursor: 'pointer' }}>Back to Home</button>
+
             <div className="step-header">
                 <h1>🎉 Great! Let's get started with your basic info.</h1>
             </div>
@@ -509,7 +511,6 @@ const StepPersonal: React.FC<{
             </div>
 
             <div className="form-actions" style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                <button className="back-btn" onClick={onBack} style={{ flex: 1, background: '#f5f5f5', color: '#666', border: '1px solid #ddd', borderRadius: '8px', padding: '10px', cursor: 'pointer' }}>Back to Home</button>
                 <button className="next-btn" onClick={onNext} style={{ flex: 2 }}>Next</button>
             </div>
         </div >

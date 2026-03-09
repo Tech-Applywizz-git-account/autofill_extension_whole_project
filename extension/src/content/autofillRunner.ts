@@ -9,6 +9,12 @@ import { DetectedField, FieldType, QuestionSection } from '../types/fieldDetecti
 import { detectFieldsInCurrentDOM, bestMatchField, Detected } from './fieldMatching';
 import { isWorkdayApplication } from './workday/workdayDetector';
 import { handleWorkdayApplication } from './workday/workdayHandler';
+import { patternStorage } from '../core/storage/patternStorage';
+import { loadProfile } from '../core/storage/profileStorage';
+import { isNewToHardcodedEngine } from './mapping/hardcodedAnswerEngine';
+import { getValueByIntent } from './mapping/questionPatternDatabase';
+import { AnalyticsTracker } from '../core/analytics/AnalyticsTracker';
+import { detectPlatform } from './utils/platformDetection';
 
 const LOG_PREFIX = "[AutofillRunner]";
 
@@ -22,6 +28,7 @@ export type ResolvedField = {
     selector?: string;
     options?: string[];
     fileName?: string; // For file uploads
+    required?: boolean;
 };
 
 export type FillPayload = {
@@ -62,16 +69,22 @@ async function runAutofill(payload: FillPayload) {
     console.log(`   Run ID: ${payload.runId}`);
     console.log(`   Fields to fill: ${payload.fields.length}\n`);
 
+    const tracker = AnalyticsTracker.getInstance();
+    tracker.startFilling();
+
     // ========== WORKDAY DETECTION ==========
     // If this is a Workday application, delegate to Workday handler
     if (isWorkdayApplication()) {
         console.log(`${LOG_PREFIX} 🏢 WORKDAY APPLICATION DETECTED - Using Workday handler\n`);
         await handleWorkdayApplication(payload);
+        tracker.endFilling();
         return;
     }
 
-    // ========== GREENHOUSE LOGIC (UNCHANGED) ==========
-    console.log(`${LOG_PREFIX} 🌱 GREENHOUSE APPLICATION - Using standard flow\n`);
+    // ========== PLATFORM DETECTION & LOGGING ==========
+    const platform = detectPlatform();
+    const platformName = platform.toUpperCase();
+    console.log(`${LOG_PREFIX} 🏢 ${platformName} APPLICATION - Using standard flow\n`);
 
     // Step 1: Detect fields in current DOM
     console.log(`🔍 Step 1: Detecting fields in current DOM...`);
@@ -84,6 +97,7 @@ async function runAutofill(payload: FillPayload) {
 
     if (potentialMatches.length === 0) {
         console.log(`${LOG_PREFIX} ⏭️ No matching fields in this frame. Skipping autofill & analytics.`);
+        tracker.endFilling();
         return;
     }
 
@@ -95,15 +109,58 @@ async function runAutofill(payload: FillPayload) {
     console.log(`║              📝 Step 2: FILLING FIELDS (${payload.fields.length} total)${' '.repeat(Math.max(0, 22 - payload.fields.length.toString().length))}║`);
     console.log(`╚════════════════════════════════════════════════════════════════════╝\n`);
 
-    // Step 2: Match and fill each resolved field
-    for (let i = 0; i < payload.fields.length; i++) {
-        const rf = payload.fields[i];
+    // --- SEQUENTIAL FILLING LOGIC ---
+    // Group fields by filling priority (case-insensitive)
+    const getPriority = (f: { fieldType: string }) => {
+        const type = f.fieldType.toUpperCase();
+        if (["TEXT", "TEXTAREA", "EMAIL", "PHONE", "TEL", "NUMBER", "DATE"].includes(type)) return 1;
+        if (["SELECT", "SELECT_NATIVE", "DROPDOWN_CUSTOM"].includes(type)) return 2;
+        if (["RADIO", "CHECKBOX"].includes(type)) return 3;
+        if (["FILE"].includes(type)) return 4;
+        return 5; // Unknown / Other
+    };
+
+    const priorityGroups = {
+        inputs: payload.fields.filter(f => getPriority(f) === 1),
+        dropdowns: payload.fields.filter(f => getPriority(f) === 2),
+        selections: payload.fields.filter(f => getPriority(f) === 3),
+        files: payload.fields.filter(f => getPriority(f) === 4),
+        others: payload.fields.filter(f => getPriority(f) === 5)
+    };
+
+    const sortedFields = [
+        ...priorityGroups.inputs,
+        ...priorityGroups.dropdowns,
+        ...priorityGroups.selections,
+        ...priorityGroups.files,
+        ...priorityGroups.others
+    ];
+
+    console.log(`${LOG_PREFIX} 📋 Sequential Filling Order:`);
+    console.log(`   1. Inputs: ${priorityGroups.inputs.length}`);
+    console.log(`   2. Dropdowns: ${priorityGroups.dropdowns.length}`);
+    console.log(`   3. Selections: ${priorityGroups.selections.length}`);
+    console.log(`   4. Files: ${priorityGroups.files.length}`);
+    if (priorityGroups.others.length > 0) console.log(`   5. Others: ${priorityGroups.others.length}`);
+    console.log(`\n`);
+
+    // Step 2: Match and fill each resolved field in priority order
+    let currentGroupType = "";
+
+    for (let i = 0; i < sortedFields.length; i++) {
+        const rf = sortedFields[i];
         const fieldNum = i + 1;
 
-        console.log(`\n┌─ Field ${fieldNum}/${payload.fields.length} ${'─'.repeat(55 - fieldNum.toString().length - payload.fields.length.toString().length)}`);
+        // Add a longer delay when switching between groups to ensure DOM settles
+        if (currentGroupType && currentGroupType !== rf.fieldType) {
+            console.log(`${LOG_PREFIX} 🕒 Group changed, waiting for DOM to settle...`);
+            await sleep(300);
+        }
+        currentGroupType = rf.fieldType;
+
+        console.log(`\n┌─ Field ${fieldNum}/${sortedFields.length} [${rf.fieldType}] ${'─'.repeat(45 - fieldNum.toString().length - sortedFields.length.toString().length - rf.fieldType.length)}`);
         console.log(`│ 📝 Question: "${rf.questionText}"`);
         console.log(`│ 💬 Answer: "${rf.value}"`);
-        console.log(`│ 🏷️  Type: ${rf.fieldType}`);
 
         // Find matching DOM element
         console.log(`│ 🔍 Searching for DOM match...`);
@@ -118,12 +175,10 @@ async function runAutofill(payload: FillPayload) {
             continue;
         }
 
-        console.log(`│ ✓ DOM match found`);
-        console.log(`│ 🖊️  Attempting to fill...`);
-
-        // Fill the matched field
+        // Fill and Verify
         const ok = await fillMatchedField(match, rf);
         results.push({ questionText: rf.questionText, ok });
+        tracker.trackFillResult(rf.questionText, ok);
 
         // Dispatch incremental progress event
         const progressEvent = new CustomEvent('FIELD_FILL_PROGRESS', {
@@ -131,22 +186,65 @@ async function runAutofill(payload: FillPayload) {
         });
         window.dispatchEvent(progressEvent);
 
-        // Report progress to background for cross-frame tracking
-        try {
-            chrome.runtime.sendMessage({
-                action: 'FIELD_FILL_PROGRESS',
-                payload: { questionText: rf.questionText, ok, runId: payload.runId }
-            }).catch(() => { });
-        } catch (e) { }
-
         if (ok) {
             console.log(`│ ✅ SUCCESS - Field filled and verified`);
             console.log(`└${'─'.repeat(66)}`);
             successes++;
+
+            // LEARN from this interaction (only if it's NEW)
+            try {
+                if (rf.canonicalKey) {
+                    const profile = await loadProfile();
+                    let isProfileEmpty = true;
+                    if (profile) {
+                        const val = getValueByIntent(profile, rf.canonicalKey);
+                        if (val !== undefined && val !== null && val !== '') {
+                            isProfileEmpty = false;
+                        }
+                    }
+
+                    const { isNewQuestion, isNewAnswer } = isNewToHardcodedEngine(rf.questionText, rf.canonicalKey, String(rf.value));
+
+                    if (isNewQuestion || isNewAnswer || isProfileEmpty) {
+                        let canonicalValue = String(rf.value);
+                        if (profile && !isProfileEmpty) {
+                            const current = getValueByIntent(profile, rf.canonicalKey);
+                            if (typeof current === 'boolean') {
+                                canonicalValue = current ? 'Yes' : 'No';
+                            } else {
+                                canonicalValue = String(current);
+                            }
+                        }
+
+                        if (isProfileEmpty && profile) {
+                            const { updateProfileField } = await import("../core/storage/profileStorage");
+                            await updateProfileField(rf.canonicalKey, rf.value);
+                        }
+
+                        if (isNewQuestion || isNewAnswer) {
+                            await patternStorage.addPattern({
+                                questionPattern: rf.questionText,
+                                intent: rf.canonicalKey,
+                                canonicalKey: rf.canonicalKey,
+                                fieldType: rf.fieldType.toLowerCase(),
+                                confidence: rf.confidence || 1.0,
+                                source: 'manual',
+                                answerMappings: [{
+                                    canonicalValue: canonicalValue,
+                                    variants: [String(rf.value)],
+                                    contextOptions: rf.options || []
+                                }]
+                            });
+                        }
+                    }
+                }
+            }
+            catch (e) {
+                console.warn(`${LOG_PREFIX} 🎓 Learning check/store failed:`, e);
+            }
         } else {
             console.log(`│ ❌ FAILED - Could not fill or verify field`);
             console.log(`└${'─'.repeat(66)}`);
-            await reportFieldFailed(payload, rf, "FILL_VERIFY_FAILED");
             failures++;
         }
 
@@ -165,6 +263,8 @@ async function runAutofill(payload: FillPayload) {
         results.filter(r => !r.ok).forEach(r => console.log(`      - ${r.questionText} (${r.reason || 'Unknown error'})`));
     }
     const successfulFieldNames = results.filter(r => r.ok).map(r => r.questionText);
+
+    tracker.endFilling();
 
     // Dispatch completion event for UI timer (local frame)
     window.dispatchEvent(new CustomEvent('AUTOFILL_COMPLETE_EVENT', {
@@ -209,8 +309,9 @@ async function fillMatchedField(match: Detected, rf: ResolvedField): Promise<boo
         const field: DetectedField = {
             element: match.element as any,
             questionText: match.questionText,
+            selector: rf.selector || "",
             fieldType: mapSeleniumTypeToFieldType(rf.fieldType), // Use Selenium's type!
-            isRequired: false,
+            isRequired: !!rf.required,
             options: rf.options,
             section: QuestionSection.PERSONAL,
             canonicalKey: rf.canonicalKey || '',

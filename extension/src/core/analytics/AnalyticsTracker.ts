@@ -125,9 +125,17 @@ export class AnalyticsTracker {
         }
     }
 
+    /**
+     * Override auto-calculated counts with manual user feedback
+     */
+    public setManualCounts(success: number, fail: number) {
+        this.successCount = success;
+        this.failCount = fail;
+    }
+
     // --- Submission ---
 
-    public async submit() {
+    public async submit(): Promise<boolean> {
         try {
             // Get user identity from storage (CORRECT KEY)
             const storage = await chrome.storage.local.get(['autofill_canonical_profile']);
@@ -162,23 +170,27 @@ export class AnalyticsTracker {
 
             console.log('📊 Submitting Analytics:', payload);
 
-            // Send to background to proxy to backend
-            chrome.runtime.sendMessage({
-                action: 'proxyFetch',
-                url: `${CONFIG.API.AI_SERVICE}/api/analytics/track`,
-                options: {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                }
-            }, (response) => {
-                console.log('📊 Analytics Response:', response);
+            // Send to background to proxy to backend and AWAIT response
+            return new Promise((resolve) => {
+                chrome.runtime.sendMessage({
+                    action: 'proxyFetch',
+                    url: `${CONFIG.API.AI_SERVICE}/api/analytics/track`,
+                    options: {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    }
+                }, (response) => {
+                    console.log('📊 Analytics Response:', response);
+                    resolve(!!response?.success);
+                });
             });
 
         } catch (e) {
             console.error('❌ Failed to submit analytics:', e);
+            return false;
         }
     }
 }

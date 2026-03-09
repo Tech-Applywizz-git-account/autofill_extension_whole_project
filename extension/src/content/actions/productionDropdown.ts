@@ -33,7 +33,7 @@ export async function selectDropdownKeyboardFirst(
         }
 
         input.focus();
-        await sleep(300); // Increased from 100ms
+        await sleep(100); // Reduced from 300ms for speed
         console.log(`${LOG_PREFIX} ✅ Focused input`);
 
         // Step 2: Open menu deliberately
@@ -163,6 +163,12 @@ function findDropdownInput(element: HTMLElement): HTMLInputElement | null {
         if (input) return input;
     }
 
+    // Ashby: dropdown trigger may be a button with [data-radix-collection-item] or specific classes
+    const ashbyDropdownTrigger = element.closest('[class*="Dropdown_trigger"], [class*="Select_trigger"], [aria-haspopup="listbox"]') as HTMLElement | null;
+    if (ashbyDropdownTrigger) {
+        return ashbyDropdownTrigger as unknown as HTMLInputElement;
+    }
+
     // NEW: If the element itself is focusable and looks like a dropdown trigger, return it
     const role = element.getAttribute('role');
     const tabIndex = element.getAttribute('tabindex');
@@ -193,11 +199,22 @@ function findMenuSearchInput(): HTMLInputElement | null {
 }
 
 /**
- * Open dropdown using keyboard (Space or Enter)
- * This is more reliable than clicking for React dropdowns
+ * Open dropdown using keyboard or click
+ * Tries click first for Ashby (Radix UI), then keyboard fallbacks
  */
 async function openDropdownWithKeyboard(input: HTMLInputElement): Promise<boolean> {
     console.log(`${LOG_PREFIX} 🔓 Attempting to open menu...`);
+
+    // 0. For Ashby/Radix UI: Try clicking the trigger element FIRST
+    //    Radix UI dropdowns open on click, not keyboard Space
+    const trigerEl = (input as HTMLElement);
+    trigerEl.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    trigerEl.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
+    trigerEl.click();
+    if (await waitForDropdownMenu(600)) {
+        console.log(`${LOG_PREFIX} ✅ Menu opened via click (Ashby/Radix)`);
+        return true;
+    }
 
     // 1. Try Space (Primary for Greenhouse/React-Select/ARIA)
     dispatchKeyEvent(input, ' ', 'Space');
@@ -215,7 +232,7 @@ async function openDropdownWithKeyboard(input: HTMLInputElement): Promise<boolea
     }
 
     // 3. Last Fallback: Click the control container
-    console.warn(`${LOG_PREFIX} ⚠️ Keyboard open failed, trying click fallback`);
+    console.warn(`${LOG_PREFIX} ⚠️ Keyboard open failed, trying click on parent`);
     const control = input.closest('.select__control') || input.parentElement;
     if (control) {
         (control as HTMLElement).click();
@@ -343,6 +360,11 @@ function getDropdownMenu(): Element | null {
         '[role="listbox"]',
         '[role="menu"]',
         '.dropdown-menu',
+        '[class*="Dropdown_menu"]',   // Ashby
+        '[class*="DropdownMenu"]',    // Ashby variant
+        '[class*="PopoverMenu"]',     // Ashby popover
+        '[class*="SelectMenu"]',      // Generic React
+        '[data-radix-popper-content-wrapper]', // Radix UI (used by Ashby)
         '.select2-results',   // Select2
         '.select2-dropdown'   // Select2
     ];
@@ -412,7 +434,7 @@ async function typeToFilter(input: HTMLInputElement, value: string) {
         input.dispatchEvent(new KeyboardEvent('keydown', { key: char, bubbles: true }));
         input.dispatchEvent(new KeyboardEvent('keypress', { key: char, bubbles: true }));
         input.dispatchEvent(new KeyboardEvent('keyup', { key: char, bubbles: true }));
-        await sleep(20); // Fast typing
+        await sleep(5); // Ultra-fast typing (reduced from 20ms)
     }
 
     console.log(`${LOG_PREFIX} ✅ Typed: ${value}`);

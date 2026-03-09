@@ -33446,30 +33446,30 @@ __webpack_require__.r(__webpack_exports__);
 const CONFIG = {
     // API Endpoints
     API: {
-        AI_SERVICE: "https://autofill-extension-backend.onrender.com" || 0,
-        PATTERN_API: "https://autofill-extension-backend.onrender.com/api/patterns" || 0,
-        USER_DATA: "https://autofill-extension-backend.onrender.com/api/user-data" || 0,
-        VERCEL_CRM: "https://ticketingtoolapplywizz.vercel.app/api/get-client-details" || 0,
-        BACKEND_URL: "http://localhost:3000" || 0,
-        STATS_URL: "https://autofill-extension-backend.onrender.com" || 0,
-        AI_API_KEY: "K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl" || 0,
+        AI_SERVICE: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_AI_URL || 'https://autofill-extension-backend.onrender.com',
+        PATTERN_API: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_PATTERN_URL || 'https://autofill-extension-backend.onrender.com/api/patterns',
+        USER_DATA: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_USER_DATA_URL || 'https://autofill-extension-backend.onrender.com/api/user-data',
+        VERCEL_CRM: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_VERCEL_CRM_URL || 'https://ticketingtoolapplywizz.vercel.app/api/get-client-details',
+        BACKEND_URL: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_BACKEND_URL || 'http://localhost:3000',
+        STATS_URL: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_AI_URL || 'https://autofill-extension-backend.onrender.com',
+        AI_API_KEY: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_AI_API_KEY || '',
     },
     // Timeouts (milliseconds)
     TIMEOUTS: {
-        DROPDOWN_SCAN: parseInt("3000" || 0, 10),
-        AI_REQUEST: parseInt("30000" || 0, 10),
-        PATTERN_SYNC: parseInt("5000" || 0, 10),
+        DROPDOWN_SCAN: parseInt({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_DROPDOWN_TIMEOUT || '3000', 10),
+        AI_REQUEST: parseInt({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_AI_TIMEOUT || '30000', 10),
+        PATTERN_SYNC: parseInt({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_PATTERN_SYNC_TIMEOUT || '5000', 10),
     },
     // Retry Configuration
     RETRIES: {
-        DROPDOWN_SCAN: parseInt("2" || 0, 10),
-        AI_REQUEST: parseInt("1" || 0, 10),
+        DROPDOWN_SCAN: parseInt({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_DROPDOWN_RETRIES || '2', 10),
+        AI_REQUEST: parseInt({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_AI_RETRIES || '1', 10),
     },
     // Confidence Thresholds (0.0 to 1.0)
     THRESHOLDS: {
-        MIN_CONFIDENCE: parseFloat("0.6" || 0),
-        FUZZY_MATCH: parseFloat("0.7" || 0),
-        PATTERN_MEMORY: parseFloat("0.95" || 0),
+        MIN_CONFIDENCE: parseFloat({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_MIN_CONFIDENCE || '0.6'),
+        FUZZY_MATCH: parseFloat({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_FUZZY_THRESHOLD || '0.7'),
+        PATTERN_MEMORY: parseFloat({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_PATTERN_MEMORY_CONFIDENCE || '0.95'),
     },
     // Canonical Field Patterns (for intent detection)
     CANONICAL_PATTERNS: {
@@ -33532,6 +33532,7 @@ __webpack_require__.r(__webpack_exports__);
 async function typeLikeHuman(element, value) {
     try {
         element.focus();
+        element.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true }));
         // Clear existing value
         element.value = "";
         element.dispatchEvent(new Event("input", { bubbles: true }));
@@ -33541,8 +33542,12 @@ async function typeLikeHuman(element, value) {
                 action: "trustedType",
                 text: value
             });
-            if (response?.success)
+            if (response?.success) {
+                element.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, cancelable: true }));
+                element.dispatchEvent(new Event("change", { bubbles: true }));
+                element.blur();
                 return verifyInputValue(element, value);
+            }
         }
         catch (e) {
             console.warn("[Autofill] Trusted typing failed, falling back to DOM simulation", e);
@@ -33551,9 +33556,11 @@ async function typeLikeHuman(element, value) {
         for (const char of value) {
             element.value += char;
             element.dispatchEvent(new Event("input", { bubbles: true }));
-            await sleep(10); // Balanced: 3x faster than original 30ms, safe for all sites
+            element.dispatchEvent(new KeyboardEvent("keypress", { key: char, bubbles: true }));
+            await sleep(2); // Ultra-fast
         }
-        // Dispatch change event
+        // Dispatch final events
+        element.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, cancelable: true }));
         element.dispatchEvent(new Event("change", { bubbles: true }));
         element.blur();
         return verifyInputValue(element, value);
@@ -33568,17 +33575,25 @@ async function typeLikeHuman(element, value) {
  */
 async function fillInput(element, value) {
     try {
+        // 1. Focus and initial state
         element.focus();
-        // Set value using multiple methods to ensure it works
-        element.value = value;
-        // Trigger React/Vue/Angular change detection
-        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
-        if (nativeInputValueSetter) {
-            nativeInputValueSetter.call(element, value);
+        element.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true }));
+        // 2. Multi-method value setting (React/Vue/Vanilla)
+        const prototype = element instanceof HTMLTextAreaElement
+            ? window.HTMLTextAreaElement.prototype
+            : window.HTMLInputElement.prototype;
+        const nativeSetter = Object.getOwnPropertyDescriptor(prototype, "value")?.set;
+        if (nativeSetter) {
+            nativeSetter.call(element, value);
         }
-        // Dispatch events
+        else {
+            element.value = value;
+        }
+        // 3. Comprehensive Event Sequence
         element.dispatchEvent(new Event("input", { bubbles: true }));
+        element.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, cancelable: true }));
         element.dispatchEvent(new Event("change", { bubbles: true }));
+        // 4. Final blur triggers many validation frameworks
         element.blur();
         return verifyInputValue(element, value);
     }
@@ -33651,44 +33666,63 @@ async function selectRadioByLabel(name, labelText) {
 async function clickRadio(radio, labelText) {
     try {
         const labelElement = getLabelElement(radio);
-        // Strategy: Greenhouse/Workday/Ashby often hide the real input. 
-        // We should click the LABEL or the visible container.
-        const greenhouseWrapper = radio.closest('.radio_button, .radio-button-container, [class*="radio"]');
-        const ashbyWrapper = radio.closest('[class*="Radio_container"], [class*="Radio_box"]');
-        const customControl = radio.parentElement?.querySelector('span[class*="custom-radio"], span[class*="radio-label"], [class*="RadioButton_checkmark"]');
-        const target = ashbyWrapper || greenhouseWrapper || customControl || labelElement || radio;
+        // Build a prioritized list of click targets
+        // Try from most specific (label) to the raw input
+        const targets = [];
+        // 1. The label is the most reliable click target
+        if (labelElement)
+            targets.push(labelElement);
+        // 2. Ashby wraps radio in a span/div inside the label
+        //    e.g. <label><span class="...Radio_box"><input .../></span>YES</label>
+        const ashbyWrapper = radio.closest('[class*="Radio_container"], [class*="Radio_box"], [class*="Radio_pill"], [class*="radio-item"]');
+        if (ashbyWrapper && !targets.includes(ashbyWrapper))
+            targets.push(ashbyWrapper);
+        // 3. Greenhouse radio wrappers
+        const greenhouseWrapper = radio.closest('.radio_button, .radio-button-container');
+        if (greenhouseWrapper && !targets.includes(greenhouseWrapper))
+            targets.push(greenhouseWrapper);
+        // 4. Lever/generic wrapper
+        const leverWrapper = radio.closest('.application-question, .application-field');
+        if (leverWrapper && !targets.includes(leverWrapper))
+            targets.push(leverWrapper);
+        // 5. Parent element as a generic fallback
+        if (radio.parentElement && !targets.includes(radio.parentElement))
+            targets.push(radio.parentElement);
+        // 6. The input itself as the last resort
+        if (!targets.includes(radio))
+            targets.push(radio);
         console.log(`[clickRadio] 🖱️ Clicking radio for: "${labelText}"`, {
             checkedBefore: radio.checked,
-            targetTag: target.tagName,
-            targetClass: target.className
+            targetsCount: targets.length
         });
-        // Event sequence for React-Select/Custom components
-        target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }));
-        target.dispatchEvent(new MouseEvent("mouseup", { bubbles: true, cancelable: true }));
-        target.click();
-        // Fallback: Click the label and input directly if they are different from target
-        if (!radio.checked) {
-            if (labelElement && labelElement !== target)
-                labelElement.click();
-            if (radio !== target)
-                radio.click();
+        // Try each target in order until the radio is checked
+        for (const target of targets) {
+            target.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+            target.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
+            target.click();
+            // Give React/Vue time to update state (Ashby needs ~300ms)
+            const success = await waitForCommit(() => radio.checked, 400);
+            if (success) {
+                console.log(`[clickRadio] ✅ Radio selected via target: ${target.tagName}.${target.className.split(' ').slice(0, 2).join('.')}`);
+                return true;
+            }
         }
-        // Wait for selection to commit
-        const success = await waitForCommit(() => radio.checked, 800);
-        if (success) {
-            console.log(`[selectRadioByLabel] ✅ Radio selected: ${labelText}`);
+        // Final fallback: force React event dispatch on the input directly
+        if (!radio.checked) {
+            radio.checked = true;
+            radio.dispatchEvent(new Event('change', { bubbles: true }));
+            radio.dispatchEvent(new Event('input', { bubbles: true }));
+            await waitForCommit(() => radio.checked, 200);
+        }
+        if (radio.checked) {
+            console.log(`[clickRadio] ✅ Radio selected (forced React dispatch): ${labelText}`);
             return true;
         }
-        else {
-            console.warn(`[selectRadioByLabel] ⚠️ Radio NOT selected after click: ${labelText}`);
-            // Last resort: force checked (though this won't trigger React state usually)
-            // radio.checked = true;
-            // radio.dispatchEvent(new Event('change', { bubbles: true }));
-            return radio.checked;
-        }
+        console.warn(`[clickRadio] ⚠️ Radio NOT selected after all attempts: ${labelText}`);
+        return false;
     }
     catch (error) {
-        console.error("[clickRadio] ❌ Error:", error);
+        console.error('[clickRadio] ❌ Error:', error);
         return false;
     }
 }
@@ -33710,28 +33744,54 @@ async function setCheckbox(element, checked) {
         const currentState = element.checked;
         if (currentState !== checked) {
             console.log(`[setCheckbox] 🔘 Toggling checkbox to ${checked}`);
-            // Broadened list of containers to click (added Ashby and generic patterns)
             const label = getLabelElement(element);
-            const greenhouseWrapper = element.closest('.checkbox, .checkbox-container, [class*="checkbox"]');
-            const ashbyWrapper = element.closest('[class*="Checkbox_container"], [class*="Checkbox_box"]');
-            const customControl = element.parentElement?.querySelector('span[class*="custom-checkbox"], span[class*="checkbox-label"], [class*="box"], [class*="checkmark"]');
-            const target = ashbyWrapper || greenhouseWrapper || customControl || label || element;
-            console.log(`[setCheckbox] 🖱️ Clicking target for checkbox`, {
-                targetTag: target.tagName,
-                targetClass: target.className
-            });
-            target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-            target.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
-            target.click();
-            // Verification with wait
-            await waitForCommit(() => element.checked === checked, 500);
+            // Build ordered list of targets to try
+            const targets = [];
+            if (label)
+                targets.push(label);
+            // Ashby wrappers
+            const ashbyWrapper = element.closest('[class*="Checkbox_container"], [class*="Checkbox_box"], [class*="Checkbox_pill"], [class*="checkbox-item"]');
+            if (ashbyWrapper)
+                targets.push(ashbyWrapper);
+            // Greenhouse/BambooHR wrappers
+            const greenhouseWrapper = element.closest('.checkbox, .checkbox-container');
+            if (greenhouseWrapper && !targets.includes(greenhouseWrapper))
+                targets.push(greenhouseWrapper);
+            // Lever/generic wrapper
+            const leverWrapper = element.closest('.application-question, .application-field');
+            if (leverWrapper && !targets.includes(leverWrapper))
+                targets.push(leverWrapper);
+            // Parent element as a generic fallback  
+            if (element.parentElement && !targets.includes(element.parentElement))
+                targets.push(element.parentElement);
+            // The input itself as last resort
+            if (!targets.includes(element))
+                targets.push(element);
+            console.log(`[setCheckbox] 🖱️ Trying ${targets.length} targets for checkbox`);
+            for (const target of targets) {
+                target.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+                target.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+                target.click();
+                const committed = await waitForCommit(() => element.checked === checked, 400);
+                if (committed) {
+                    console.log(`[setCheckbox] ✅ Checked via target: ${target.tagName}.${target.className?.split?.(' ')?.slice(0, 2)?.join('.')}`);
+                    break;
+                }
+            }
+            // Final forced fallback
+            if (element.checked !== checked) {
+                element.checked = checked;
+                element.dispatchEvent(new Event('change', { bubbles: true }));
+                element.dispatchEvent(new Event('input', { bubbles: true }));
+                await waitForCommit(() => element.checked === checked, 200);
+            }
         }
         const success = element.checked === checked;
         console.log(`[setCheckbox] ${success ? '✅' : '❌'} Result: ${element.checked}`);
         return success;
     }
     catch (error) {
-        console.error("Failed to set checkbox:", error);
+        console.error('Failed to set checkbox:', error);
         return false;
     }
 }
@@ -34577,6 +34637,13 @@ async function fillField(field, value, fileName // Optional filename for file up
             case _types_fieldDetection__WEBPACK_IMPORTED_MODULE_0__.FieldType.TEXTAREA:
                 console.log(`[Autofill] 📝 Filling input field: ${field.questionText}`);
                 success = await (0,_autofillActions__WEBPACK_IMPORTED_MODULE_1__.fillInput)(field.element, String(value));
+                // RELIABILITY FALLBACK:
+                // If initial fast-fill fails verification, OR if the field is required and we want to be extra safe,
+                // try character-by-character typing. This bypasses many complex framework validations.
+                if (!success || (field.isRequired && !success)) {
+                    console.log(`[Autofill] ⚠️ Fast-fill failed or required field: Retrying with typeLikeHuman for "${field.questionText}"`);
+                    success = await (0,_autofillActions__WEBPACK_IMPORTED_MODULE_1__.typeLikeHuman)(field.element, String(value));
+                }
                 break;
             case _types_fieldDetection__WEBPACK_IMPORTED_MODULE_0__.FieldType.SELECT_NATIVE:
                 console.log(`[Autofill] 📋 Selecting from native dropdown: ${field.questionText}`);
@@ -34721,8 +34788,8 @@ async function fillAllFields(fields) {
         // Fill the field
         const result = await fillField(field, field.filledValue);
         results.set(field, result);
-        // Small delay between fields to avoid overwhelming the page
-        await sleep(50);
+        // Tiny delay between fields to keep events orderly but fast
+        await sleep(10);
     }
     return results;
 }
@@ -34770,7 +34837,7 @@ async function selectDropdownKeyboardFirst(element, value, options) {
             return false;
         }
         input.focus();
-        await (0,_dropdownInteractions__WEBPACK_IMPORTED_MODULE_0__.sleep)(300); // Increased from 100ms
+        await (0,_dropdownInteractions__WEBPACK_IMPORTED_MODULE_0__.sleep)(100); // Reduced from 300ms for speed
         console.log(`${LOG_PREFIX} ✅ Focused input`);
         // Step 2: Open menu deliberately
         const opened = await openDropdownWithKeyboard(input);
@@ -34886,6 +34953,11 @@ function findDropdownInput(element) {
         if (input)
             return input;
     }
+    // Ashby: dropdown trigger may be a button with [data-radix-collection-item] or specific classes
+    const ashbyDropdownTrigger = element.closest('[class*="Dropdown_trigger"], [class*="Select_trigger"], [aria-haspopup="listbox"]');
+    if (ashbyDropdownTrigger) {
+        return ashbyDropdownTrigger;
+    }
     // NEW: If the element itself is focusable and looks like a dropdown trigger, return it
     const role = element.getAttribute('role');
     const tabIndex = element.getAttribute('tabindex');
@@ -34913,11 +34985,21 @@ function findMenuSearchInput() {
     return null;
 }
 /**
- * Open dropdown using keyboard (Space or Enter)
- * This is more reliable than clicking for React dropdowns
+ * Open dropdown using keyboard or click
+ * Tries click first for Ashby (Radix UI), then keyboard fallbacks
  */
 async function openDropdownWithKeyboard(input) {
     console.log(`${LOG_PREFIX} 🔓 Attempting to open menu...`);
+    // 0. For Ashby/Radix UI: Try clicking the trigger element FIRST
+    //    Radix UI dropdowns open on click, not keyboard Space
+    const trigerEl = input;
+    trigerEl.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    trigerEl.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
+    trigerEl.click();
+    if (await waitForDropdownMenu(600)) {
+        console.log(`${LOG_PREFIX} ✅ Menu opened via click (Ashby/Radix)`);
+        return true;
+    }
     // 1. Try Space (Primary for Greenhouse/React-Select/ARIA)
     dispatchKeyEvent(input, ' ', 'Space');
     if (await waitForDropdownMenu(800)) {
@@ -34932,7 +35014,7 @@ async function openDropdownWithKeyboard(input) {
         return true;
     }
     // 3. Last Fallback: Click the control container
-    console.warn(`${LOG_PREFIX} ⚠️ Keyboard open failed, trying click fallback`);
+    console.warn(`${LOG_PREFIX} ⚠️ Keyboard open failed, trying click on parent`);
     const control = input.closest('.select__control') || input.parentElement;
     if (control) {
         control.click();
@@ -35045,6 +35127,11 @@ function getDropdownMenu() {
         '[role="listbox"]',
         '[role="menu"]',
         '.dropdown-menu',
+        '[class*="Dropdown_menu"]', // Ashby
+        '[class*="DropdownMenu"]', // Ashby variant
+        '[class*="PopoverMenu"]', // Ashby popover
+        '[class*="SelectMenu"]', // Generic React
+        '[data-radix-popper-content-wrapper]', // Radix UI (used by Ashby)
         '.select2-results', // Select2
         '.select2-dropdown' // Select2
     ];
@@ -35108,7 +35195,7 @@ async function typeToFilter(input, value) {
         input.dispatchEvent(new KeyboardEvent('keydown', { key: char, bubbles: true }));
         input.dispatchEvent(new KeyboardEvent('keypress', { key: char, bubbles: true }));
         input.dispatchEvent(new KeyboardEvent('keyup', { key: char, bubbles: true }));
-        await (0,_dropdownInteractions__WEBPACK_IMPORTED_MODULE_0__.sleep)(20); // Fast typing
+        await (0,_dropdownInteractions__WEBPACK_IMPORTED_MODULE_0__.sleep)(5); // Ultra-fast typing (reduced from 20ms)
     }
     console.log(`${LOG_PREFIX} ✅ Typed: ${value}`);
 }
@@ -35245,11 +35332,23 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _fieldMatching__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./fieldMatching */ "./src/content/fieldMatching.ts");
 /* harmony import */ var _workday_workdayDetector__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./workday/workdayDetector */ "./src/content/workday/workdayDetector.ts");
 /* harmony import */ var _workday_workdayHandler__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./workday/workdayHandler */ "./src/content/workday/workdayHandler.ts");
+/* harmony import */ var _core_storage_patternStorage__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../core/storage/patternStorage */ "./src/core/storage/patternStorage.ts");
+/* harmony import */ var _core_storage_profileStorage__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../core/storage/profileStorage */ "./src/core/storage/profileStorage.ts");
+/* harmony import */ var _mapping_hardcodedAnswerEngine__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./mapping/hardcodedAnswerEngine */ "./src/content/mapping/hardcodedAnswerEngine.ts");
+/* harmony import */ var _mapping_questionPatternDatabase__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./mapping/questionPatternDatabase */ "./src/content/mapping/questionPatternDatabase.ts");
+/* harmony import */ var _core_analytics_AnalyticsTracker__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../core/analytics/AnalyticsTracker */ "./src/core/analytics/AnalyticsTracker.ts");
+/* harmony import */ var _utils_platformDetection__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./utils/platformDetection */ "./src/content/utils/platformDetection.ts");
 // extension/src/content/autofillRunner.ts
 /**
  * Main autofill orchestrator - receives answers from Selenium scan and fills current tab
  * Production architecture: Selenium READ-ONLY → Extension fills EVERYTHING
  */
+
+
+
+
+
+
 
 
 
@@ -35278,15 +35377,20 @@ async function runAutofill(payload) {
     console.log(`   URL: ${payload.url}`);
     console.log(`   Run ID: ${payload.runId}`);
     console.log(`   Fields to fill: ${payload.fields.length}\n`);
+    const tracker = _core_analytics_AnalyticsTracker__WEBPACK_IMPORTED_MODULE_9__.AnalyticsTracker.getInstance();
+    tracker.startFilling();
     // ========== WORKDAY DETECTION ==========
     // If this is a Workday application, delegate to Workday handler
     if ((0,_workday_workdayDetector__WEBPACK_IMPORTED_MODULE_3__.isWorkdayApplication)()) {
         console.log(`${LOG_PREFIX} 🏢 WORKDAY APPLICATION DETECTED - Using Workday handler\n`);
         await (0,_workday_workdayHandler__WEBPACK_IMPORTED_MODULE_4__.handleWorkdayApplication)(payload);
+        tracker.endFilling();
         return;
     }
-    // ========== GREENHOUSE LOGIC (UNCHANGED) ==========
-    console.log(`${LOG_PREFIX} 🌱 GREENHOUSE APPLICATION - Using standard flow\n`);
+    // ========== PLATFORM DETECTION & LOGGING ==========
+    const platform = (0,_utils_platformDetection__WEBPACK_IMPORTED_MODULE_10__.detectPlatform)();
+    const platformName = platform.toUpperCase();
+    console.log(`${LOG_PREFIX} 🏢 ${platformName} APPLICATION - Using standard flow\n`);
     // Step 1: Detect fields in current DOM
     console.log(`🔍 Step 1: Detecting fields in current DOM...`);
     const detected = (0,_fieldMatching__WEBPACK_IMPORTED_MODULE_2__.detectFieldsInCurrentDOM)();
@@ -35296,6 +35400,7 @@ async function runAutofill(payload) {
     const potentialMatches = payload.fields.filter(rf => (0,_fieldMatching__WEBPACK_IMPORTED_MODULE_2__.bestMatchField)(detected, rf.questionText, rf.canonicalKey));
     if (potentialMatches.length === 0) {
         console.log(`${LOG_PREFIX} ⏭️ No matching fields in this frame. Skipping autofill & analytics.`);
+        tracker.endFilling();
         return;
     }
     const results = [];
@@ -35304,14 +35409,56 @@ async function runAutofill(payload) {
     console.log(`╔════════════════════════════════════════════════════════════════════╗`);
     console.log(`║              📝 Step 2: FILLING FIELDS (${payload.fields.length} total)${' '.repeat(Math.max(0, 22 - payload.fields.length.toString().length))}║`);
     console.log(`╚════════════════════════════════════════════════════════════════════╝\n`);
-    // Step 2: Match and fill each resolved field
-    for (let i = 0; i < payload.fields.length; i++) {
-        const rf = payload.fields[i];
+    // --- SEQUENTIAL FILLING LOGIC ---
+    // Group fields by filling priority (case-insensitive)
+    const getPriority = (f) => {
+        const type = f.fieldType.toUpperCase();
+        if (["TEXT", "TEXTAREA", "EMAIL", "PHONE", "TEL", "NUMBER", "DATE"].includes(type))
+            return 1;
+        if (["SELECT", "SELECT_NATIVE", "DROPDOWN_CUSTOM"].includes(type))
+            return 2;
+        if (["RADIO", "CHECKBOX"].includes(type))
+            return 3;
+        if (["FILE"].includes(type))
+            return 4;
+        return 5; // Unknown / Other
+    };
+    const priorityGroups = {
+        inputs: payload.fields.filter(f => getPriority(f) === 1),
+        dropdowns: payload.fields.filter(f => getPriority(f) === 2),
+        selections: payload.fields.filter(f => getPriority(f) === 3),
+        files: payload.fields.filter(f => getPriority(f) === 4),
+        others: payload.fields.filter(f => getPriority(f) === 5)
+    };
+    const sortedFields = [
+        ...priorityGroups.inputs,
+        ...priorityGroups.dropdowns,
+        ...priorityGroups.selections,
+        ...priorityGroups.files,
+        ...priorityGroups.others
+    ];
+    console.log(`${LOG_PREFIX} 📋 Sequential Filling Order:`);
+    console.log(`   1. Inputs: ${priorityGroups.inputs.length}`);
+    console.log(`   2. Dropdowns: ${priorityGroups.dropdowns.length}`);
+    console.log(`   3. Selections: ${priorityGroups.selections.length}`);
+    console.log(`   4. Files: ${priorityGroups.files.length}`);
+    if (priorityGroups.others.length > 0)
+        console.log(`   5. Others: ${priorityGroups.others.length}`);
+    console.log(`\n`);
+    // Step 2: Match and fill each resolved field in priority order
+    let currentGroupType = "";
+    for (let i = 0; i < sortedFields.length; i++) {
+        const rf = sortedFields[i];
         const fieldNum = i + 1;
-        console.log(`\n┌─ Field ${fieldNum}/${payload.fields.length} ${'─'.repeat(55 - fieldNum.toString().length - payload.fields.length.toString().length)}`);
+        // Add a longer delay when switching between groups to ensure DOM settles
+        if (currentGroupType && currentGroupType !== rf.fieldType) {
+            console.log(`${LOG_PREFIX} 🕒 Group changed, waiting for DOM to settle...`);
+            await sleep(300);
+        }
+        currentGroupType = rf.fieldType;
+        console.log(`\n┌─ Field ${fieldNum}/${sortedFields.length} [${rf.fieldType}] ${'─'.repeat(45 - fieldNum.toString().length - sortedFields.length.toString().length - rf.fieldType.length)}`);
         console.log(`│ 📝 Question: "${rf.questionText}"`);
         console.log(`│ 💬 Answer: "${rf.value}"`);
-        console.log(`│ 🏷️  Type: ${rf.fieldType}`);
         // Find matching DOM element
         console.log(`│ 🔍 Searching for DOM match...`);
         const match = (0,_fieldMatching__WEBPACK_IMPORTED_MODULE_2__.bestMatchField)(detected, rf.questionText, rf.canonicalKey);
@@ -35323,33 +35470,71 @@ async function runAutofill(payload) {
             failures++;
             continue;
         }
-        console.log(`│ ✓ DOM match found`);
-        console.log(`│ 🖊️  Attempting to fill...`);
-        // Fill the matched field
+        // Fill and Verify
         const ok = await fillMatchedField(match, rf);
         results.push({ questionText: rf.questionText, ok });
+        tracker.trackFillResult(rf.questionText, ok);
         // Dispatch incremental progress event
         const progressEvent = new CustomEvent('FIELD_FILL_PROGRESS', {
             detail: { questionText: rf.questionText, ok }
         });
         window.dispatchEvent(progressEvent);
-        // Report progress to background for cross-frame tracking
-        try {
-            chrome.runtime.sendMessage({
-                action: 'FIELD_FILL_PROGRESS',
-                payload: { questionText: rf.questionText, ok, runId: payload.runId }
-            }).catch(() => { });
-        }
-        catch (e) { }
         if (ok) {
             console.log(`│ ✅ SUCCESS - Field filled and verified`);
             console.log(`└${'─'.repeat(66)}`);
             successes++;
+            // LEARN from this interaction (only if it's NEW)
+            try {
+                if (rf.canonicalKey) {
+                    const profile = await (0,_core_storage_profileStorage__WEBPACK_IMPORTED_MODULE_6__.loadProfile)();
+                    let isProfileEmpty = true;
+                    if (profile) {
+                        const val = (0,_mapping_questionPatternDatabase__WEBPACK_IMPORTED_MODULE_8__.getValueByIntent)(profile, rf.canonicalKey);
+                        if (val !== undefined && val !== null && val !== '') {
+                            isProfileEmpty = false;
+                        }
+                    }
+                    const { isNewQuestion, isNewAnswer } = (0,_mapping_hardcodedAnswerEngine__WEBPACK_IMPORTED_MODULE_7__.isNewToHardcodedEngine)(rf.questionText, rf.canonicalKey, String(rf.value));
+                    if (isNewQuestion || isNewAnswer || isProfileEmpty) {
+                        let canonicalValue = String(rf.value);
+                        if (profile && !isProfileEmpty) {
+                            const current = (0,_mapping_questionPatternDatabase__WEBPACK_IMPORTED_MODULE_8__.getValueByIntent)(profile, rf.canonicalKey);
+                            if (typeof current === 'boolean') {
+                                canonicalValue = current ? 'Yes' : 'No';
+                            }
+                            else {
+                                canonicalValue = String(current);
+                            }
+                        }
+                        if (isProfileEmpty && profile) {
+                            const { updateProfileField } = await Promise.resolve(/*! import() */).then(__webpack_require__.bind(__webpack_require__, /*! ../core/storage/profileStorage */ "./src/core/storage/profileStorage.ts"));
+                            await updateProfileField(rf.canonicalKey, rf.value);
+                        }
+                        if (isNewQuestion || isNewAnswer) {
+                            await _core_storage_patternStorage__WEBPACK_IMPORTED_MODULE_5__.patternStorage.addPattern({
+                                questionPattern: rf.questionText,
+                                intent: rf.canonicalKey,
+                                canonicalKey: rf.canonicalKey,
+                                fieldType: rf.fieldType.toLowerCase(),
+                                confidence: rf.confidence || 1.0,
+                                source: 'manual',
+                                answerMappings: [{
+                                        canonicalValue: canonicalValue,
+                                        variants: [String(rf.value)],
+                                        contextOptions: rf.options || []
+                                    }]
+                            });
+                        }
+                    }
+                }
+            }
+            catch (e) {
+                console.warn(`${LOG_PREFIX} 🎓 Learning check/store failed:`, e);
+            }
         }
         else {
             console.log(`│ ❌ FAILED - Could not fill or verify field`);
             console.log(`└${'─'.repeat(66)}`);
-            await reportFieldFailed(payload, rf, "FILL_VERIFY_FAILED");
             failures++;
         }
         // Small delay between fields
@@ -35366,6 +35551,7 @@ async function runAutofill(payload) {
         results.filter(r => !r.ok).forEach(r => console.log(`      - ${r.questionText} (${r.reason || 'Unknown error'})`));
     }
     const successfulFieldNames = results.filter(r => r.ok).map(r => r.questionText);
+    tracker.endFilling();
     // Dispatch completion event for UI timer (local frame)
     window.dispatchEvent(new CustomEvent('AUTOFILL_COMPLETE_EVENT', {
         detail: {
@@ -35406,8 +35592,9 @@ async function fillMatchedField(match, rf) {
         const field = {
             element: match.element,
             questionText: match.questionText,
+            selector: rf.selector || "",
             fieldType: mapSeleniumTypeToFieldType(rf.fieldType), // Use Selenium's type!
-            isRequired: false,
+            isRequired: !!rf.required,
             options: rf.options,
             section: _types_fieldDetection__WEBPACK_IMPORTED_MODULE_1__.QuestionSection.PERSONAL,
             canonicalKey: rf.canonicalKey || '',
@@ -35640,21 +35827,40 @@ function detectFieldsInCurrentDOM() {
         });
     }
     // Filter: keep only entries with question text
-    const filtered = out.filter(x => (x.questionText ?? "").trim().length > 0);
+    // And exclude generic UI elements like "or drag and drop here"
+    const genericUITexts = [
+        'or drag and drop here',
+        'drag and drop',
+        'drag & drop',
+        'click to upload',
+        'browse files',
+    ];
+    const filtered = out.filter(x => {
+        const text = (x.questionText ?? "").trim().toLowerCase();
+        if (text.length === 0)
+            return false;
+        if (genericUITexts.some(g => text === g || text.startsWith(g)))
+            return false;
+        return true;
+    });
     console.log(`${LOG_PREFIX} Detected ${filtered.length} fields:`, filtered.map(f => ({ text: f.questionText.substring(0, 30), kind: f.kind })));
     return filtered;
 }
 /**
  * Helper to get a semi-stable identifier for a container to group anonymous controls
+ * Aligned with FormScanner.ts logic for consistency
  */
-function getContainerHash(el) {
-    const container = el.closest('fieldset, [role="group"], .field, .form-group') || el.parentElement;
+function getContainerHash(element) {
+    // Walk up the DOM to find a meaningful container
+    let container = element.closest('fieldset, [role="group"], [class*="Question"], [class*="Field"], [class*="_field"], [class*="application-question"]') || element.parentElement?.parentElement || element.parentElement;
     if (!container)
-        return Math.random().toString(); // Fallback
-    // Use a combination of class and index if possible
-    const className = container.className || 'no-class';
-    const index = Array.from(document.querySelectorAll(`.${className.split(' ')[0]}`)).indexOf(container);
-    return `${className}_${index}`;
+        return Math.random().toString(36);
+    // Use class + DOM position as the key
+    const className = typeof container.className === 'string' ? container.className : '';
+    const classKey = className.split(' ').filter(c => c && !c.startsWith('css-')).slice(0, 3).join('.');
+    const siblings = Array.from(container.parentElement?.children || []);
+    const idx = siblings.indexOf(container);
+    return `${classKey}_${idx}`;
 }
 /**
  * Find best matching field by questionText similarity
@@ -35698,7 +35904,15 @@ function getLabelFor(el) {
 function isVisible(el) {
     const r = el.getBoundingClientRect();
     const style = window.getComputedStyle(el);
-    return r.width > 0 && r.height > 0 && style.visibility !== "hidden" && style.display !== "none";
+    // Ashby and many other platforms hide native inputs with opacity: 0
+    // while their custom wrappers are visible. We must allow these.
+    const isHiddenInput = el instanceof HTMLInputElement &&
+        (el.type === 'radio' || el.type === 'checkbox' || el.type === 'file');
+    return (r.width > 0 &&
+        r.height > 0 &&
+        style.visibility !== "hidden" &&
+        style.display !== "none" &&
+        (style.opacity !== '0' || isHiddenInput));
 }
 /**
  * Normalize text for comparison
@@ -35979,38 +36193,69 @@ function classifySection(canonicalKey) {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   HARDCODED_RULES: () => (/* binding */ HARDCODED_RULES),
+/* harmony export */   HARDCODED_SYNONYMS: () => (/* binding */ HARDCODED_SYNONYMS),
+/* harmony export */   isNewToHardcodedEngine: () => (/* binding */ isNewToHardcodedEngine),
 /* harmony export */   resolveHardcoded: () => (/* binding */ resolveHardcoded)
 /* harmony export */ });
-/**
- * HARDCODED ANSWER ENGINE v1.0
- * ============================
- *
- * Directly resolves 100+ commonly repeated job platform questions
- * from the user profile WITHOUT any AI calls, fuzzy matching, or learned patterns.
- *
- * Philosophy:
- *   If we know the question pattern AND we know where the answer is in the profile,
- *   we should ALWAYS answer it deterministically. No AI needed.
- *
- * Structure:
- *   Each rule has:
- *     - patterns[]      : lowercase substrings that identify this question
- *     - excludes[]      : substrings that DISQUALIFY this match (prevents false positives)
- *     - resolver()      : function that returns the answer from profile + options
- *
- * Usage:
- *   import { resolveHardcoded } from './hardcodedAnswerEngine';
- *   const answer = resolveHardcoded(quesftionText, fieldType, options, profile);
- *   if (answer !== null) { /* use it directly — no AI needed *\/ }
- */
+// /**
+//  * HARDCODED ANSWER ENGINE v1.0
+//  * ============================
+//  *
+//  * Directly resolves 100+ commonly repeated job platform questions
+//  * from the user profile WITHOUT any AI calls, fuzzy matching, or learned patterns.
+//  *
+//  * Philosophy:
+//  *   If we know the question pattern AND we know where the answer is in the profile,
+//  *   we should ALWAYS answer it deterministically. No AI needed.
+//  *
+//  * Structure:
+//  *   Each rule has:
+//  *     - patterns[]      : lowercase substrings that identify this question
+//  *     - excludes[]      : substrings that DISQUALIFY this match (prevents false positives)
+//  *     - resolver()      : function that returns the answer from profile + options
+//  *
+//  * Usage:
+//  *   import { resolveHardcoded } from './hardcodedAnswerEngine';
+//  *   const answer = resolveHardcoded(quesftionText, fieldType, options, profile);
+//  *   if (answer !== null) { /* use it directly — no AI needed *\/ }
+//  */
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// DATA & SYNONYMS
+// ─────────────────────────────────────────────────────────────────────────────
+const HARDCODED_SYNONYMS = {
+    'yes': ['y', 'true', 'i do', 'authorized', 'i am', 'i can', 'of course', 'affirm', 'confirm'],
+    'no': ['n', 'false', 'i do not', "i don't", 'not authorized', 'i am not', 'i cannot', 'none',
+        'i have not', 'i have no', 'i did not', 'i do not have'],
+    'male': ['man', 'cisgender male', 'cis male', 'm'],
+    'female': ['woman', 'cisgender female', 'cis female', 'f'],
+    'non-binary': ['nonbinary', 'genderqueer', 'gender non-conforming', 'gender non-binary'],
+    'prefer not to say': ['decline to self-identify', 'decline to state', 'prefer not to answer',
+        'prefer not to disclose', 'i prefer not to answer', 'choose not to disclose',
+        'rather not say', 'no response'],
+    'south asian': ['asian (not hispanic or latino)', 'asian', 'asian indian',
+        'asian/pacific islander', 'south asian or east asian'],
+    'not a veteran': ['i am not a protected veteran', 'i am not a veteran', 'not a veteran',
+        'not applicable', 'none of the above', 'no military service'],
+    'no disability': ['i do not have a disability', 'no, i do not have a disability',
+        'i don\'t have a disability', 'no disability'],
+    // US State Mappings
+    'alabama': ['al'], 'alaska': ['ak'], 'arizona': ['az'], 'arkansas': ['ar'], 'california': ['ca', 'calif'],
+    'colorado': ['co'], 'connecticut': ['ct'], 'delaware': ['de'], 'florida': ['fl'], 'georgia': ['ga'],
+    'hawaii': ['hi'], 'idaho': ['id'], 'illinois': ['il'], 'indiana': ['in'], 'iowa': ['ia'],
+    'kansas': ['ks'], 'kentucky': ['ky'], 'louisiana': ['la'], 'maine': ['me'], 'maryland': ['md'],
+    'massachusetts': ['ma'], 'michigan': ['mi'], 'minnesota': ['mn'], 'mississippi': ['ms'], 'missouri': ['mo'],
+    'montana': ['mt'], 'nebraska': ['ne'], 'nevada': ['nv'], 'new hampshire': ['nh'], 'new jersey': ['nj'],
+    'new mexico': ['nm'], 'new york': ['ny'], 'north carolina': ['nc'], 'north dakota': ['nd'], 'ohio': ['oh'],
+    'oklahoma': ['ok'], 'oregon': ['or'], 'pennsylvania': ['pa', 'penn'], 'rhode island': ['ri'], 'south carolina': ['sc'],
+    'south dakota': ['sd'], 'tennessee': ['tn'], 'texas': ['tx'], 'utah': ['ut'], 'vermont': ['vt'],
+    'virginia': ['va'], 'washington': ['wa'], 'west virginia': ['wv'], 'wisconsin': ['wi'], 'wyoming': ['wy'],
+};
 /**
  * Match a value against dropdown options using exact → synonym → partial → Specificity Scoring.
- *
- * Truth-Aware: If the profile value implies a specific intent (like NO),
- * it will skip matching any options that imply the opposite intent (YES).
  */
 function matchOption(value, options) {
     if (!options || options.length === 0)
@@ -36026,37 +36271,21 @@ function matchOption(value, options) {
     // 2. Truth-Filtered matching
     const filteredOptions = options.filter(o => {
         const ol = o.toLowerCase().trim();
+        // Neutral options are always safe to check
+        if (ol.includes('prefer not to') || ol.includes('decline') || ol === 'n/a' || ol === 'none')
+            return true;
         if (isNoIntent) {
-            // Skip options that clearly mean YES
             if (ol === 'yes' || ol === 'true' || ol.startsWith('yes,') || ol === 'i do' || ol === 'y')
                 return false;
         }
         if (isYesIntent) {
-            // Skip options that clearly mean NO
             if (ol === 'no' || ol === 'false' || ol.startsWith('no,') || ol.includes('none') || ol === 'n')
                 return false;
         }
         return true;
     });
     // 3. Synonym map
-    const synonyms = {
-        'yes': ['y', 'true', 'i do', 'authorized', 'i am', 'i can', 'of course', 'affirm', 'confirm'],
-        'no': ['n', 'false', 'i do not', "i don't", 'not authorized', 'i am not', 'i cannot', 'none',
-            'i have not', 'i have no', 'i did not', 'i do not have'],
-        'male': ['man', 'cisgender male', 'cis male', 'm'],
-        'female': ['woman', 'cisgender female', 'cis female', 'f'],
-        'non-binary': ['nonbinary', 'genderqueer', 'gender non-conforming', 'gender non-binary'],
-        'prefer not to say': ['decline to self-identify', 'decline to state', 'prefer not to answer',
-            'prefer not to disclose', 'i prefer not to answer', 'choose not to disclose',
-            'rather not say', 'no response'],
-        'south asian': ['asian (not hispanic or latino)', 'asian', 'asian indian',
-            'asian/pacific islander', 'south asian or east asian'],
-        'not a veteran': ['i am not a protected veteran', 'i am not a veteran', 'not a protected veteran',
-            'not applicable', 'none of the above', 'no military service'],
-        'no disability': ['i do not have a disability', 'no, i do not have a disability',
-            'i don\'t have a disability', 'no disability'],
-    };
-    for (const [key, syns] of Object.entries(synonyms)) {
+    for (const [key, syns] of Object.entries(HARDCODED_SYNONYMS)) {
         if (v === key || syns.includes(v)) {
             const match = filteredOptions.find(o => {
                 const ol = o.toLowerCase().trim();
@@ -36076,7 +36305,6 @@ function matchOption(value, options) {
             return partial;
     }
     // 5. Word-level SPECIFICITY scoring (excluding generic terms)
-    // 5. Word-level SPECIFICITY scoring (excluding generic terms)
     const GENERIC_WORDS = new Set([
         'university', 'college', 'school', 'institute',
         'national', 'international', 'global', 'solutions', 'systems',
@@ -36090,11 +36318,9 @@ function matchOption(value, options) {
     let maxMatchedWords = 0;
     for (const opt of filteredOptions) {
         const ol = opt.toLowerCase();
-        // Check if words match (with basic plural/singular normalization)
         const matchedCount = words.filter(w => {
             if (ol.includes(w))
                 return true;
-            // "States" matches "State"
             if (w.endsWith('s') && ol.includes(w.slice(0, -1)))
                 return true;
             if (!w.endsWith('s') && ol.includes(w + 's'))
@@ -36106,13 +36332,11 @@ function matchOption(value, options) {
             bestMatch = opt;
         }
         else if (matchedCount === maxMatchedWords && matchedCount > 0 && bestMatch) {
-            // TIE-BREAKER: Prefer the shorter string (Precision over Breadth)
             if (opt.length < bestMatch.length) {
                 bestMatch = opt;
             }
         }
     }
-    // QUALITY CHECK: Ensure robust matching
     const matchRatio = maxMatchedWords / words.length;
     if (bestMatch && (matchRatio >= 0.5 || maxMatchedWords >= 2)) {
         console.log(`[HardcodedEngine] 🎯 Specificity match: "${v}" -> "${bestMatch}" (${maxMatchedWords}/${words.length} words matched)`);
@@ -36121,8 +36345,8 @@ function matchOption(value, options) {
     return null;
 }
 /** Produce Yes or No answer, matching against dropdown options. */
-function yesNo(value, options) {
-    const raw = value ? 'Yes' : 'No';
+function yesNo(value, options, textFieldFallback = 'No') {
+    const raw = value ? 'Yes' : (textFieldFallback || 'No');
     if (!options || options.length === 0)
         return raw;
     if (value) {
@@ -36135,7 +36359,7 @@ function yesNo(value, options) {
         return options.find(o => {
             const l = o.toLowerCase().trim();
             return (l === 'no' || l === 'n' || l === 'false' || l === 'i do not' || l.startsWith('no,')) && !l.includes('yes');
-        }) || 'No';
+        }) || (textFieldFallback || 'No');
     }
 }
 /** Parse a date string like "2024-05" → { year: "2024", month: "May" } */
@@ -36154,7 +36378,7 @@ function parseDate(date) {
 // ─────────────────────────────────────────────────────────────────────────────
 // RULE DEFINITIONS  (ordered: most specific first)
 // ─────────────────────────────────────────────────────────────────────────────
-const RULES = [
+const HARDCODED_RULES = [
     // =========================================================================
     // WORK AUTHORIZATION — always YES
     // =========================================================================
@@ -36319,6 +36543,40 @@ const RULES = [
         resolver: (p, opts) => yesNo(p.workAuthorization?.needsSponsorship === true, opts)
     },
     {
+        intent: 'legal.visaRequirement',
+        patterns: ['visa sponsorship', 'require documentation', 'authorized to work', 'immigrant status', 'legal right to work'],
+        resolver: (p) => yesNo(p.workAuthorization?.needsSponsorship === false), // Default to No sponsorship needed
+    },
+    {
+        intent: 'legal.hybridWork',
+        patterns: ['hybrid work model', 'anchor days', 'in office', '3 days a week', 'mondays, tuesdays and thursdays'],
+        resolver: () => 'Yes',
+    },
+    {
+        intent: 'consent.privacyAcknowledgement',
+        patterns: ['applicant privacy policy', "sentry's applicant privacy policy", 'information i submit will be used', 'read and acknowledge'],
+        resolver: (p, opts) => opts?.find(o => o.toLowerCase().includes('acknowledge')) || 'Yes',
+    },
+    {
+        intent: 'personal.pronouns',
+        patterns: ['pronouns', 'preferred pronouns', 'identify your preferred pronouns'],
+        resolver: (p, opts) => {
+            const val = p.personal?.pronouns || 'n/a';
+            return matchOption(val, opts) || val;
+        }
+    },
+    {
+        intent: 'howDidYouHear',
+        patterns: ['how did you hear', 'how did you learn', 'source of application', 'where did you see'],
+        resolver: (p, opts) => {
+            if (!opts)
+                return 'LinkedIn';
+            return opts.find(o => o.toLowerCase().includes('careers page')) ||
+                opts.find(o => o.toLowerCase().includes('linkedin')) ||
+                opts[0];
+        }
+    },
+    {
         patterns: [
             'do you have a disability or chronic condition',
             'do you have a physical or mental disability',
@@ -36344,7 +36602,6 @@ const RULES = [
             const val = p.eeo?.veteran;
             if (val)
                 return matchOption(val, opts) || yesNo(false, opts);
-            // Default "I am not a protected veteran"
             return matchOption('not a veteran', opts) || yesNo(false, opts);
         }
     },
@@ -36422,6 +36679,7 @@ const RULES = [
     },
     {
         patterns: ['sexual orientation', 'how would you describe your sexual orientation', 'lgbtq'],
+        excludes: ['lgbtq community', 'do you consider yourself'],
         intent: 'eeo.sexualOrientation',
         resolver: (p, opts) => {
             const val = p.eeo?.sexualOrientation;
@@ -36449,11 +36707,11 @@ const RULES = [
         intent: 'application.howDidYouHear',
         resolver: (p, opts) => {
             const val = p.application?.howDidYouHear ||
+                p.customAnswers?.['screening.howDidYouHear'] ||
                 p.customAnswers?.['howDidYouHear'] ||
                 p.customAnswers?.['how did you hear about us'];
             if (val)
                 return matchOption(val, opts) || val;
-            // Default: LinkedIn
             return matchOption('linkedin', opts) || matchOption('LinkedIn', opts) || null;
         }
     },
@@ -36471,8 +36729,56 @@ const RULES = [
             'name of employee who referred',
         ],
         intent: 'application.referralName',
-        resolver: (p, _opts) => {
+        resolver: (p) => {
             return p.application?.referralName || '';
+        }
+    },
+    {
+        patterns: ['salary expectations', 'desired salary', 'expected compensation',
+            'salary requirement', 'salary range', 'desired pay', 'expected salary',
+            'annual salary', 'monthly salary', 'compensation expectations',
+            'base salary requirements'
+        ],
+        intent: 'preferences.desiredSalary',
+        resolver: (p, opts) => {
+            const val = p.preferences?.desiredSalary || p.customAnswers?.['desired salary'];
+            if (!val)
+                return null;
+            const numericVal = parseInt(String(val).replace(/\D/g, ''), 10);
+            if (opts && opts.length > 0) {
+                for (const opt of opts) {
+                    const cleanOpt = opt.toLowerCase().replace(/[\$,k]/g, '').replace(/ /g, '');
+                    const parts = cleanOpt.split('-').filter(p => p.length > 0).map(s => parseInt(s, 10));
+                    if (parts.length === 2) {
+                        let [min, max] = parts;
+                        if (min < 1000)
+                            min *= 1000;
+                        if (max < 1000)
+                            max *= 1000;
+                        if (numericVal >= min && numericVal <= max)
+                            return opt;
+                    }
+                    else if (cleanOpt.includes('+') || cleanOpt.includes('above') || cleanOpt.includes('more') || cleanOpt.includes('greater')) {
+                        let threshold = parseInt(cleanOpt.replace(/\D/g, ''), 10);
+                        if (threshold < 1000)
+                            threshold *= 1000;
+                        if (numericVal >= threshold)
+                            return opt;
+                    }
+                    else if (cleanOpt.includes('under') || cleanOpt.includes('below') || cleanOpt.includes('less')) {
+                        let threshold = parseInt(cleanOpt.replace(/\D/g, ''), 10);
+                        if (threshold < 1000)
+                            threshold *= 1000;
+                        if (numericVal <= threshold)
+                            return opt;
+                    }
+                }
+                const match = matchOption(val, opts);
+                if (match)
+                    return match;
+                return null;
+            }
+            return String(val).replace(/\D/g, '').trim();
         }
     },
     {
@@ -36518,7 +36824,6 @@ const RULES = [
         patterns: ['high school', 'secondary school', 'high school name', 'hs diploma'],
         intent: 'education.highSchool',
         resolver: (p, opts) => {
-            // Use last education entry (oldest = usually high school)
             const edu = Array.isArray(p.education) && p.education.length > 0
                 ? p.education[p.education.length - 1] : null;
             if (!edu?.school)
@@ -36723,7 +37028,6 @@ const RULES = [
         ],
         intent: 'experience.yearsTotal',
         resolver: (p, opts) => {
-            // Calculate from earliest start date to now
             const exps = Array.isArray(p.experience) ? p.experience : [];
             if (exps.length === 0)
                 return null;
@@ -36740,22 +37044,17 @@ const RULES = [
             const val = String(years);
             if (!opts || opts.length === 0)
                 return val;
-            // Match against range options like "3-5 years", "5+ years", etc.
             const num = years;
             const rangeMatch = opts.find(o => {
                 const ol = o.toLowerCase().replace(/\s+/g, '');
-                // "5+" means 5 or more
                 const plusMatch = ol.match(/^(\d+)\+/);
                 if (plusMatch && num >= parseInt(plusMatch[1], 10))
                     return true;
-                // "3-5" range
                 const rangeMatch2 = ol.match(/^(\d+)-(\d+)/);
                 if (rangeMatch2 && num >= parseInt(rangeMatch2[1], 10) && num <= parseInt(rangeMatch2[2], 10))
                     return true;
-                // "less than 1", "0-1" etc.
                 if (ol.includes('lessthan1') && num < 1)
                     return true;
-                // exact number
                 if (ol === val || ol === `${val}years` || ol === `${val}year`)
                     return true;
                 return false;
@@ -36802,7 +37101,6 @@ const RULES = [
                 name = `${f} ${l}`;
             else
                 name = f || l || null;
-            // SAFETY: If name looks like a URL, it's likely mis-mapped in profile or caught by a generic rule
             if (name && (name.startsWith('http') || name.includes('.com/') || name.includes('linkedin.com'))) {
                 return null;
             }
@@ -36819,24 +37117,68 @@ const RULES = [
         patterns: ['phone number', 'phone', 'mobile number', 'telephone', 'contact number', 'cell phone', 'mobile phone'],
         excludes: ['device type', 'phone type', 'country code', 'emergency', 'reference', 'alternate'],
         intent: 'personal.phone',
-        resolver: (p) => p.personal?.phone || null
+        resolver: (p) => {
+            const phone = p.personal?.phone;
+            if (!phone)
+                return null;
+            // Validate: a phone number must contain at least some digits
+            // Reject long strings, country names, or boilerplate text
+            const hasDigits = /\d/.test(phone);
+            const isReasonableLength = phone.length < 20;
+            if (hasDigits && isReasonableLength)
+                return phone;
+            console.warn('[HardcodedEngine] ⚠️ Phone value looks corrupted, skipping:', phone?.substring(0, 30));
+            return null;
+        }
     },
     {
         patterns: ['linkedin', 'linkedin profile', 'linkedin url', 'linked in profile'],
         excludes: ['github', 'portfolio'],
         intent: 'personal.linkedin',
-        resolver: (p) => p.personal?.linkedin || p.social?.linkedin || null
+        resolver: (p) => {
+            const val = p.personal?.linkedin || p.social?.linkedin;
+            if (!val)
+                return null;
+            // Validate: LinkedIn URL must look like a URL or contain 'linkedin'
+            if (val.includes('linkedin') || val.startsWith('http') || val.startsWith('www'))
+                return val;
+            console.warn('[HardcodedEngine] ⚠️ LinkedIn value looks wrong, skipping:', val?.substring(0, 30));
+            return null;
+        }
     },
     {
         patterns: ['github', 'github profile', 'github url'],
         intent: 'personal.github',
-        resolver: (p) => p.personal?.github || p.social?.github || null
+        resolver: (p) => {
+            const val = p.personal?.github || p.social?.github;
+            if (!val)
+                return null;
+            // Validate: GitHub must look like a URL or username (not a paragraph of text)
+            // A GitHub URL/username should be short and contain 'github' or look like a URL
+            const isUrl = val.startsWith('http') || val.includes('github.com') || val.startsWith('www');
+            const isUsername = val.length < 50 && !val.includes(' ');
+            if (isUrl || isUsername)
+                return val;
+            console.warn('[HardcodedEngine] ⚠️ GitHub value looks like boilerplate text, skipping:', val?.substring(0, 30));
+            return null;
+        }
     },
     {
         patterns: ['portfolio', 'personal website', 'website', 'online portfolio', 'portfolio url'],
         excludes: ['linkedin', 'github'],
         intent: 'personal.portfolio',
         resolver: (p) => p.personal?.portfolio || p.social?.website || null
+    },
+    {
+        patterns: ['address', 'address line 1', 'street address', 'mailing address', 'home address'],
+        excludes: ['address line 2', 'city', 'state', 'zip', 'country'],
+        intent: 'personal.addressLine',
+        resolver: (p, opts) => {
+            const val = p.personal?.addressLine;
+            if (!val)
+                return null;
+            return matchOption(val, opts) || val;
+        }
     },
     {
         patterns: ['city', 'current city', 'Location', 'location city', 'please list your current city'],
@@ -36850,7 +37192,7 @@ const RULES = [
         }
     },
     {
-        patterns: ['state', 'province', 'current state', 'state/province', 'region'],
+        patterns: ['state', 'province', 'current state', 'state/province', 'region', 'area', 'providence', 'state / providence'],
         excludes: ['city', 'country', 'zip', 'united states'],
         intent: 'personal.state',
         resolver: (p, opts) => {
@@ -36861,9 +37203,14 @@ const RULES = [
         }
     },
     {
-        patterns: ['zip code', 'postal code', 'zip', 'postcode', 'post code', 'pincode'],
+        patterns: ['zip code', 'postal code', 'zip', 'postcode', 'post code', 'pincode', 'zipcode', 'zip/postal'],
         intent: 'personal.postalCode',
-        resolver: (p) => p.personal?.postalCode || null
+        resolver: (p, opts) => {
+            const val = p.personal?.postalCode;
+            if (!val)
+                return null;
+            return matchOption(val, opts) || val;
+        }
     },
     {
         patterns: ['country', 'current country', 'country of residence', 'nation'],
@@ -36905,16 +37252,47 @@ const RULES = [
         ],
         intent: 'customAnswers.whyInterested',
         resolver: (p) => {
-            // Check customAnswers first
-            const custom = p.customAnswers?.['whyInterested'] ||
+            const custom = p.customAnswers?.['screening.whyRole'] ||
+                p.customAnswers?.['whyInterested'] ||
                 p.customAnswers?.['what interests you most about working with us'];
             if (custom)
                 return custom;
-            // Standard boilerplate
             return "I'm excited about the opportunity to contribute to a fast-growing, innovative organization " +
                 "that is making a meaningful impact in its industry while offering strong opportunities " +
                 "for learning and growth.";
         }
+    },
+    {
+        patterns: [
+            'why do you want this role',
+            'why are you the best candidate',
+            'what makes you a good fit',
+            'why should we hire you',
+            'what can you bring to this',
+            'your motivation for this position'
+        ],
+        intent: 'screening.whyRole',
+        resolver: (p) => p.customAnswers?.['screening.whyRole'] || null
+    },
+    {
+        patterns: [
+            'relevant experience',
+            'describe your experience with',
+            'what is your experience in',
+            'how many years of experience do you have with'
+        ],
+        intent: 'screening.relevantExperience',
+        resolver: (p) => p.customAnswers?.['screening.relevantExperience'] || null
+    },
+    {
+        patterns: [
+            'notice period',
+            'how soon can you start',
+            'availability to start',
+            'earliest start date'
+        ],
+        intent: 'screening.noticePeriod',
+        resolver: (p) => p.customAnswers?.['screening.noticePeriod'] || p.preferences?.startDate || p.preferences?.noticePeriod || null
     },
     // =========================================================================
     // DRIVER'S LICENSE
@@ -36941,12 +37319,858 @@ const RULES = [
             'employee referral', 'know employees', 'do you know any current employees'],
         excludes: ['referred by', 'name of'],
         intent: 'application.hasRelatives',
-        resolver: (p, opts) => yesNo(p.application?.hasRelatives === true, opts)
+        resolver: (p, opts) => {
+            const val = p.application?.hasRelatives === true;
+            return yesNo(val, opts, 'No one');
+        }
     },
     {
         patterns: ['government background', 'worked for government', 'federal employment', 'government employee'],
         intent: 'application.governmentBackground',
         resolver: (p, opts) => yesNo(p.application?.governmentBackground === true, opts)
+    },
+    // =========================================================================
+    // CRIMINAL HISTORY — always No
+    // =========================================================================
+    {
+        patterns: [
+            'have you ever been convicted',
+            'have you ever been convicted in any court',
+            'convicted of a felony',
+            'convicted of a misdemeanor',
+            'convicted of a crime',
+            'criminal conviction',
+            'criminal history',
+            'criminal record',
+            'criminal background',
+            'been found guilty',
+            'pled guilty',
+            'plead guilty',
+            'pending criminal charges',
+            'been charged with a crime',
+            'crime of domestic violence',
+            'felony or any other crime',
+            'violation of the uniform code of military justice',
+        ],
+        excludes: ['background check consent', 'do you understand', 'authorization'],
+        intent: 'legal.criminalHistory',
+        resolver: (_p, opts) => yesNo(false, opts),
+    },
+    // =========================================================================
+    // MENTAL INSTITUTION / CONTROLLED SUBSTANCE ADDICTION — always No
+    // =========================================================================
+    {
+        patterns: [
+            'adjudicated as a mental defective',
+            'committed to a mental institution',
+            'mental institution',
+            'mental defective',
+            'unlawful user of',
+            'addicted to marijuana',
+            'addicted to any depressant',
+            'addicted to any controlled substance',
+            'narcotic drug',
+        ],
+        intent: 'legal.mentalInstitutionOrDrug',
+        resolver: (_p, opts) => yesNo(false, opts),
+    },
+    // =========================================================================
+    // FUGITIVE / UNLAWFUL ALIEN STATUS — always No
+    // =========================================================================
+    {
+        patterns: [
+            'are you a fugitive from justice',
+            'fugitive from justice',
+            'alien illegally or unlawfully in the united states',
+            'unlawfully in the united states',
+            'illegally in the united states',
+        ],
+        intent: 'legal.fugitiveOrUnlawful',
+        resolver: (_p, opts) => yesNo(false, opts),
+    },
+    // =========================================================================
+    // NONIMMIGRANT VISA HOLDER (H-1B, TN, F-1 etc.)
+    // Auto-detects from profile citizenshipStatus; defaults No
+    // =========================================================================
+    {
+        patterns: [
+            'are you an alien who has been admitted to the united states under a nonimmigrant visa',
+            'admitted under a nonimmigrant visa',
+            'h-1b, tn, f1',
+            'h-1b visa holder',
+            'nonimmigrant visa',
+        ],
+        excludes: ['require sponsorship', 'sponsorship'],
+        intent: 'legal.nonimmigrantVisa',
+        resolver: (p, opts) => {
+            const status = (p.workAuthorization?.citizenshipStatus || '').toLowerCase();
+            const onVisa = status.includes('visa') || status.includes('h1b') || status.includes('opt') || status.includes('tn');
+            return yesNo(onVisa, opts);
+        },
+    },
+    // =========================================================================
+    // DISHONOURABLE DISCHARGE / RENOUNCED CITIZENSHIP — always No
+    // =========================================================================
+    {
+        patterns: [
+            'discharged from the armed forces under dishonorable conditions',
+            'dishonorable conditions',
+            'dishonourable discharge',
+            'have you ever renounced your united states citizenship',
+            'renounced your citizenship',
+        ],
+        intent: 'legal.dishonourableOrRenounced',
+        resolver: (_p, opts) => yesNo(false, opts),
+    },
+    // =========================================================================
+    // EXPORT CONTROL — restricted country (Cuba, Iran, etc.) — always No
+    // =========================================================================
+    {
+        patterns: [
+            'are you a national, citizen, or permanent resident of cuba',
+            'national, citizen, or permanent resident of cuba',
+            'cuba, iran, north korea',
+            'iran, north korea, sudan',
+            'north korea, sudan, syria',
+            'cuba, iran',
+            'iran, north korea',
+            'sanctioned country',
+            'ofac sanctioned',
+        ],
+        intent: 'legal.restrictedCountryNational',
+        resolver: (_p, opts) => yesNo(false, opts),
+    },
+    // =========================================================================
+    // DEEMED EXPORT — "would you meet the requirements" — Yes (compliant)
+    // =========================================================================
+    {
+        patterns: [
+            'would you meet the requirements for a deemed export license',
+            'deemed export license',
+            'deemed export',
+            'ear - controlled technology',
+            'ear controlled technology',
+            'export control laws',
+            'export administration regulations',
+        ],
+        excludes: ['national, citizen', 'cuba', 'iran'],
+        intent: 'legal.deemedExportCompliant',
+        resolver: (_p, opts) => yesNo(true, opts),
+    },
+    // =========================================================================
+    // EXPORT CONTROL CONSENT / "I have read and understand" — Yes
+    // =========================================================================
+    {
+        patterns: [
+            'i have read and understand the selection criteria',
+            'i have read and understand the export',
+            'i understand the selection criteria',
+        ],
+        intent: 'legal.exportControlConsent',
+        resolver: (_p, opts) => {
+            if (opts && opts.length > 0) {
+                const agree = opts.find(o => {
+                    const l = o.toLowerCase();
+                    return l.includes('read') || l.includes('understand') || l.includes('agree') || l.includes('yes');
+                });
+                if (agree)
+                    return agree;
+            }
+            return 'I have read and understand the selection criteria.';
+        },
+    },
+    // =========================================================================
+    // GOVERNMENT OFFICIAL (self) — always No
+    // =========================================================================
+    {
+        patterns: [
+            'are you now, or have you been in the past year, a covered government official',
+            'covered government official',
+            'decision maker on a visa contract',
+            'employed by a government agency or state-owned entity',
+            'government agency or state-owned entity',
+            'authority or influence over any matters',
+            'lobbying or appearing before the government',
+            'subject to any restrictions on lobbying',
+        ],
+        intent: 'legal.isGovernmentOfficial',
+        resolver: (_p, opts) => yesNo(false, opts),
+    },
+    // =========================================================================
+    // CLOSE RELATIVE WHO IS GOVERNMENT OFFICIAL — always No
+    // =========================================================================
+    {
+        patterns: [
+            'do you have a close relative who is a covered government official',
+            'close relative who is a covered government official',
+            'close relative who is a government official',
+            'relative with authority or influence over matters',
+        ],
+        intent: 'legal.relativeIsGovernmentOfficial',
+        resolver: (_p, opts) => yesNo(false, opts),
+    },
+    // =========================================================================
+    // CLOSE RELATIVE AT ANY NAMED COMPANY (Visa, KPMG, BDO, etc.) — always No
+    // =========================================================================
+    {
+        patterns: [
+            'do you have a close relative who is a current employee or partner at kpmg',
+            'close relative who is a current employee or partner at kpmg',
+            'close relative who is a current employee or partner at bdo',
+            'do you have a close relative who is a current employee',
+            'close relative who is a current employee',
+            'relative who is a current employee or partner',
+            'close relative of any visa board director',
+            'close relative of any visa board',
+            'relative of a current employee or partner',
+            'do you share the residential household with any visa board',
+            'share the residential household with',
+            'relatives currently working for visa',
+            'relatives currently working for',
+            'do you have any relatives currently working for',
+            'close relative of any board director',
+            'close relative of any executive officer',
+        ],
+        intent: 'legal.relativeAtNamedCompany',
+        resolver: (_p, opts) => yesNo(false, opts),
+    },
+    // =========================================================================
+    // PREVIOUSLY EMPLOYED AT SPECIFIC NAMED COMPANY — always No
+    // =========================================================================
+    {
+        patterns: [
+            'have you ever worked for visa inc',
+            'worked for visa inc',
+            'ever worked for visa',
+            'have you ever been a partner or employee of kpmg',
+            'partner or employee of kpmg',
+            'partner or employee of bdo',
+            'currently or recently been a partner or employee of kpmg',
+            'have you ever worked for mastercard',
+            'worked for mastercard',
+            'provided services as a contingent worker',
+            'previously employed at mastercard',
+        ],
+        intent: 'application.previouslyEmployedAtNamedCompany',
+        resolver: (_p, opts) => yesNo(false, opts),
+    },
+    // =========================================================================
+    // CONTRACTUAL RESTRICTIONS / NON-COMPETE — always No
+    // =========================================================================
+    {
+        patterns: [
+            'do you have any contractual obligations',
+            'contractual obligations',
+            'contractual restrictions',
+            'non-compete agreement',
+            'non-compete',
+            'non-solicitation agreement',
+            'restrictive covenant',
+            'restrictive covenants',
+            'impact your ability to join',
+            'impact, impede or interfere with your ability',
+            'agreements, relationships, or commitments to another',
+        ],
+        intent: 'legal.contractualRestrictions',
+        resolver: (_p, opts) => yesNo(false, opts),
+    },
+    // =========================================================================
+    // COURT ORDER / INDICTMENT / RESTRAINING ORDER — always No
+    // =========================================================================
+    {
+        patterns: [
+            'are you subject to a court order',
+            'subject to a court order',
+            'military protection order',
+            'restraining you from harassing',
+            'restraining order',
+            'under indictment',
+            'under indictment or information in any court',
+        ],
+        intent: 'legal.courtOrderOrIndictment',
+        resolver: (_p, opts) => yesNo(false, opts),
+    },
+    // =========================================================================
+    // LGBTQ COMMUNITY MEMBERSHIP — Prefer not to say
+    // =========================================================================
+    {
+        patterns: [
+            'do you consider yourself a member of the lesbian, gay, bisexual',
+            'do you consider yourself a member of the lgbtq',
+            'lesbian, gay, bisexual and/or transgender',
+            'lgbtq community',
+            'lgbtq+ community',
+        ],
+        intent: 'eeo.lgbtq',
+        resolver: (p, opts) => {
+            const val = p.eeo?.lgbtq;
+            if (val)
+                return matchOption(val, opts) || val;
+            return matchOption('prefer not to say', opts) || 'Prefer not to say';
+        },
+    },
+    // =========================================================================
+    // US CITIZEN / GREEN CARD / ASYLEE / REFUGEE — always No
+    // (User is not a US citizen/green card holder — adjust if your profile differs)
+    // =========================================================================
+    {
+        patterns: [
+            'are you a u.s. citizen, a lawful permanent resident',
+            'u.s. citizen, a lawful permanent resident',
+            'lawful permanent resident of the united states',
+            'green card holder',
+            'asylee, a refugee',
+            'temporary resident under the 1986 legalization program',
+            'u.s. citizen or lawful permanent resident',
+        ],
+        intent: 'workAuthorization.usCitizenOrEquivalent',
+        resolver: (p, opts) => {
+            const status = (p.workAuthorization?.citizenshipStatus || '').toLowerCase();
+            const isQualified = status.includes('citizen') || status.includes('permanent resident') ||
+                status.includes('green card') || status.includes('asylee') || status.includes('refugee');
+            // Default: No — override via profile.workAuthorization.citizenshipStatus if needed
+            return yesNo(isQualified, opts);
+        },
+    },
+    // =========================================================================
+    // PRIVACY / POLICY / ACKNOWLEDGEMENT CONSENTS — Yes / Agree
+    // =========================================================================
+    {
+        patterns: [
+            'acknowledge receipt of the candidate privacy notice',
+            'i acknowledge',
+            'i agree that visa may reach out',
+            'you declare that you have read and understand the privacy notice',
+            'privacy notice',
+            'i agree to allow',
+            'privacy policy',
+            'i agree not to use ai interview tools',
+            'by submitting your application, you are agreeing',
+            'acknowledgment of receipt and review',
+            'i acknowledge that i received a copy',
+            'have read and acknowledge receipt',
+            'have read pindrop\'s candidate privacy notice',
+            'accept the privacy terms',
+            'my answers on this application are correct',
+        ],
+        excludes: ['criminal', 'felony', 'disability', 'veteran'],
+        intent: 'consent.privacyAcknowledgement',
+        resolver: (_p, opts) => {
+            if (opts && opts.length > 0) {
+                const agree = opts.find(o => {
+                    const l = o.toLowerCase();
+                    return l.includes('agree') || l.includes('yes') || l.includes('acknowledge') ||
+                        l.includes('i have read') || l.includes('accept');
+                });
+                if (agree)
+                    return agree;
+            }
+            return 'I agree';
+        },
+    },
+    // =========================================================================
+    // ABLE TO PERFORM ESSENTIAL FUNCTIONS OF THE JOB — Yes
+    // =========================================================================
+    {
+        patterns: [
+            'are you able to perform the essential functions of the job',
+            'able to perform the essential functions',
+            'essential functions of the job for which you are applying',
+            'with or without reasonable accommodations',
+            'perform the essential functions',
+        ],
+        intent: 'application.ableToPerformEssentialFunctions',
+        resolver: (_p, opts) => yesNo(true, opts),
+    },
+    // =========================================================================
+    // DO YOU UNDERSTAND THESE REQUIREMENTS (background check etc.) — Yes
+    // =========================================================================
+    {
+        patterns: [
+            'do you understand these requirements',
+            'i understand these requirements',
+            'do you understand and agree to these requirements',
+            'criminal background check',
+            'federal background checks',
+            'education verification',
+            'do you understand this',
+        ],
+        excludes: ['criminal history', 'convicted', 'felony'],
+        intent: 'consent.understandsRequirements',
+        resolver: (_p, opts) => {
+            if (opts && opts.length > 0) {
+                const yes = opts.find(o => {
+                    const l = o.toLowerCase();
+                    return l.includes('yes') || l.includes('i understand') || l.includes('understand');
+                });
+                if (yes)
+                    return yes;
+            }
+            return 'Yes';
+        },
+    },
+    // =========================================================================
+    // AUTHORIZED WITHOUT SPONSORSHIP — Yes (Workable / Bamboo / Jenzabar variants)
+    // =========================================================================
+    {
+        patterns: [
+            'are you legally authorized to work in the united states without visa sponsorship',
+            'authorized to work in the united states without visa sponsorship',
+            'are you authorized to work for any employer without sponsorship now and in the future',
+            'authorized to work for any employer without sponsorship',
+            'does not sponsor applicants for work visas',
+            'legally authorized to work in your current country of employment',
+            'can you provide verification of both your identity and authorization to work',
+            'can you provide verification of your identity upon hire',
+        ],
+        intent: 'workAuthorization.authorizedWithoutSponsorship',
+        resolver: (p, opts) => {
+            const needsSponsorship = p.workAuthorization?.needsSponsorship;
+            return yesNo(needsSponsorship !== true, opts);
+        },
+    },
+    // =========================================================================
+    // CURRENT LOCATION — city + state combined
+    // =========================================================================
+    {
+        patterns: [
+            'current location',
+            'where are you currently located',
+            'please list your current city',
+            'location city',
+            'where do you currently live',
+            'where are you based',
+        ],
+        excludes: ['work location', 'office location', 'hub location', 'city and state', 'country'],
+        intent: 'personal.currentLocation',
+        resolver: (p, opts) => {
+            const city = p.personal?.city;
+            const state = p.personal?.state;
+            if (city && state) {
+                const combined = matchOption(`${city}, ${state}`, opts);
+                if (combined)
+                    return combined;
+            }
+            // Fallback: try individual parts
+            return matchOption(city, opts) || matchOption(state, opts) || (city && state ? `${city}, ${state}` : city || null);
+        },
+    },
+    // =========================================================================
+    // WORK LOCATION — city, state, country combined
+    // =========================================================================
+    {
+        patterns: [
+            'what is your work location',
+            'work location',
+            'city, state, country',
+            'city and state/province',
+            'please list the city and state',
+            'city and state that you are located in',
+        ],
+        excludes: ['office', 'hub', 'current location'],
+        intent: 'personal.workLocation',
+        resolver: (p, opts) => {
+            const city = p.personal?.city;
+            const state = p.personal?.state;
+            const country = p.personal?.country;
+            // Try triple combination
+            if (city && state && country) {
+                const combined = matchOption(`${city}, ${state}, ${country}`, opts);
+                if (combined)
+                    return combined;
+            }
+            // Try city/state combination
+            if (city && state) {
+                const combined = matchOption(`${city}, ${state}`, opts);
+                if (combined)
+                    return combined;
+            }
+            // Fallback: try individual parts
+            return matchOption(city, opts) || matchOption(state, opts) || matchOption(country, opts) || city || null;
+        },
+    },
+    // =========================================================================
+    // TWITTER / FACEBOOK / OTHER WEBSITE LINKS
+    // =========================================================================
+    {
+        patterns: [
+            'twitter url',
+            'twitter profile',
+            'x (fka twitter)',
+            'x profile',
+        ],
+        intent: 'personal.twitter',
+        resolver: (p) => p.personal?.twitter || p.social?.twitter || null,
+    },
+    {
+        patterns: [
+            'facebook url',
+            'facebook profile',
+        ],
+        intent: 'personal.facebook',
+        resolver: (p) => p.personal?.facebook || p.social?.facebook || null,
+    },
+    {
+        patterns: [
+            'other website',
+            'other url',
+            'additional link',
+            'links',
+        ],
+        excludes: ['linkedin', 'github', 'twitter', 'portfolio', 'facebook'],
+        intent: 'personal.otherWebsite',
+        resolver: (p) => p.personal?.portfolio || p.social?.website || null,
+    },
+    // =========================================================================
+    // PORTFOLIO / WORK SAMPLES LINK FIELD
+    // =========================================================================
+    {
+        patterns: [
+            'please share links to any relevant work samples',
+            'share links to any relevant work samples',
+            'work samples',
+            'please provide your portfolio or work samples here',
+        ],
+        excludes: ['upload', 'drag and drop'],
+        intent: 'personal.workSamples',
+        resolver: (p) => p.personal?.portfolio || p.social?.website || null,
+    },
+    // =========================================================================
+    // PREFERRED NAME (Lever / Bamboo variant)
+    // =========================================================================
+    {
+        patterns: ['preferred first name'],
+        intent: 'personal.preferredFirstName',
+        resolver: (p) => p.personal?.preferredName || p.personal?.firstName || null,
+    },
+    {
+        patterns: ['preferred last name'],
+        intent: 'personal.preferredLastName',
+        resolver: (p) => p.personal?.lastName || null,
+    },
+    // =========================================================================
+    // CITIZENSHIP SELECTION (multi-select)
+    // =========================================================================
+    {
+        patterns: [
+            'please select all citizenships',
+            'select all citizenships',
+            'select each country individually',
+            'citizenship country',
+        ],
+        intent: 'workAuthorization.citizenshipCountry',
+        resolver: (p, opts) => {
+            const status = (p.workAuthorization?.citizenshipStatus || '').toLowerCase();
+            const country = (p.personal?.country || '').toLowerCase();
+            if (status.includes('citizen') || country.includes('united states') || country === 'us' || country === 'usa') {
+                return matchOption('United States', opts) || 'United States';
+            }
+            const val = p.workAuthorization?.citizenshipCountry || p.personal?.country;
+            return val ? matchOption(val, opts) || val : null;
+        },
+    },
+    // =========================================================================
+    // OPEN TO RELOCATE — Yes by default (overridable via profile)
+    // =========================================================================
+    {
+        patterns: [
+            'are you open to relocate',
+            'open to relocation',
+            'willing to relocate',
+            'are you open to relocating',
+            'currently located or willing to relocate',
+            'currently based in sf',
+            'are you open to relocating or currently based in sf',
+        ],
+        intent: 'preferences.openToRelocate',
+        resolver: (p, opts) => {
+            const val = p.preferences?.openToRelocate;
+            return val !== undefined ? yesNo(val, opts) : yesNo(true, opts);
+        },
+    },
+    // =========================================================================
+    // WITHIN 50 MILES OF HUB — matches user city against hub options
+    // =========================================================================
+    {
+        patterns: [
+            'within 50 miles of one of our hubs',
+            'within 50 miles of',
+            '50 miles of the hub',
+            'reside within 50 miles',
+        ],
+        intent: 'preferences.withinHubDistance',
+        resolver: (p, opts) => {
+            const city = (p.personal?.city || '').toLowerCase().trim();
+            const state = (p.personal?.state || '').toLowerCase().trim();
+            const locationStr = `${city} ${state}`;
+            if (opts && opts.length > 0) {
+                // 1. Direct city/state word match
+                const match = opts.find(o => {
+                    const ol = o.toLowerCase();
+                    // Use regex for word boundary matching
+                    const cityRegex = new RegExp(`\\b${city}\\b`, 'i');
+                    const stateRegex = new RegExp(`\\b${state}\\b`, 'i');
+                    return (city && cityRegex.test(ol)) || (state && stateRegex.test(ol));
+                });
+                if (match)
+                    return match;
+                // 2. Remote / Anywhere fallback
+                const remoteMatch = opts.find(o => {
+                    const ol = o.toLowerCase();
+                    return ol.includes('remote') || ol.includes('anywhere') || ol.includes('home-based') || ol.includes('location neutral');
+                });
+                if (remoteMatch)
+                    return remoteMatch;
+                return opts.find(o => o.toLowerCase().includes('able to relocate')) ||
+                    opts.find(o => o.toLowerCase().includes('n/a')) ||
+                    null;
+            }
+            return null;
+        },
+    },
+    // =========================================================================
+    // EXPERIENCE WITH SPECIFIC TECHNOLOGIES / THRESHOLDS — Yes
+    // =========================================================================
+    {
+        patterns: [
+            'do you have 5+ years experience in fullstack',
+            'do you have 6+ years of experience in a software engineering role',
+            'do you have professional experience designing and building apis',
+            'do you have at least 3 years of professional experience with react',
+            'do you have experience strategically incorporating ai',
+            'do you have previous experience with any renewed vision products',
+            'do you have recent hands on experience',
+        ],
+        intent: 'application.meetsExperienceRequirement',
+        resolver: (_p, opts) => yesNo(true, opts),
+    },
+    // =========================================================================
+    // CURRENTLY WORK AND LIVE IN THE UNITED STATES — Yes
+    // =========================================================================
+    {
+        patterns: [
+            'do you currently work and live in the united states',
+            'currently work and live in the united states',
+            'do you live and work in the us',
+        ],
+        intent: 'personal.workAndLiveInUS',
+        resolver: (p, opts) => {
+            const country = (p.personal?.country || '').toLowerCase();
+            const isUS = country.includes('united states') || country.includes('usa') || country === 'us' || country === '';
+            return yesNo(isUS !== false, opts);
+        },
+    },
+    // =========================================================================
+    // SMS / MARKETING CONSENT — Yes
+    // =========================================================================
+    {
+        patterns: [
+            'i agree that visa may reach out to me via sms',
+            'consent to receive sms',
+            'i agree to receive sms',
+            'reach out to me via sms',
+        ],
+        intent: 'consent.smsMarketing',
+        resolver: (_p, opts) => yesNo(true, opts),
+    },
+    // =========================================================================
+    // MASTERCARD CONTINGENT WORKER — No
+    // =========================================================================
+    {
+        patterns: [
+            'have you ever worked for mastercard as an employee or provided services as a contingent worker',
+            'contingent worker',
+            'contractor, consultant',
+        ],
+        excludes: ['current employer', 'company name'],
+        intent: 'application.contingentWorkerAtNamedCompany',
+        resolver: (_p, opts) => yesNo(false, opts),
+    },
+    // =========================================================================
+    // EXPECTED ANNUAL CASH COMPENSATION (text field)
+    // =========================================================================
+    {
+        patterns: [
+            'what is your expected annual cash compensation',
+            'expected annual cash compensation',
+            'expected annual gross salary',
+            'annual gross salary',
+            'what is your expected annual gross salary',
+            'salary expectations',
+            'compensation expectations',
+            'desired salary',
+            'expected salary',
+            'target salary',
+            'compensation requirements',
+        ],
+        excludes: ['range', 'select'],
+        intent: 'preferences.desiredSalary',
+        resolver: (p, opts) => {
+            const val = p.preferences?.desiredSalary || p.preferences?.salaryExpectations || "100000";
+            if (opts && opts.length > 0) {
+                return matchOption(val, opts);
+            }
+            // For text fields, ensure it's numbers only
+            return String(val).replace(/[^\d]/g, '').trim() || "100000";
+        },
+    },
+    // =========================================================================
+    // LOCAL CURRENCY — USD for US-based users
+    // =========================================================================
+    {
+        patterns: [
+            'what is your local currency',
+            'local currency',
+            'currency type',
+        ],
+        intent: 'preferences.currency',
+        resolver: (p, opts) => {
+            const val = p.preferences?.currency;
+            if (val)
+                return matchOption(val, opts) || val;
+            const country = (p.personal?.country || '').toLowerCase();
+            if (country.includes('united states') || country === 'us' || country === 'usa' || country === '') {
+                return matchOption('USD', opts) || matchOption('usd', opts) || 'USD';
+            }
+            return null;
+        },
+    },
+    // =========================================================================
+    // WHEN CAN YOU START / AVAILABILITY TO START
+    // =========================================================================
+    {
+        patterns: [
+            'when are you available to start',
+            'when can you start',
+            'availability to start',
+            'what is your availability to start',
+            'earliest start date',
+            'available to start working',
+            'date available',
+        ],
+        excludes: ['notice period'],
+        intent: 'screening.startDate',
+        resolver: (p, opts) => {
+            const val = p.preferences?.startDate || p.customAnswers?.['screening.noticePeriod'] || p.preferences?.noticePeriod;
+            if (!val)
+                return null;
+            return matchOption(val, opts) || val;
+        },
+    },
+    // =========================================================================
+    // PROUDEST ACHIEVEMENT / TECHNICAL PROBLEM — custom answers
+    // =========================================================================
+    {
+        patterns: [
+            'what is your proudest achievement',
+            'proudest achievement',
+            'most proud of',
+            'greatest professional achievement',
+        ],
+        intent: 'customAnswers.proudestAchievement',
+        resolver: (p) => p.customAnswers?.['proudest achievement'] || p.customAnswers?.['screening.proudestAchievement'] || null,
+    },
+    {
+        patterns: [
+            'describe a technical problem and how you solved it',
+            'technical problem and how you solved it',
+            'describe a technical challenge',
+        ],
+        intent: 'customAnswers.technicalProblem',
+        resolver: (p) => p.customAnswers?.['technical problem'] || p.customAnswers?.['screening.technicalProblem'] || null,
+    },
+    // =========================================================================
+    // SEARCH TIMELINE / DEADLINES
+    // =========================================================================
+    {
+        patterns: [
+            'what is your search timeline',
+            'search timeline',
+            'any deadlines we should be aware of',
+            'do you have any deadlines',
+        ],
+        intent: 'screening.searchTimeline',
+        resolver: (p) => p.customAnswers?.['screening.searchTimeline'] || p.preferences?.startDate || null,
+    },
+    // =========================================================================
+    // FOR HIRING PURPOSES — STATE OF RESIDENCE
+    // =========================================================================
+    {
+        patterns: [
+            'for hiring purposes, in which state do you currently reside',
+            'which state do you currently reside',
+            'state of residence for hiring',
+            'in which state do you reside',
+        ],
+        intent: 'personal.stateOfResidence',
+        resolver: (p, opts) => {
+            const val = p.personal?.state;
+            if (!val)
+                return null;
+            return matchOption(val, opts) || val;
+        },
+    },
+    // =========================================================================
+    // WHY ARE YOU INTERESTED IN THIS ROLE (Lever / Workable variant)
+    // =========================================================================
+    {
+        patterns: [
+            'why are you interested in this role',
+            'why are you applying',
+            'what drew you to this role',
+            'why do you want to join',
+        ],
+        intent: 'customAnswers.whyInterestedInRole',
+        resolver: (p) => {
+            return p.customAnswers?.['screening.whyRole'] ||
+                p.customAnswers?.['why are you interested in this role'] ||
+                null;
+        },
+    },
+    // =========================================================================
+    // WEBSITE / GITHUB / PORTFOLIO — Space character to satisfy requirements
+    // =========================================================================
+    {
+        patterns: [
+            'personal website',
+            'portfolio url',
+            'portfolio link',
+            'website url',
+            'blog url',
+            'other website',
+            'personal link',
+            'website (optional)',
+            'portfolio (optional)',
+            'Website',
+            'Website URL',
+            'Other website',
+            'Website Link',
+            'Website Profile',
+            'Website (optional)',
+            'Website'
+        ],
+        intent: 'personal.website',
+        resolver: (p) => p.personal?.website || p.personal?.portfolio || " ",
+    },
+    {
+        patterns: [
+            'github url',
+            'github account',
+            'github link',
+            'github profile',
+            'link to github',
+            'github (optional)',
+            'github',
+            'GitHub',
+            'GitHub URL',
+            'GitHub Link',
+            'GitHub Profile',
+            'GitHub (optional)',
+            'GitHub',
+            'GitHub URL'
+        ],
+        intent: 'personal.github',
+        resolver: (p) => p.personal?.github || p.personal?.githubUrl || " ",
     },
 ];
 // ─────────────────────────────────────────────────────────────────────────────
@@ -36955,15 +38179,63 @@ const RULES = [
 /**
  * Attempt to resolve a question directly from the profile without AI.
  *
- * @returns HardcodedResult if resolved, or null if this question needs learned/fuzzy/AI handling.
+ * Includes "Static Hardcoding" (HARDCODED_RULES) and "Dynamic Hardcoding" (Learned Patterns).
+ *
+ * @returns HardcodedResult if resolved, or null if this question needs AI handling.
  */
-function resolveHardcoded(questionText, _fieldType, options, profile) {
-    const normalized = questionText.toLowerCase().trim()
-        .replace(/[*?!]/g, '') // strip common punctuation
+function resolveHardcoded(questionText, fieldType, options, profile, learnedPatterns = []) {
+    // ─────────────────────────────────────────────────────────────────────────
+    // PHASE 0: BLACKLIST — Skip placeholder/fake UI text immediately
+    // These are not real questions and should never be sent to AI.
+    // ─────────────────────────────────────────────────────────────────────────
+    const QUESTION_BLACKLIST = [
+        'start typing...',
+        'start typing',
+        'or drag and drop here',
+        'drag and drop here',
+        'drag and drop',
+        'drag & drop',
+        'drag & drop here',
+        'click to upload',
+        'click here to upload',
+        'browse files',
+        'browse',
+        'attach files',
+        'drop files here',
+        'drop file here',
+        'upload file',
+        'upload a file',
+        'upload your file',
+        'type here...',
+        'type here',
+        'enter text here',
+        'search...',
+        'search',
+        'select...',
+        'choose...',
+        'please select',
+        'please select...',
+        'select one...',
+        'choose one',
+        'choose an option',
+        'select an option',
+        '--select--',
+        '-- select --',
+        'none',
+        'n/a',
+        'enter here',
+    ];
+    const normalizedRaw = questionText.toLowerCase().trim()
+        .replace(/[*?!]/g, '')
         .replace(/\s+/g, ' ')
         .trim();
+    const isBlacklisted = QUESTION_BLACKLIST.some(b => normalizedRaw === b || normalizedRaw.startsWith(b + ' ') || normalizedRaw.endsWith(' ' + b));
+    if (isBlacklisted) {
+        console.log(`[HardcodedEngine] 🚫 Blacklisted placeholder question, skipping: "${questionText}"`);
+        return { answer: '__SKIP__', intent: 'blacklisted', confidence: 1.0 };
+    }
+    const normalized = normalizedRaw;
     // PHASE 1: CATCH-ALL (Profile-First Discovery)
-    // If the user has explicitly answered this exact question text before, use it.
     if (profile.customAnswers && typeof profile.customAnswers === 'object') {
         for (const [key, value] of Object.entries(profile.customAnswers)) {
             if (key.toLowerCase().trim().replace(/[*?!]/g, '') === normalized) {
@@ -36994,32 +38266,68 @@ function resolveHardcoded(questionText, _fieldType, options, profile) {
             }
         }
     }
-    // PHASE 2: PATTERN-BASED RULES
-    for (const rule of RULES) {
-        // Check if any pattern matches
+    // PHASE 2: STATIC PATTERN RULES
+    for (const rule of HARDCODED_RULES) {
         const patternMatch = rule.patterns.some(p => normalized.includes(p));
         if (!patternMatch)
             continue;
-        // Check exclusions — if any exclusion keyword found, skip this rule
         if (rule.excludes) {
             const excluded = rule.excludes.some(e => normalized.includes(e));
             if (excluded)
                 continue;
         }
-        // Run resolver
         const answer = rule.resolver(profile, options);
-        // null means "can't resolve from profile" (e.g. field is empty) — fall through
         if (answer === null)
             continue;
-        // Empty string is a valid answer (e.g. blank referral name field)
-        console.log(`[HardcodedEngine] ⚡ "${questionText}" → intent:${rule.intent} answer:"${answer}"`);
+        console.log(`[HardcodedEngine] ⚡ Static hit: "${questionText}" → intent:${rule.intent} answer:"${answer}"`);
         return {
             answer,
             intent: rule.intent,
             confidence: 1.0
         };
     }
-    return null; // Not handled — fall through to learned/fuzzy/AI
+    // PHASE 3: DYNAMIC LEARNED PATTERNS
+    if (learnedPatterns && learnedPatterns.length > 0) {
+        for (const pattern of learnedPatterns) {
+            const patternQ = (pattern.questionPattern || '').toLowerCase().trim().replace(/[*?!]/g, '');
+            if (normalized === patternQ || (normalized.length > 10 && normalized.includes(patternQ))) {
+                console.log(`[HardcodedEngine] 🎓 Dynamic hit: "${questionText}" matched learned pattern "${patternQ}"`);
+                if (pattern.answerMappings && pattern.answerMappings.length > 0) {
+                    const firstMapping = pattern.answerMappings[0];
+                    const val = firstMapping.variants?.[0] || firstMapping.canonicalValue;
+                    const matchedOption = matchOption(val, options);
+                    if (matchedOption) {
+                        return {
+                            answer: matchedOption,
+                            intent: pattern.intent,
+                            confidence: 1.0
+                        };
+                    }
+                }
+            }
+        }
+    }
+    return null;
+}
+/**
+ * Check if a question or an answer variant is new to the hardcoded engine.
+ */
+function isNewToHardcodedEngine(questionText, intent, selectedValue) {
+    const normalizedQ = questionText.toLowerCase().trim().replace(/[*?!]/g, '');
+    const rule = HARDCODED_RULES.find(r => r.intent === intent);
+    let isNewQuestion = true;
+    if (rule) {
+        isNewQuestion = !rule.patterns.some(p => normalizedQ.includes(p));
+    }
+    const normalizedA = selectedValue.toLowerCase().trim();
+    let isNewAnswer = true;
+    for (const [key, syns] of Object.entries(HARDCODED_SYNONYMS)) {
+        if (normalizedA === key || syns.includes(normalizedA)) {
+            isNewAnswer = false;
+            break;
+        }
+    }
+    return { isNewQuestion, isNewAnswer };
 }
 
 
@@ -37075,6 +38383,40 @@ class QuestionMapper {
             console.log(`│ 🎯 Selector: ${q.selector}`);
             console.log(`└${'─'.repeat(66)}`);
         });
+        // ─────────────────────────────────────────────────────────────────────
+        // Phase 0: BLACKLIST — Filter out fake/placeholder UI text
+        // ─────────────────────────────────────────────────────────────────────
+        const QUESTION_BLACKLIST = [
+            'start typing...',
+            'start typing',
+            'or drag and drop here',
+            'drag and drop',
+            'drag & drop',
+            'click to upload',
+            'browse files',
+            'attach files',
+            'drop files here',
+            'upload file',
+            'type here...',
+            'type here',
+            'enter text here',
+            'search...',
+            'select...',
+            'choose...',
+            'please select',
+        ];
+        const validQuestions = questions.filter(q => {
+            const normalized = q.questionText.toLowerCase().trim();
+            const isBlacklisted = QUESTION_BLACKLIST.some(b => normalized === b || normalized.startsWith(b));
+            if (isBlacklisted) {
+                console.log(`🚫 [QuestionMapper] Blacklisted fake question: "${q.questionText}"`);
+            }
+            return !isBlacklisted;
+        });
+        if (validQuestions.length < questions.length) {
+            console.log(`🧹 Filtered out ${questions.length - validQuestions.length} fake/placeholder question(s). Proceeding with ${validQuestions.length}.`);
+            questions = validQuestions;
+        }
         // Remove duplicates
         const uniqueQuestions = this.removeDuplicates(questions);
         if (uniqueQuestions.length < questions.length) {
@@ -37093,6 +38435,10 @@ class QuestionMapper {
         }
         // Start analytics tracking for mapping phase
         _core_analytics_AnalyticsTracker__WEBPACK_IMPORTED_MODULE_6__.AnalyticsTracker.getInstance().startMapping();
+        // 🟢 NEW: Fetch all learned patterns (local + global) for the dynamic hardcoding engine
+        console.log(`\n📚 Fetching all learned patterns for dynamic hardcoding...`);
+        const learnedPatterns = await _core_storage_patternStorage__WEBPACK_IMPORTED_MODULE_2__.patternStorage.getAllPatterns();
+        console.log(`   ✅ Loaded ${learnedPatterns.length} patterns (Local + Global)\n`);
         const mappedAnswers = [];
         const unmappedForAI = [];
         // ─────────────────────────────────────────────────────────────────────
@@ -37134,15 +38480,37 @@ class QuestionMapper {
         // Every common job-platform question is answered directly from profile.
         // If resolved, the question never reaches Phase 0, learned patterns, or AI.
         // ─────────────────────────────────────────────────────────────────────
-        console.log(`\n⚡ Phase -1: Hardcoded answer engine (instant, zero AI)...\n`);
+        console.log(`\n⚡ Phase -1: Hardcoded answer engine (dynamic, global logic)...\n`);
         const phase0Candidates = [];
         for (const q of phaseNeg1Candidates) {
-            const hResult = (0,_hardcodedAnswerEngine__WEBPACK_IMPORTED_MODULE_4__.resolveHardcoded)(q.questionText, q.fieldType, q.options || undefined, profile);
+            // 🟢 UPDATED: Pass learnedPatterns to the hardcoded engine
+            const hResult = (0,_hardcodedAnswerEngine__WEBPACK_IMPORTED_MODULE_4__.resolveHardcoded)(q.questionText, q.fieldType, q.options || undefined, profile, learnedPatterns);
             if (hResult !== null) {
+                // BLACKLIST: Skip placeholder/fake UI questions entirely
+                if (hResult.answer === '__SKIP__') {
+                    console.log(`  🚫 [BLACKLIST] Skipping placeholder question: "${q.questionText}"`);
+                    continue; // Don't add to phase0Candidates OR mappedAnswers
+                }
+                let validatedAnswer = hResult.answer;
+                // VALIDATION: If it's a dropdown/select, ensure the answer is actually in the options
+                if (q.options && q.options.length > 0 && q.fieldType !== 'file') {
+                    const optionMatch = this.matchInOptions(hResult.answer, q.options, 1.0);
+                    if (optionMatch) {
+                        validatedAnswer = optionMatch.answer;
+                    }
+                    else {
+                        // Hardcoded engine gave a value that doesn't exist in the dropdown
+                        // (e.g. salary "20000" but dropdown wants "$20k-$30k")
+                        // Fall through to Phase 0 -> Phase 1 -> Phase 2 (AI) so it can LEARN.
+                        console.log(`  ⚠️ Phase -1 [HARDCODED]: "${q.questionText}" → "${hResult.answer}" not in options, falling through`);
+                        phase0Candidates.push(q);
+                        continue;
+                    }
+                }
                 mappedAnswers.push({
                     selector: q.selector,
                     questionText: q.questionText,
-                    answer: hResult.answer,
+                    answer: validatedAnswer,
                     source: 'hardcoded',
                     confidence: hResult.confidence,
                     required: q.required,
@@ -37150,7 +38518,7 @@ class QuestionMapper {
                     options: q.options || undefined,
                     canonicalKey: hResult.intent
                 });
-                console.log(`  ⚡ [HARDCODED] "${q.questionText}" → "${hResult.answer}" (${hResult.intent})`);
+                console.log(`  ⚡ [HARDCODED] "${q.questionText}" → "${validatedAnswer}" (${hResult.intent})`);
             }
             else {
                 phase0Candidates.push(q);
@@ -37310,13 +38678,15 @@ class QuestionMapper {
         const seen = new Set();
         const unique = [];
         for (const q of questions) {
-            const normalized = this.normalizeQuestion(q.questionText);
+            // RELAXED DEDUPLICATION: Include fieldType in the uniqueness key.
+            // This allows a "Phone" dropdown (country code) and "Phone" text input (number) to both exist.
+            const normalized = `${this.normalizeQuestion(q.questionText)}|${q.fieldType}`;
             if (!seen.has(normalized)) {
                 seen.add(normalized);
                 unique.push(q);
             }
             else {
-                console.log(`   🔄 Skipping duplicate: "${q.questionText}"`);
+                console.log(`   🔄 Skipping identical duplicate: "${q.questionText}" (${q.fieldType})`);
             }
         }
         return unique;
@@ -37361,7 +38731,7 @@ class QuestionMapper {
      * Try learned patterns from storage
      */
     async tryLearned(question, profile) {
-        const pattern = await _core_storage_patternStorage__WEBPACK_IMPORTED_MODULE_2__.patternStorage.findPattern(question.questionText);
+        const pattern = await _core_storage_patternStorage__WEBPACK_IMPORTED_MODULE_2__.patternStorage.findPattern(question.questionText, question.fieldType, question.options);
         if (!pattern || pattern.intent.toLowerCase() === 'unknown') {
             return null;
         }
@@ -37386,7 +38756,7 @@ class QuestionMapper {
             }
         }
         // Get canonical value from profile (optional - may not exist)
-        const canonicalValue = this.getValueFromProfile(profile, pattern.intent);
+        const canonicalValue = (0,_questionPatternDatabase__WEBPACK_IMPORTED_MODULE_3__.getValueByIntent)(profile, pattern.intent);
         // INFINITE LEARNING MODE:
         // Try to match stored variants against current options
         // This works even if profile doesn't have this value!
@@ -37453,32 +38823,6 @@ class QuestionMapper {
         }
         // No match found and no profile value - pattern exists but can't use it
         return null;
-    }
-    /**
-     * Get value from profile using intent path
-     */
-    getValueFromProfile(profile, intent) {
-        const parts = intent.split('.');
-        let value = profile;
-        for (const part of parts) {
-            // Handle array access: if current value is an array, take the first item
-            // This is a simplified approach for Workday sections.
-            // Ideally, the Handler should pass the specific item context, but for now this fixes the "undefined" error.
-            if (Array.isArray(value) && value.length > 0) {
-                value = value[0];
-            }
-            else if (Array.isArray(value) && value.length === 0) {
-                return null;
-            }
-            value = value?.[part];
-            if (value === undefined)
-                return null;
-        }
-        // Convert booleans to strings
-        if (typeof value === 'boolean') {
-            return value ? 'Yes' : 'No';
-        }
-        return value ? String(value) : null;
     }
     /**
      * Find best answer variant for available options
@@ -37555,7 +38899,7 @@ class QuestionMapper {
         // Store the AI's answer as a variant for this intent
         // Build up a knowledge base of answers for each intent over time
         // Try to get canonical value from profile (optional - used as base if available)
-        const canonicalValue = this.getValueFromProfile(profile, intent);
+        const canonicalValue = (0,_questionPatternDatabase__WEBPACK_IMPORTED_MODULE_3__.getValueByIntent)(profile, intent);
         // Use AI's answer as the canonical value if profile doesn't have it
         const valueToStore = canonicalValue || answer.answer;
         console.log(`[QuestionMapper] 📚 Learning variant "${answer.answer}" for intent: ${intent}`);
@@ -37577,9 +38921,6 @@ class QuestionMapper {
         await _core_storage_patternStorage__WEBPACK_IMPORTED_MODULE_2__.patternStorage.addPattern(pattern);
         console.log(`[QuestionMapper] ✅ Pattern stored with variant: "${answer.answer}"`);
     }
-    /**
-     * Detect intent from question and answer
-     */
     detectIntent(questionText, answer, profile) {
         const qLower = questionText.toLowerCase();
         // Check by matching answer to profile values
@@ -37700,8 +39041,15 @@ class QuestionMapper {
         if ((qLower.includes('email') || qLower === 'email') && profile.personal?.email) {
             return validateWithOptions(profile.personal.email);
         }
-        // Phone (usually text field, but validate if options exist)
-        if ((qLower.includes('phone') || qLower === 'phone') && profile.personal?.phone) {
+        // Phone (distinguish between country code and number)
+        if ((qLower.includes('phone') || qLower === 'phone' || qLower.includes('mobile') || qLower === 'mobile') && profile.personal?.phone) {
+            // If the field is a dropdown or custom dropdown, it's likely a COUNTRY CODE
+            if (question.fieldType === 'select' || question.fieldType === 'dropdown_custom') {
+                console.log(`[QuestionMapper] 📞 Phone country code field detected. Profile value: "${profile.personal.country}"`);
+                // Use country to find the code in options
+                return validateWithOptions(profile.personal.country);
+            }
+            // Otherwise, it's the actual PHONE NUMBER
             return validateWithOptions(profile.personal.phone);
         }
         // Country (often dropdown, so validation is critical)
@@ -38453,6 +39801,1406 @@ class QuestionMapper {
         return typeMap[fieldType] || 'input_text';
     }
 }
+// /**
+//  * QuestionMapper - Maps scanned questions to answers
+//  * Uses predefined patterns, canonical matching, learned patterns, fuzzy matching, and AI fallback
+//  */
+// import { loadProfile } from '../../core/storage/profileStorage';
+// import { askAI } from '../../core/ai/aiService';
+// import { patternStorage } from '../../core/storage/patternStorage';
+// import { findQuestionIntent, getValueByIntent } from './questionPatternDatabase';
+// import { resolveHardcoded } from './hardcodedAnswerEngine';
+// import { getCachedResponse, setCachedResponse } from '../../core/storage/aiResponseCache';
+// import { AnalyticsTracker } from '../../core/analytics/AnalyticsTracker';
+// export interface ScannedQuestion {
+//     questionText: string;
+//     fieldType: string;
+//     options: string[] | undefined;
+//     required: boolean;
+//     selector: string;
+// }
+// export type MappedSource = 'canonical' | 'learned' | 'fuzzy' | 'AI' | 'injected_skills' | 'hardcoded_override' | 'hardcoded';
+// export interface MappedAnswer {
+//     selector: string;
+//     questionText: string;
+//     answer: string;
+//     source: MappedSource;
+//     confidence: number;
+//     required: boolean;
+//     fieldType: string;
+//     canonicalKey?: string;
+//     options?: string[];
+//     fileName?: string; // For file uploads - the original filename
+// }
+// export class QuestionMapper {
+//     /**
+//      * Process all scanned questions and return fill plan
+//      */
+//     async processQuestions(questions: ScannedQuestion[]): Promise<MappedAnswer[]> {
+//         console.log(`\n╔════════════════════════════════════════════════════════════════════╗`);
+//         console.log(`║             📋 SCANNED QUESTIONS (Total: ${questions.length})${' '.repeat(Math.max(0, 24 - questions.length.toString().length))}║`);
+//         console.log(`╚════════════════════════════════════════════════════════════════════╝\n`);
+//         questions.forEach((q, index) => {
+//             console.log(`\n┌─ Question #${index + 1} ${'─'.repeat(55 - (index + 1).toString().length)}`);
+//             console.log(`│ 📝 Text: "${q.questionText}"`);
+//             console.log(`│ 🏷️  Type: ${q.fieldType}`);
+//             console.log(`│ ${q.required ? '⚠️  Required: YES' : '✓  Required: NO'}`);
+//             if (q.options && q.options.length > 0) {
+//                 console.log(`│ 🎯 Options (${q.options.length}): [${q.options.slice(0, 5).join(', ')}${q.options.length > 5 ? `, ... +${q.options.length - 5} more` : ''}]`);
+//             } else {
+//                 console.log(`│ 📄 Options: None (free text field)`);
+//             }
+//             console.log(`│ 🎯 Selector: ${q.selector}`);
+//             console.log(`└${'─'.repeat(66)}`);
+//         });
+//         // Remove duplicates
+//         const uniqueQuestions = this.removeDuplicates(questions);
+//         if (uniqueQuestions.length < questions.length) {
+//             console.log(`\n🔄 Removed ${questions.length - uniqueQuestions.length} duplicate question(s)`);
+//             console.log(`📊  Processing ${uniqueQuestions.length} unique questions\n`);
+//         } else {
+//             console.log(`\n✓ All ${questions.length} questions are unique\n`);
+//         }
+//         console.log(`\n╔════════════════════════════════════════════════════════════════════╗`);
+//         console.log(`║                    🔍 STARTING MAPPING PROCESS                     ║`);
+//         console.log(`╚════════════════════════════════════════════════════════════════════╝\n`);
+//         const profile = await loadProfile();
+//         if (!profile) {
+//             throw new Error('No profile found. Please complete onboarding.');
+//         }
+//         // Start analytics tracking for mapping phase
+//         AnalyticsTracker.getInstance().startMapping();
+//         // 🟢 NEW: Fetch all learned patterns (local + global) for the dynamic hardcoding engine
+//         console.log(`\n📚 Fetching all learned patterns for dynamic hardcoding...`);
+//         const learnedPatterns = await patternStorage.getAllPatterns();
+//         console.log(`   ✅ Loaded ${learnedPatterns.length} patterns (Local + Global)\n`);
+//         const mappedAnswers: MappedAnswer[] = [];
+//         const unmappedForAI: ScannedQuestion[] = [];
+//         // ─────────────────────────────────────────────────────────────────────
+//         // Phase -2: CUSTOM ANSWERS — User manual overrides take absolute priority
+//         // ─────────────────────────────────────────────────────────────────────
+//         console.log(`\n⭐ Phase -2: Checking custom manual overrides...\n`);
+//         const phaseNeg1Candidates: ScannedQuestion[] = [];
+//         for (const q of uniqueQuestions) {
+//             if (profile.customAnswers && profile.customAnswers[q.questionText]) {
+//                 const customAnswer = profile.customAnswers[q.questionText];
+//                 console.log(`  ⭐ [CUSTOM] "${q.questionText}" → "${customAnswer}"`);
+//                 // Validate against options if this is a dropdown/radio
+//                 let finalAnswer = customAnswer;
+//                 if (q.options && q.options.length > 0) {
+//                     const matched = (this as any).matchInOptions(customAnswer, q.options, 1.0);
+//                     if (matched) {
+//                         finalAnswer = matched.answer;
+//                         console.log(`     ✓ Validated against options: "${finalAnswer}"`);
+//                     }
+//                 }
+//                 mappedAnswers.push({
+//                     selector: q.selector,
+//                     questionText: q.questionText,
+//                     answer: finalAnswer,
+//                     source: 'hardcoded_override',
+//                     confidence: 1.0,
+//                     required: q.required,
+//                     fieldType: q.fieldType,
+//                     options: q.options || undefined
+//                 });
+//             } else {
+//                 phaseNeg1Candidates.push(q);
+//             }
+//         }
+//         console.log(`  ✅ Custom overrides resolved ${uniqueQuestions.length - phaseNeg1Candidates.length}/${uniqueQuestions.length} questions.\n`);
+//         // ─────────────────────────────────────────────────────────────────────
+//         // Phase -1: HARDCODED ENGINE — deterministic, zero AI, zero network
+//         // Every common job-platform question is answered directly from profile.
+//         // If resolved, the question never reaches Phase 0, learned patterns, or AI.
+//         // ─────────────────────────────────────────────────────────────────────
+//         console.log(`\n⚡ Phase -1: Hardcoded answer engine (dynamic, global logic)...\n`);
+//         const phase0Candidates: ScannedQuestion[] = [];
+//         for (const q of phaseNeg1Candidates) {
+//             // 🟢 UPDATED: Pass learnedPatterns to the hardcoded engine
+//             const hResult = resolveHardcoded(q.questionText, q.fieldType, q.options || undefined, profile, learnedPatterns);
+//             if (hResult !== null) {
+//                 let validatedAnswer = hResult.answer;
+//                 // VALIDATION: If it's a dropdown/select, ensure the answer is actually in the options
+//                 if (q.options && q.options.length > 0 && q.fieldType !== 'file') {
+//                     const optionMatch = this.matchInOptions(hResult.answer, q.options, 1.0);
+//                     if (optionMatch) {
+//                         validatedAnswer = optionMatch.answer;
+//                     } else {
+//                         // Hardcoded engine gave a value that doesn't exist in the dropdown
+//                         // (e.g. salary "20000" but dropdown wants "$20k-$30k")
+//                         // Fall through to Phase 0 -> Phase 1 -> Phase 2 (AI) so it can LEARN.
+//                         console.log(`  ⚠️ Phase -1 [HARDCODED]: "${q.questionText}" → "${hResult.answer}" not in options, falling through`);
+//                         phase0Candidates.push(q);
+//                         continue;
+//                     }
+//                 }
+//                 mappedAnswers.push({
+//                     selector: q.selector,
+//                     questionText: q.questionText,
+//                     answer: validatedAnswer,
+//                     source: 'hardcoded',
+//                     confidence: hResult.confidence,
+//                     required: q.required,
+//                     fieldType: q.fieldType,
+//                     options: q.options || undefined,
+//                     canonicalKey: hResult.intent
+//                 });
+//                 console.log(`  ⚡ [HARDCODED] "${q.questionText}" → "${validatedAnswer}" (${hResult.intent})`);
+//             } else {
+//                 phase0Candidates.push(q);
+//             }
+//         }
+//         console.log(`  ✅ Hardcoded resolved ${phaseNeg1Candidates.length - phase0Candidates.length}/${phaseNeg1Candidates.length} questions. ${phase0Candidates.length} remaining.\n`);
+//         // ─────────────────────────────────────────────────────────────────────
+//         // Phase 0: Pattern DB — intent patterns from questionPatternDatabase.ts
+//         // ─────────────────────────────────────────────────────────────────────
+//         console.log(`🎯 Phase 0: Checking predefined question patterns...\n`);
+//         // Phase 0: Try predefined question patterns (fastest - instant recognition)
+//         for (const q of phase0Candidates) {
+//             const match = findQuestionIntent(q.questionText, q.fieldType);
+//             if (match) {
+//                 const intent = match.intent;
+//                 let value = getValueByIntent(profile, intent);
+//                 // Debug log to trace "No" values
+//                 if (value === 'No' || value === 'No Experience') {
+//                     console.warn(`  ⚠️ Debug: Intent "${intent}" returned "${value}" from profile`);
+//                 }
+//                 if (value !== null && value !== undefined && value !== '') {
+//                     let fileName: string | undefined = undefined;
+//                     // SPECIAL HANDLING FOR FILE OBJECTS
+//                     if (value && typeof value === 'object' && (value.base64 || value.url)) {
+//                         fileName = value.fileName || 'resume.pdf';
+//                         const base64Data = value.base64 || '';
+//                         value = base64Data.startsWith('data:') ? base64Data : `data:application/pdf;base64,${base64Data}`;
+//                     } else if (typeof value === 'boolean') {
+//                         // For boolean values, convert to Yes/No
+//                         value = this.booleanToYesNo(value, q.options || undefined);
+//                     } else {
+//                         value = String(value);
+//                     }
+//                     // For dropdown/radio/checkbox fields, validate against available options
+//                     // Skip validation for file fields (they don't have standard options)
+//                     if (q.fieldType !== 'file' && q.options && q.options.length > 0) {
+//                         const optionMatch = this.matchInOptions(value, q.options, 1.0);
+//                         if (optionMatch) {
+//                             value = optionMatch.answer; // Use the exact option text
+//                         } else {
+//                             // Value not in options - fall through to learned/fuzzy/AI
+//                             console.log(`  ⚠️ Phase 0: "${q.questionText}" → "${value}" not in options, falling through`);
+//                             unmappedForAI.push(q);
+//                             continue;
+//                         }
+//                     }
+//                     // Successfully matched using predefined pattern
+//                     mappedAnswers.push({
+//                         selector: q.selector,
+//                         questionText: q.questionText,
+//                         answer: value,
+//                         source: 'canonical' as const,
+//                         confidence: 1.0,
+//                         required: q.required,
+//                         fieldType: q.fieldType,
+//                         options: q.options || undefined,
+//                         canonicalKey: intent,
+//                         fileName: fileName // Pass the original filename
+//                     });
+//                     console.log(`  ⚡ "${q.questionText}" → ${intent} (predefined pattern: "${match.pattern}", value: "${fileName || value}")`);
+//                     continue; // Skip to next question
+//                 }
+//             }
+//             // No predefined pattern match or no profile value - will try canonical/learned/fuzzy
+//             unmappedForAI.push(q);
+//         }
+//         console.log(`\n✅  Phase 0 Complete: ${mappedAnswers.length}/${uniqueQuestions.length} mapped via predefined patterns\n`);
+//         // Phase 1: Try canonical, learned, then fuzzy matching for remaining questions
+//         console.log(`🚀 Phase 1: Attempting canonical, learned pattern, and fuzzy matching...\n`);
+//         const phase1Candidates = [...unmappedForAI]; // Copy questions that didn't match patterns
+//         unmappedForAI.length = 0; // Clear for Phase 1 results
+//         // Phase 1: Try canonical, learned, then fuzzy matching
+//         for (const q of phase1Candidates) {
+//             console.log(`\n  🔍 Mapping: "${q.questionText}"`);
+//             const result = await this.tryMapping(q, profile);
+//             // Lower threshold to 0.6 (60%) to use learned patterns
+//             // Learned patterns typically have 60-95% confidence
+//             if (result && result.confidence >= 0.6) {
+//                 // Confidence is good enough - use this answer
+//                 mappedAnswers.push({
+//                     selector: q.selector,
+//                     questionText: q.questionText,
+//                     answer: result.answer,
+//                     source: result.source as any,
+//                     confidence: result.confidence,
+//                     required: q.required,
+//                     fieldType: q.fieldType,
+//                     options: q.options || undefined,
+//                     fileName: result.fileName // Include fileName if present
+//                 });
+//                 const sourceIcon = result.source === 'canonical' ? '🎯' : result.source === 'learned' ? '🧠' : '🔍';
+//                 console.log(`     ${sourceIcon} ✅ Mapped via ${result.source.toUpperCase()}: "${result.answer}" (${(result.confidence * 100).toFixed(0)}% confidence)`);
+//             } else {
+//                 // Low confidence or no match - queue for AI
+//                 unmappedForAI.push(q);
+//                 console.log(`     ⏭️  ⚠️ No match - Queued for AI (confidence: ${result ? (result.confidence * 100).toFixed(0) + '%' : 'N/A'})`);
+//             }
+//         }
+//         // Phase 2: Send unmapped questions to AI and LEARN from responses
+//         console.log(`\n\n╔════════════════════════════════════════════════════════════════════╗`);
+//         console.log(`║                Phase 1 Complete: ${mappedAnswers.length}/${uniqueQuestions.length} Mapped${' '.repeat(Math.max(0, 24 - mappedAnswers.length.toString().length - uniqueQuestions.length.toString().length))}║`);
+//         console.log(`╚════════════════════════════════════════════════════════════════════╝\n`);
+//         if (unmappedForAI.length > 0) {
+//             console.log(`\n╔════════════════════════════════════════════════════════════════════╗`);
+//             console.log(`║         🤖 Phase 2: AI Processing (${unmappedForAI.length} questions)${' '.repeat(Math.max(0, 26 - unmappedForAI.length.toString().length))}║`);
+//             console.log(`╚════════════════════════════════════════════════════════════════════╝\n`);
+//             console.log(`📤 Sending ${unmappedForAI.length} question(s) to AI for processing...\n`);
+//             console.log(`❓ Questions for AI:`);
+//             unmappedForAI.forEach((q, idx) => {
+//                 console.log(`   ${idx + 1}. "${q.questionText}"`);
+//             });
+//             console.log(``);
+//             // Notify UI of AI count immediately (before calling AI)
+//             window.dispatchEvent(new CustomEvent('AI_COUNT_UPDATE', {
+//                 detail: { count: unmappedForAI.length }
+//             }));
+//             const aiAnswers = await this.requestAIAnswers(unmappedForAI, profile);
+//             console.log(`\n📚 Learning from AI responses...`);
+//             // Learn from each AI response
+//             for (let i = 0; i < unmappedForAI.length; i++) {
+//                 const question = unmappedForAI[i];
+//                 const answer = aiAnswers[i];
+//                 if (answer) {
+//                     await this.learnFromAIResponse(question, answer, profile);
+//                 }
+//             }
+//             mappedAnswers.push(...aiAnswers);
+//             console.log(`✅ AI phase complete. Learned ${aiAnswers.length} new patterns.\n`);
+//         } else {
+//             console.log(`\n✨ All questions mapped without AI! No AI calls needed.\n`);
+//         }
+//         console.log(`\n╔════════════════════════════════════════════════════════════════════╗`);
+//         console.log(`║           ✅ MAPPING COMPLETE: ${mappedAnswers.length}/${uniqueQuestions.length} Answers Ready${' '.repeat(Math.max(0, 20 - mappedAnswers.length.toString().length - uniqueQuestions.length.toString().length))}║`);
+//         console.log(`╚════════════════════════════════════════════════════════════════════╝\n`);
+//         // Summary breakdown
+//         const canonicalCount = mappedAnswers.filter(a => a.source === 'canonical').length;
+//         const learnedCount = mappedAnswers.filter(a => a.source === 'learned').length;
+//         const fuzzyCount = mappedAnswers.filter(a => a.source === 'fuzzy').length;
+//         const aiCount = mappedAnswers.filter(a => a.source === 'AI').length;
+//         console.log(`📊 Mapping Source Breakdown:`);
+//         console.log(`   🎯 Canonical: ${canonicalCount}`);
+//         console.log(`   🧠 Learned Patterns: ${learnedCount}`);
+//         console.log(`   🔍 Fuzzy Match: ${fuzzyCount}`);
+//         console.log(`   🤖 AI Generated: ${aiCount}\n`);
+//         AnalyticsTracker.getInstance().endMapping(mappedAnswers);
+//         return mappedAnswers;
+//     }
+//     /**
+//      * Remove duplicate questions based on normalized text
+//      */
+//     private removeDuplicates(questions: ScannedQuestion[]): ScannedQuestion[] {
+//         const seen = new Set<string>();
+//         const unique: ScannedQuestion[] = [];
+//         for (const q of questions) {
+//             // RELAXED DEDUPLICATION: Include fieldType in the uniqueness key.
+//             // This allows a "Phone" dropdown (country code) and "Phone" text input (number) to both exist.
+//             const normalized = `${this.normalizeQuestion(q.questionText)}|${q.fieldType}`;
+//             if (!seen.has(normalized)) {
+//                 seen.add(normalized);
+//                 unique.push(q);
+//             } else {
+//                 console.log(`   🔄 Skipping identical duplicate: "${q.questionText}" (${q.fieldType})`);
+//             }
+//         }
+//         return unique;
+//     }
+//     /**
+//      * Try canonical, learned, and fuzzy matching
+//      */
+//     private async tryMapping(question: ScannedQuestion, profile: any): Promise<{ answer: string; source: 'canonical' | 'learned' | 'fuzzy'; confidence: number; fileName?: string } | null> {
+//         // (Manual overrides (customAnswers) now handled in Phase -2 of processQuestions)
+//         // 1. Try canonical matching
+//         console.log(`     🎯 Trying canonical mapping...`);
+//         const canonicalResult = this.tryCanonical(question, profile);
+//         if (canonicalResult) {
+//             console.log(`     ✓ Canonical match found!`);
+//             return canonicalResult;
+//         }
+//         console.log(`     ✗ No canonical match`);
+//         // 2. Try learned patterns
+//         console.log(`     🧠 Trying learned patterns...`);
+//         const learnedResult = await this.tryLearned(question, profile);
+//         if (learnedResult) {
+//             console.log(`     ✓ Learned pattern match found!`);
+//             return learnedResult;
+//         }
+//         console.log(`     ✗ No learned pattern match`);
+//         // 3. Try fuzzy matching with options
+//         if (question.options && question.options.length > 0) {
+//             console.log(`     🔍 Trying fuzzy matching with ${question.options.length} options...`);
+//             const fuzzyResult = this.tryFuzzy(question, profile);
+//             if (fuzzyResult) {
+//                 console.log(`     ✓ Fuzzy match found!`);
+//                 return fuzzyResult;
+//             }
+//             console.log(`     ✗ No fuzzy match`);
+//         } else {
+//             console.log(`     ⊗ Fuzzy matching skipped (no options)`);
+//         }
+//         return null;
+//     }
+//     /**
+//      * Try learned patterns from storage
+//      */
+//     private async tryLearned(question: ScannedQuestion, profile: any): Promise<{ answer: string; source: 'learned'; confidence: number } | null> {
+//         const pattern = await patternStorage.findPattern(question.questionText, question.fieldType, question.options);
+//         if (!pattern || pattern.intent.toLowerCase() === 'unknown') {
+//             return null;
+//         }
+//         // SAFETY CHECK: Ignore learned patterns for generic labels matching "Attach", "Upload", etc.
+//         // These are context-dependent and a global pattern (e.g. Attach -> Resume) causes issues (e.g. filling Cover Letter)
+//         const lowerQ = question.questionText.toLowerCase().trim();
+//         const genericLabels = ['attach', 'upload', 'resume/cv', 'resume', 'cover letter', 'file', 'choose file', 'browse', 'select']; // actually 'resume' is fine, but 'attach' is bad.
+//         // We only want to block truly context-free generics
+//         if (['attach', 'upload', 'file', 'choose file', 'browse', 'select file'].includes(lowerQ)) {
+//             console.log(`[QuestionMapper] ⚠️ Skipping learned pattern for generic question "${question.questionText}"`);
+//             return null;
+//         }
+//         // SAFETY CHECK: If this is a file input, ensure we don't return text answers (e.g. bio/summary)
+//         // Learned patterns often capture text values for "Attach" if there were text inputs named "Attach" elsewhere
+//         if (question.fieldType === 'file') {
+//             // Only proceed if the intent is clearly file-related (RESUME/COVER_LETTER)
+//             // OR if the answer we would generate is a data URI (unlikely for learned patterns currently)
+//             const intent = pattern.intent.toLowerCase();
+//             if (!intent.includes('resume') && !intent.includes('cover') && !intent.includes('cv') && !intent.includes('file')) {
+//                 console.log(`[QuestionMapper] ⚠️ Skipping learned pattern for file input "${question.questionText}": intent "${pattern.intent}" implies text`);
+//                 return null;
+//             }
+//         }
+//         // Get canonical value from profile (optional - may not exist)
+//         const canonicalValue = getValueByIntent(profile, pattern.intent);
+//         // INFINITE LEARNING MODE:
+//         // Try to match stored variants against current options
+//         // This works even if profile doesn't have this value!
+//         if (pattern.answerMappings && pattern.answerMappings.length > 0 && question.options) {
+//             // Try to find variant that matches current options
+//             for (const mapping of pattern.answerMappings) {
+//                 for (const variant of mapping.variants) {
+//                     const match = question.options.find(opt =>
+//                         opt.toLowerCase() === variant.toLowerCase() ||
+//                         opt.toLowerCase().includes(variant.toLowerCase()) ||
+//                         variant.toLowerCase().includes(opt.toLowerCase())
+//                     );
+//                     if (match) {
+//                         console.log(`[QuestionMapper] 🎯 Matched stored variant "${variant}" → "${match}"`);
+//                         return { answer: match, source: 'learned', confidence: pattern.confidence };
+//                     }
+//                 }
+//             }
+//         }
+//         // Fallback: Use canonical value from profile if available
+//         if (canonicalValue) {
+//             // For generic fields with answer mappings, find best variant
+//             if (pattern.answerMappings && pattern.answerMappings.length > 0) {
+//                 const answer = this.findBestVariant(canonicalValue, pattern.answerMappings, question.options);
+//                 if (answer) {
+//                     return { answer, source: 'learned', confidence: pattern.confidence };
+//                 }
+//                 // findBestVariant returned null - variant doesn't match options
+//                 // Fall through to let AI handle it
+//             } else {
+//                 // For personal fields (pattern-only), validate against options if they exist
+//                 if (question.options && question.options.length > 0) {
+//                     // Check if canonical value matches any option
+//                     const match = question.options.find(opt =>
+//                         opt.toLowerCase() === canonicalValue.toLowerCase() ||
+//                         opt.toLowerCase().includes(canonicalValue.toLowerCase()) ||
+//                         canonicalValue.toLowerCase().includes(opt.toLowerCase())
+//                     );
+//                     if (match) {
+//                         console.log(`[QuestionMapper] 🔍 Canonical value "${canonicalValue}" matches option "${match}"`);
+//                         return { answer: match, source: 'learned', confidence: pattern.confidence };
+//                     }
+//                     // No match - let AI handle it
+//                     console.log(`[QuestionMapper] ⚠️ Canonical value "${canonicalValue}" not in options, will use AI`);
+//                 } else {
+//                     // No options to validate against, return canonical value as-is
+//                     return { answer: canonicalValue, source: 'learned', confidence: pattern.confidence };
+//                 }
+//             }
+//         }
+//         // NEW: For text fields, try to use the stored answer from pattern
+//         // even if profile doesn't have this value
+//         if (!question.options && pattern.answerMappings && pattern.answerMappings.length > 0) {
+//             const firstMapping = pattern.answerMappings[0];
+//             // Try variants first
+//             if (firstMapping.variants && firstMapping.variants.length > 0) {
+//                 const storedAnswer = firstMapping.variants[0];
+//                 console.log(`[QuestionMapper] 📝 Using stored text answer from pattern`);
+//                 return { answer: storedAnswer, source: 'learned', confidence: pattern.confidence };
+//             }
+//             // Try canonical value from mapping
+//             if (firstMapping.canonicalValue) {
+//                 console.log(`[QuestionMapper] 📝 Using stored canonical answer from pattern`);
+//                 return { answer: firstMapping.canonicalValue, source: 'learned', confidence: pattern.confidence };
+//             }
+//         }
+//         // No match found and no profile value - pattern exists but can't use it
+//         return null;
+//     }
+//     /**
+//      * Find best answer variant for available options
+//      */
+//     private findBestVariant(canonicalValue: string, answerMappings: any[], options?: string[]): string | null {
+//         // Find the mapping for this canonical value
+//         const mapping = answerMappings.find(m => m.canonicalValue === canonicalValue);
+//         if (!mapping) return null; // No mapping exists
+//         if (!options || options.length === 0) {
+//             // No options available, return first variant
+//             return mapping.variants[0] || canonicalValue;
+//         }
+//         // Find matching variant in options
+//         for (const variant of mapping.variants) {
+//             const match = options.find(opt =>
+//                 opt.toLowerCase() === variant.toLowerCase() ||
+//                 opt.toLowerCase().includes(variant.toLowerCase()) ||
+//                 variant.toLowerCase().includes(opt.toLowerCase())
+//             );
+//             if (match) {
+//                 console.log(`[QuestionMapper] 🎯 Matched learned variant "${variant}" → "${match}"`);
+//                 return match;
+//             }
+//         }
+//         // No match found - return null so AI can learn correct mapping
+//         console.log(`[QuestionMapper] ⚠️ No learned variant matches options, will use AI`);
+//         return null;
+//     }
+//     /**
+//      * Learn from AI response
+//      */
+//     private async learnFromAIResponse(question: ScannedQuestion, answer: MappedAnswer, profile: any): Promise<void> {
+//         // Primary: Use AI-provided intent if available
+//         let intent: string | null = null;
+//         if (answer.canonicalKey || (answer as any).intent) {
+//             // AI provided an intent classification
+//             intent = answer.canonicalKey || (answer as any).intent;
+//             console.log(`[QuestionMapper] ✓ Using AI-provided intent: ${intent}`);
+//             // Handle new intent creation
+//             if ((answer as any).isNewIntent) {
+//                 console.log(`[QuestionMapper] 🆕 AI suggested new intent: ${intent} ("${(answer as any).suggestedIntentName}")`);
+//                 // Store as a custom intent pattern for future use
+//                 const pattern: any = {
+//                     questionPattern: this.normalizeQuestion(question.questionText),
+//                     intent,
+//                     canonicalKey: intent,
+//                     fieldType: question.fieldType,
+//                     confidence: answer.confidence || 0.8,
+//                     source: 'AI-new',
+//                     isCustomIntent: true
+//                 };
+//                 if (question.options) {
+//                     pattern.answerMappings = [{
+//                         canonicalValue: answer.answer,
+//                         variants: [answer.answer],
+//                         contextOptions: question.options
+//                     }];
+//                 }
+//                 await patternStorage.addPattern(pattern);
+//                 return;
+//             }
+//         } else {
+//             // Fallback: Try to detect intent from question and answer using keywords
+//             intent = this.detectIntent(question.questionText, answer.answer, profile);
+//             if (intent) {
+//                 console.log(`[QuestionMapper] ⚠️ Using fallback keyword detection: ${intent}`);
+//             }
+//         }
+//         if (!intent) {
+//             console.log(`[QuestionMapper] Cannot determine intent for: "${question.questionText}"`);
+//             return;
+//         }
+//         // INFINITE LEARNING MODE:
+//         // Store the AI's answer as a variant for this intent
+//         // Build up a knowledge base of answers for each intent over time
+//         // Try to get canonical value from profile (optional - used as base if available)
+//         const canonicalValue = getValueByIntent(profile, intent);
+//         // Use AI's answer as the canonical value if profile doesn't have it
+//         const valueToStore = canonicalValue || answer.answer;
+//         console.log(`[QuestionMapper] 📚 Learning variant "${answer.answer}" for intent: ${intent}`);
+//         // Create pattern with answer variant
+//         const pattern: any = {
+//             questionPattern: this.normalizeQuestion(question.questionText),
+//             intent,
+//             canonicalKey: intent,
+//             fieldType: question.fieldType,
+//             confidence: answer.confidence || 0.8,
+//             source: 'AI'
+//         };
+//         // ALWAYS store answer mappings to build variant knowledge base
+//         pattern.answerMappings = [{
+//             canonicalValue: valueToStore,  // The "base" answer (from profile or AI)
+//             variants: [answer.answer],      // Specific variant used this time
+//             contextOptions: question.options || []  // Options available when this was used
+//         }];
+//         await patternStorage.addPattern(pattern);
+//         console.log(`[QuestionMapper] ✅ Pattern stored with variant: "${answer.answer}"`);
+//     }
+//     private detectIntent(questionText: string, answer: string, profile: any): string | null {
+//         const qLower = questionText.toLowerCase();
+//         // Check by matching answer to profile values
+//         if (answer === profile.eeo?.gender) return 'eeo.gender';
+//         if (answer === profile.eeo?.hispanic) return 'eeo.hispanic';
+//         if (answer === profile.eeo?.veteran) return 'eeo.veteran';
+//         if (answer === profile.eeo?.disability) return 'eeo.disability';
+//         if (answer === profile.eeo?.race) return 'eeo.race';
+//         if (answer === profile.personal?.firstName) return 'personal.firstName';
+//         if (answer === profile.personal?.lastName) return 'personal.lastName';
+//         if (answer === profile.personal?.email) return 'personal.email';
+//         if (answer === profile.personal?.phone) return 'personal.phone';
+//         if (answer === profile.personal?.city) return 'personal.city';
+//         if (answer === profile.personal?.state) return 'personal.state';
+//         if (answer === profile.personal?.country) return 'personal.country';
+//         if (answer === profile.social?.linkedin) return 'social.linkedin';
+//         if (answer === profile.social?.website) return 'social.website';
+//         // Keyword-based fallback
+//         if (qLower.includes('gender') || qLower.includes('sex')) return 'eeo.gender';
+//         if (qLower.includes('hispanic') || qLower.includes('latino')) return 'eeo.hispanic';
+//         if (qLower.includes('veteran')) return 'eeo.veteran';
+//         if (qLower.includes('disability')) return 'eeo.disability';
+//         if (qLower.includes('race') || qLower.includes('ethnicity')) return 'eeo.race';
+//         if (qLower.includes('sponsor')) return 'workAuth.needsSponsorship';
+//         if (qLower.includes('authorized') && qLower.includes('work')) return 'workAuth.authorizedUS';
+//         if (qLower.includes('driver') && qLower.includes('license')) return 'workAuth.driverLicense';
+//         if (qLower.includes('linkedin')) return 'social.linkedin';
+//         if (qLower.includes('website') || qLower.includes('portfolio')) return 'social.website';
+//         if (qLower.includes('first name') || qLower.includes('given name')) return 'personal.firstName';
+//         if (qLower.includes('last name') || qLower.includes('family name') || qLower.includes('surname')) return 'personal.lastName';
+//         if (qLower.includes('email')) return 'personal.email';
+//         if (qLower.includes('phone') || qLower.includes('mobile')) return 'personal.phone';
+//         return null;
+//     }
+//     /**
+//      * Check if intent is generic (shareable)
+//      */
+//     private isGenericIntent(intent: string): boolean {
+//         const genericIntents = [
+//             'eeo.gender', 'eeo.hispanic', 'eeo.veteran', 'eeo.disability', 'eeo.race',
+//             'workAuth.sponsorship', 'workAuth.usAuthorized', 'workAuth.driverLicense',
+//             'location.country', 'location.state', 'application.hasRelatives'
+//         ];
+//         return genericIntents.includes(intent);
+//     }
+//     /**
+//      * Normalize question text for pattern matching
+//      */
+//     private normalizeQuestion(questionText: string): string {
+//         return questionText.toLowerCase()
+//             .replace(/[*?!]/g, '') // Remove special chars
+//             .trim();
+//     }
+//     /**
+//      * Canonical matching - exact profile field mapping
+//      */
+//     private tryCanonical(question: ScannedQuestion, profile: any): { answer: string; source: 'canonical'; confidence: number; fileName?: string } | null {
+//         const qLower = question.questionText.toLowerCase();
+//         /**
+//          * Helper: Validate canonical answer against dropdown/radio options
+//          * For dropdown/radio questions, we must ensure the canonical value matches an option
+//          * Otherwise, return null to let AI handle it
+//          */
+//         const validateWithOptions = (canonicalValue: string, fileName?: string): { answer: string; source: 'canonical'; confidence: number; fileName?: string } | null => {
+//             // If no options, return as-is (text field)
+//             if (!question.options || question.options.length === 0) {
+//                 return { answer: canonicalValue, source: 'canonical', confidence: 1.0, fileName };
+//             }
+//             // For dropdown/radio, validate against options
+//             const matched = this.matchInOptions(canonicalValue, question.options, 1.0);
+//             if (matched) {
+//                 console.log(`     ✓ Canonical value "${canonicalValue}" validated against options → "${matched.answer}"`);
+//                 return { ...matched, fileName };
+//             } else {
+//                 console.log(`     ⚠️ Canonical value "${canonicalValue}" not in options [${question.options.join(', ')}] - skipping`);
+//                 return null; // Let AI handle it
+//             }
+//         };
+//         // ===== PERSONAL INFO =====
+//         // First name (usually text field, but validate if options exist)
+//         if ((qLower.includes('first name') || qLower === 'first name') && profile.personal?.firstName) {
+//             return validateWithOptions(profile.personal.firstName);
+//         }
+//         // Last name (usually text field, but validate if options exist)
+//         if ((qLower.includes('last name') || qLower === 'last name') && profile.personal?.lastName) {
+//             return validateWithOptions(profile.personal.lastName);
+//         }
+//         // Email (usually text field, but validate if options exist)
+//         if ((qLower.includes('email') || qLower === 'email') && profile.personal?.email) {
+//             return validateWithOptions(profile.personal.email);
+//         }
+//         // Phone (distinguish between country code and number)
+//         if ((qLower.includes('phone') || qLower === 'phone' || qLower.includes('mobile') || qLower === 'mobile') && profile.personal?.phone) {
+//             // If the field is a dropdown or custom dropdown, it's likely a COUNTRY CODE
+//             if (question.fieldType === 'select' || question.fieldType === 'dropdown_custom') {
+//                 console.log(`[QuestionMapper] 📞 Phone country code field detected. Profile value: "${profile.personal.country}"`);
+//                 // Use country to find the code in options
+//                 return validateWithOptions(profile.personal.country);
+//             }
+//             // Otherwise, it's the actual PHONE NUMBER
+//             return validateWithOptions(profile.personal.phone);
+//         }
+//         // Country (often dropdown, so validation is critical)
+//         if (qLower.includes('country') && profile.personal?.country) {
+//             console.log(`[QuestionMapper] 🌍 Country field detected. Profile value: "${profile.personal.country}"`);
+//             if (question.options) {
+//                 console.log(`[QuestionMapper] 🌍 Available country options: [${question.options.join(', ')}]`);
+//             }
+//             return validateWithOptions(profile.personal.country);
+//         }
+//         // City (validate against options - prevents matching "Can you commute to city X?" with city name)
+//         if (qLower.includes('city') && profile.personal?.city) {
+//             return validateWithOptions(profile.personal.city);
+//         }
+//         // State (validate against options)
+//         if (qLower.includes('state') && !qLower.includes('united') && profile.personal?.state) {
+//             return validateWithOptions(profile.personal.state);
+//         }
+//         // LinkedIn - comprehensive matching
+//         if ((qLower.includes('linkedin') ||
+//             qLower.includes('linked in') ||
+//             qLower.includes('linkedin profile') ||
+//             qLower.includes('linkedin url') ||
+//             qLower.includes('professional profile') ||
+//             qLower === 'linkedin')) {
+//             // Debug: Log what we have in profile
+//             console.log('[QuestionMapper] LinkedIn question detected');
+//             console.log('[QuestionMapper] profile.social?.linkedin:', profile.social?.linkedin);
+//             console.log('[QuestionMapper] profile.personal?.linkedin:', profile.personal?.linkedin);
+//             // Check both locations (social and personal)
+//             const linkedinUrl = profile.social?.linkedin || profile.personal?.linkedin;
+//             if (linkedinUrl) {
+//                 console.log('[QuestionMapper] ✅ Using LinkedIn from profile:', linkedinUrl);
+//                 return { answer: linkedinUrl, source: 'canonical', confidence: 1.0 };
+//             } else {
+//                 console.log('[QuestionMapper] ⚠️ LinkedIn not found in profile!');
+//             }
+//         }
+//         // Website / portfolio - comprehensive matching
+//         if ((qLower.includes('website') ||
+//             qLower.includes('portfolio') ||
+//             qLower.includes('personal website') ||
+//             qLower.includes('online portfolio') ||
+//             qLower === 'website') && profile.social?.website) {
+//             return { answer: profile.social.website, source: 'canonical', confidence: 1.0 };
+//         }
+//         // ===== FILE UPLOADS =====
+//         // Resume/CV
+//         // CRITICAL: Must explicitly exclude "cover letter" to prevent mis-mapping
+//         if ((question.fieldType === 'file' && question.selector.includes('resume')) ||
+//             (qLower.includes('resume') && !qLower.includes('cover')) ||
+//             qLower.includes('cv') ||
+//             (question.fieldType === 'file' && qLower === 'attach' && question.selector.includes('resume'))) {
+//             console.log(`[QuestionMapper] 🔍 Potential Resume match for "${question.questionText}"`);
+//             console.log(`[QuestionMapper] 🔍 Debug info: Selector="${question.selector}", qLower="${qLower}"`);
+//             if (profile.documents?.resume?.base64) {
+//                 console.log(`[QuestionMapper] 📎 Resume match CONFIRMED for "${question.questionText}"`);
+//                 // Return base64 data URL format that Selenium expects
+//                 const base64Data = profile.documents.resume.base64;
+//                 // If base64Data already includes the data URL prefix, use as-is
+//                 const dataUrl = base64Data.startsWith('data:') ? base64Data : `data:application/pdf;base64,${base64Data}`;
+//                 const fileName = profile.documents.resume.fileName ||
+//                     (profile.personal?.firstName && profile.personal?.lastName
+//                         ? `${profile.personal.firstName}_${profile.personal.lastName}_Resume.pdf`
+//                         : 'resume.pdf');
+//                 return { answer: dataUrl, source: 'canonical', confidence: 1.0, fileName };
+//             }
+//         }
+//         // ===== WORK AUTHORIZATION =====
+//         // Driver's License
+//         if (qLower.includes('driver') && qLower.includes('license')) {
+//             if (profile.workAuthorization?.driverLicense !== undefined) {
+//                 const answer = this.booleanToYesNo(profile.workAuthorization.driverLicense, question.options || undefined);
+//                 return { answer, source: 'canonical', confidence: 1.0 };
+//             }
+//         }
+//         // Sponsorship
+//         if (qLower.includes('sponsor') && (qLower.includes('visa') || qLower.includes('work') || qLower.includes('government'))) {
+//             if (profile.workAuthorization?.needsSponsorship !== undefined) {
+//                 const answer = this.booleanToYesNo(profile.workAuthorization.needsSponsorship, question.options || undefined);
+//                 return { answer, source: 'canonical', confidence: 1.0 };
+//             }
+//         }
+//         // US Authorization - comprehensive matching
+//         if ((qLower.includes('authorized') || qLower.includes('legally')) &&
+//             qLower.includes('work') &&
+//             (qLower.includes('united states') || qLower.includes('u.s.') || qLower.includes('us') || qLower.includes('america'))) {
+//             if (profile.workAuthorization?.authorizedUS !== undefined) {
+//                 const answer = this.booleanToYesNo(profile.workAuthorization.authorizedUS, question.options || undefined);
+//                 return { answer, source: 'canonical', confidence: 1.0 };
+//             }
+//         }
+//         // ===== APPLICATION QUESTIONS =====
+//         // Related to Employee
+//         if ((qLower.includes('relat') && qLower.includes('employee')) || (qLower.includes('friend') && qLower.includes('work'))) {
+//             if (profile.application?.hasRelatives !== undefined) {
+//                 const answer = this.booleanToYesNo(profile.application.hasRelatives, question.options || undefined);
+//                 return { answer, source: 'canonical', confidence: 1.0 };
+//             }
+//         }
+//         // Previously Applied
+//         if (qLower.includes('previously') && qLower.includes('appl')) {
+//             if (profile.application?.previouslyApplied !== undefined) {
+//                 const answer = this.booleanToYesNo(profile.application.previouslyApplied, question.options || undefined);
+//                 return { answer, source: 'canonical', confidence: 1.0 };
+//             }
+//         }
+//         // ===== EEO QUESTIONS =====
+//         // Gender
+//         if (qLower.includes('gender') && profile.eeo?.gender) {
+//             return this.matchInOptions(profile.eeo.gender, question.options || undefined, 1.0);
+//         }
+//         // Hispanic/Latino
+//         if ((qLower.includes('hispanic') || qLower.includes('latino')) && profile.eeo?.hispanic) {
+//             return this.matchInOptions(profile.eeo.hispanic, question.options || undefined, 1.0);
+//         }
+//         // Veteran Status
+//         if (qLower.includes('veteran') && profile.eeo?.veteran) {
+//             return this.matchInOptions(profile.eeo.veteran, question.options || undefined, 1.0);
+//         }
+//         // Disability
+//         if (qLower.includes('disability') && profile.eeo?.disability) {
+//             return this.matchInOptions(profile.eeo.disability, question.options || undefined, 1.0);
+//         }
+//         // Race
+//         if (qLower.includes('race') && profile.eeo?.race) {
+//             return this.matchInOptions(profile.eeo.race, question.options || undefined, 1.0);
+//         }
+//         // Sexual Orientation (NEW - prevent AI calls)
+//         if ((qLower.includes('sexual orientation') || qLower.includes('sexual identity')) && profile.eeo?.sexualOrientation) {
+//             return this.matchInOptions(profile.eeo.sexualOrientation, question.options || undefined, 1.0);
+//         }
+//         // ===== EDUCATION QUESTIONS =====
+//         // Get first education entry (most recent / highest degree)
+//         const edu = Array.isArray(profile.education) && profile.education.length > 0 ? profile.education[0] : null;
+//         if (edu) {
+//             // School name
+//             if ((qLower === 'school' || qLower.includes('school name') || qLower.includes('university') ||
+//                 qLower.includes('college') || qLower.includes('institution')) &&
+//                 !qLower.includes('high school') && edu.school) {
+//                 return validateWithOptions(edu.school);
+//             }
+//             // High school
+//             if ((qLower.includes('high school') || qLower.includes('secondary school')) && edu.school) {
+//                 return validateWithOptions(edu.school);
+//             }
+//             // Degree type
+//             if ((qLower === 'degree' || qLower.includes('degree type') || qLower.includes('degree level') ||
+//                 qLower.includes('education level') || qLower.includes('highest degree') ||
+//                 qLower.includes('highest education') || qLower.includes('education attained')) && edu.degree) {
+//                 return validateWithOptions(edu.degree);
+//             }
+//             // Major / Field of Study
+//             if ((qLower === 'major' || qLower.includes('field of study') || qLower.includes('discipline') ||
+//                 qLower.includes('concentration') || qLower.includes('area of study')) && edu.major) {
+//                 return validateWithOptions(edu.major);
+//             }
+//             // GPA
+//             if ((qLower.includes('gpa') || qLower.includes('grade point')) && edu.gpa) {
+//                 return validateWithOptions(edu.gpa);
+//             }
+//             // Graduation / End date
+//             if ((qLower.includes('graduation') || qLower.includes('completion date') || qLower.includes('graduated')) && edu.endDate) {
+//                 return validateWithOptions(edu.endDate);
+//             }
+//         }
+//         // ===== WORK EXPERIENCE QUESTIONS =====
+//         // Get first (most recent) experience entry
+//         const exp = Array.isArray(profile.experience) && profile.experience.length > 0 ? profile.experience[0] : null;
+//         if (exp) {
+//             // Company name — only in experience context (check for experience/employment-related keywords in question
+//             // or check that question doesn't also match education context keywords)
+//             if ((qLower === 'company' || qLower === 'company name' || qLower === 'employer' ||
+//                 qLower.includes('employer name') || qLower.includes('organization name') ||
+//                 (qLower.includes('company') && !qLower.includes('school') && !qLower.includes('university'))) && exp.company) {
+//                 return validateWithOptions(exp.company);
+//             }
+//             // Job title
+//             if ((qLower === 'title' || qLower === 'job title' || qLower === 'position' ||
+//                 qLower.includes('job title') || qLower.includes('position title') || qLower.includes('your title') ||
+//                 qLower.includes('job role')) && exp.title) {
+//                 return validateWithOptions(exp.title);
+//             }
+//             // Work location
+//             if ((qLower.includes('work location') || qLower.includes('job location') ||
+//                 qLower.includes('office location')) && exp.location) {
+//                 return validateWithOptions(exp.location);
+//             }
+//             // Currently working
+//             if ((qLower.includes('currently working') || qLower.includes('current position') ||
+//                 qLower.includes('still working') || qLower.includes('currently employed')) &&
+//                 exp.currentlyWorking !== undefined) {
+//                 const answer = this.booleanToYesNo(exp.currentlyWorking, question.options || undefined);
+//                 return { answer, source: 'canonical', confidence: 1.0 };
+//             }
+//         }
+//         // ===== HOW DID YOU HEAR / REFERRAL SOURCE =====
+//         if (qLower.includes('how did you hear') || qLower.includes('where did you hear') ||
+//             qLower.includes('how did you find') || qLower.includes('referral source') ||
+//             qLower.includes('source of application') || qLower.includes('how did you learn')) {
+//             // Check dedicated application.howDidYouHear field first
+//             const howHeard = profile.application?.howDidYouHear ||
+//                 profile.customAnswers?.['howDidYouHear'] ||
+//                 profile.customAnswers?.['how did you hear about us'];
+//             if (howHeard) {
+//                 return validateWithOptions(howHeard);
+//             }
+//         }
+//         // Referral name
+//         if ((qLower.includes('referred by') || qLower.includes('who referred you') ||
+//             qLower.includes('referral name') || qLower.includes('referrer name')) &&
+//             profile.application?.referralName) {
+//             return validateWithOptions(profile.application.referralName);
+//         }
+//         return null;
+//     }
+//     /**
+//      * Fuzzy matching - match profile values to available options
+//      */
+//     private tryFuzzy(question: ScannedQuestion, profile: any): { answer: string; source: 'canonical' | 'fuzzy'; confidence: number } | null {
+//         if (!question.options) return null;
+//         const qLower = question.questionText.toLowerCase();
+//         // Gender matching (fallback if not in eeo)
+//         if (qLower.includes('gender') && profile.personal?.gender) {
+//             return this.matchInOptions(profile.personal.gender, question.options || undefined, 0.9);
+//         }
+//         return null;
+//     }
+//     /**
+//      * Fuzzy match a value to the closest option in the list
+//      * Used to validate AI responses against available options
+//      */
+//     private fuzzyMatchOption(value: string, options: string[]): string | null {
+//         const result = this.matchInOptions(value, options, 0.9);
+//         return result ? result.answer : null;
+//     }
+//     /**
+//      * Convert boolean to Yes/No based on available options
+//      */
+//     private booleanToYesNo(value: boolean, options?: string[]): string {
+//         if (!options || options.length === 0) {
+//             return value ? 'Yes' : 'No';
+//         }
+//         // Find Yes option
+//         if (value) {
+//             const yesOption = options.find(opt =>
+//                 opt.toLowerCase().includes('yes') ||
+//                 opt.toLowerCase() === 'y' ||
+//                 opt.toLowerCase().includes('true') ||
+//                 opt.toLowerCase() === 'i do'
+//             );
+//             return yesOption || 'Yes';
+//         }
+//         // Find No option
+//         const noOption = options.find(opt =>
+//             opt.toLowerCase().includes('no') ||
+//             opt.toLowerCase() === 'n' ||
+//             opt.toLowerCase().includes('false') ||
+//             opt.toLowerCase() === 'i do not' ||
+//             opt.toLowerCase() === `i don't` ||
+//             opt.toLowerCase().includes('prefer not')
+//         );
+//         return noOption || 'No';
+//     }
+//     /**
+//      * Match stored value to best option
+//      */
+//     private matchInOptions(value: string, options?: string[], confidence: number = 1.0): { answer: string; source: 'canonical'; confidence: number } | null {
+//         if (!options || options.length === 0) {
+//             return { answer: value, source: 'canonical', confidence };
+//         }
+//         const valueLower = value.toLowerCase().trim();
+//         // 1. Exact match
+//         const exactMatch = options.find(opt => opt.toLowerCase().trim() === valueLower);
+//         if (exactMatch) {
+//             return { answer: exactMatch, source: 'canonical', confidence };
+//         }
+//         // 1.5 Synonym match (Male matched to Man, etc.)
+//         const synonyms: Record<string, string[]> = {
+//             'male': ['man', 'cisgender male', 'cis male'],
+//             'female': ['woman', 'cisgender female', 'cis female'],
+//             'man': ['male', 'cisgender male', 'cis male'],
+//             'woman': ['female', 'cisgender female', 'cis female'],
+//             'non-binary': ['nonbinary', 'genderqueer', 'gender non-conforming', 'gender non-binary', 'non-binary/non-conforming'],
+//             'prefer not to say': ['decline to self-identify', 'decline to state', 'i prefer not to answer', 'prefer not to disclose'],
+//             'yes': ['y', 'true', 'i do', 'authorized'],
+//             'no': ['n', 'false', 'i do not', 'not authorized']
+//         };
+//         if (synonyms[valueLower]) {
+//             for (const synonym of synonyms[valueLower]) {
+//                 const synonymMatch = options.find(opt => opt.toLowerCase().trim() === synonym);
+//                 if (synonymMatch) {
+//                     console.log(`[QuestionMapper] 🔄 Synonym matched "${value}" → "${synonymMatch}"`);
+//                     return { answer: synonymMatch, source: 'canonical', confidence };
+//                 }
+//             }
+//         }
+//         // 2. Partial match (contains)
+//         const partialMatch = options.find(opt =>
+//             opt.toLowerCase().includes(valueLower) ||
+//             valueLower.includes(opt.toLowerCase())
+//         );
+//         if (partialMatch) {
+//             console.log(`[QuestionMapper] 🔍 Fuzzy matched "${value}" → "${partialMatch}"`);
+//             return { answer: partialMatch, source: 'canonical', confidence };
+//         }
+//         // 3. Word-level matching (for country names, etc.)
+//         // "USA" should match "United States +1"
+//         // "India" should match "India +91"
+//         const valueWords = valueLower.split(/\s+/);
+//         const wordMatch = options.find(opt => {
+//             const optLower = opt.toLowerCase();
+//             // Check if option starts with the value
+//             if (optLower.startsWith(valueLower)) return true;
+//             // Check if any word in value matches the start of option
+//             for (const word of valueWords) {
+//                 if (optLower.startsWith(word) && word.length >= 3) return true;
+//             }
+//             return false;
+//         });
+//         if (wordMatch) {
+//             console.log(`[QuestionMapper] 🔍 Word matched "${value}" → "${wordMatch}"`);
+//             return { answer: wordMatch, source: 'canonical', confidence };
+//         }
+//         // 4. Country abbreviation mapping (common cases)
+//         const countryMap: Record<string, string> = {
+//             'usa': 'united states',
+//             'us': 'united states',
+//             'uk': 'united kingdom',
+//             'uae': 'united arab emirates'
+//         };
+//         if (countryMap[valueLower]) {
+//             const mappedName = countryMap[valueLower];
+//             const countryMatch = options.find(opt =>
+//                 opt.toLowerCase().includes(mappedName)
+//             );
+//             if (countryMatch) {
+//                 console.log(`[QuestionMapper] 🌍 Country abbreviation "${value}" → "${countryMatch}"`);
+//                 return { answer: countryMatch, source: 'canonical', confidence };
+//             }
+//         }
+//         // No match found - return null so we can try AI with context
+//         console.log(`[QuestionMapper] ⚠️ Canonical value "${value}" not in options, will use AI`);
+//         return null;
+//     }
+//     /**
+//      * Request AI answers for unmapped questions
+//      * ⚡ PARALLEL PROCESSING - all AI calls happen simultaneously
+//      * 💾 CACHED - Checks cache first to avoid redundant API calls
+//      */
+//     // private async requestAIAnswers(questions: ScannedQuestion[], profile: any): Promise<MappedAnswer[]> {
+//     //     console.log(`⚡ Processing ${questions.length} AI question(s) in PARALLEL...`);
+//     //     const startTime = Date.now();
+//     //     console.log(`⏱️  AI request started at ${new Date().toLocaleTimeString()}\n`);
+//     //     let cacheHits = 0;
+//     //     let cacheMisses = 0;
+//     //     // Create all AI request promises at once (parallel execution)
+//     //     const aiPromises = questions.map(async (q, index) => {
+//     //         try {
+//     //             // 💾 PHASE 1: Check cache first
+//     //             const cached = await getCachedResponse(q.questionText, q.fieldType, q.options);
+//     //             if (cached) {
+//     //                 cacheHits++;
+//     //                 console.log(`   💾 [${index + 1}/${questions.length}] Cache HIT: "${q.questionText}" (${Math.round((Date.now() - cached.timestamp) / (60 * 1000))} min old)`);
+//     //                 // Dispatch event for UI
+//     //                 window.dispatchEvent(new CustomEvent('AI_PROGRESS', {
+//     //                     detail: {
+//     //                         current: index + 1,
+//     //                         total: questions.length,
+//     //                         question: q.questionText,
+//     //                         status: 'complete',
+//     //                         answer: cached.answer,
+//     //                         cached: true
+//     //                     }
+//     //                 }));
+//     //                 return {
+//     //                     selector: q.selector,
+//     //                     questionText: q.questionText,
+//     //                     answer: cached.answer,
+//     //                     source: 'AI' as const,
+//     //                     confidence: cached.confidence,
+//     //                     required: q.required,
+//     //                     fieldType: q.fieldType,
+//     //                     options: q.options || undefined,
+//     //                     canonicalKey: cached.intent
+//     //                 } as MappedAnswer;
+//     //             }
+//     //             // 📡 PHASE 2: Cache miss - call AI
+//     //             cacheMisses++;
+//     //             // Dispatch START event for UI
+//     //             window.dispatchEvent(new CustomEvent('AI_PROGRESS', {
+//     //                 detail: {
+//     //                     current: index + 1,
+//     //                     total: questions.length,
+//     //                     question: q.questionText,
+//     //                     status: 'processing'
+//     //                 }
+//     //             }));
+//     //             console.log(`   📤 [${index + 1}/${questions.length}] Cache MISS - Asking AI: "${q.questionText}"`);
+//     //             if (q.options && q.options.length > 0 && q.options.length <= 20) {
+//     //                 console.log(`      Options provided: [${q.options.slice(0, 3).join(', ')}${q.options.length > 3 ? '...' : ''}]`);
+//     //             }
+//     //             const aiResponse = await askAI({
+//     //                 question: q.questionText,
+//     //                 fieldType: q.fieldType,
+//     //                 // Limit options sent to AI - only send if <= 20 options
+//     //                 // This prevents overwhelming the prompt with long lists (like Country)
+//     //                 // but ensures we send options for small sets (Gender, Race, etc.)
+//     //                 options: (q.options && q.options.length <= 20) ? q.options : [],
+//     //                 userProfile: profile
+//     //             });
+//     //             if (aiResponse.answer) {
+//     //                 const intentInfo = aiResponse.intent
+//     //                     ? `, intent: ${aiResponse.intent}${aiResponse.isNewIntent ? ' (NEW)' : ''}`
+//     //                     : '';
+//     //                 console.log(`   📥 [${index + 1}/${questions.length}] AI Response: "${aiResponse.answer}" (${(aiResponse.confidence * 100).toFixed(0)}% confidence${intentInfo})`);
+//     //                 // CRITICAL: Validate AI answer against available options
+//     //                 let finalAnswer = aiResponse.answer;
+//     //                 if (q.options && q.options.length > 0) {
+//     //                     // Check if AI answer exists in options (exact match)
+//     //                     const exactMatch = q.options.find(opt =>
+//     //                         opt.toLowerCase().trim() === aiResponse.answer.toLowerCase().trim()
+//     //                     );
+//     //                     if (!exactMatch) {
+//     //                         console.warn(`      ⚠️ AI answer "${aiResponse.answer}" not in options, trying fuzzy match...`);
+//     //                         // Try fuzzy matching to find closest option
+//     //                         const fuzzyMatch = this.fuzzyMatchOption(aiResponse.answer, q.options);
+//     //                         if (fuzzyMatch) {
+//     //                             console.log(`      ✅ Fuzzy matched "${aiResponse.answer}" → "${fuzzyMatch}"`);
+//     //                             finalAnswer = fuzzyMatch;
+//     //                         } else {
+//     //                             console.error(`      ❌ AI answer "${aiResponse.answer}" not found in options for "${q.questionText}"`);
+//     //                             return null; // Skip this question if we can't match
+//     //                         }
+//     //                     } else {
+//     //                         finalAnswer = exactMatch; // Use the exact match from options
+//     //                         console.log(`      ✓ Exact match found in options`);
+//     //                     }
+//     //                 }
+//     //                 // 💾 PHASE 3: Store in cache for future use
+//     //                 await setCachedResponse(
+//     //                     q.questionText,
+//     //                     q.fieldType,
+//     //                     q.options,
+//     //                     {
+//     //                         answer: finalAnswer,
+//     //                         confidence: aiResponse.confidence || 0.8,
+//     //                         intent: aiResponse.intent
+//     //                     }
+//     //                 );
+//     //                 // Dispatch COMPLETE event for UI
+//     //                 window.dispatchEvent(new CustomEvent('AI_PROGRESS', {
+//     //                     detail: {
+//     //                         current: index + 1,
+//     //                         total: questions.length,
+//     //                         question: q.questionText,
+//     //                         status: 'complete',
+//     //                         answer: finalAnswer
+//     //                     }
+//     //                 }));
+//     //                 return {
+//     //                     selector: q.selector,
+//     //                     questionText: q.questionText,
+//     //                     answer: finalAnswer,  // Use validated answer
+//     //                     source: 'AI' as const,
+//     //                     confidence: aiResponse.confidence || 0.8,
+//     //                     required: q.required,
+//     //                     fieldType: q.fieldType,
+//     //                     options: q.options || undefined,
+//     //                     canonicalKey: aiResponse.intent,  // Pass intent to learning method
+//     //                     ...(aiResponse.isNewIntent && { isNewIntent: aiResponse.isNewIntent, suggestedIntentName: aiResponse.suggestedIntentName })
+//     //                 } as MappedAnswer;
+//     //             } else {
+//     //                 console.warn(`   ⚠️ [${index + 1}/${questions.length}] AI returned no answer for: \"${q.questionText}\"`);
+//     //                 return null;
+//     //             }
+//     //         } catch (error) {
+//     //             console.error(`   ❌ [${index + 1}/${questions.length}] AI error for \"${q.questionText}\":`, error);
+//     //             return null;
+//     //         }
+//     //     });
+//     //     // Wait for ALL AI requests to complete simultaneously
+//     //     const results = await Promise.all(aiPromises);
+//     //     // Filter out null results
+//     //     const aiAnswers: MappedAnswer[] = results.filter((answer) => answer !== null) as MappedAnswer[];
+//     //     const endTime = Date.now();
+//     //     const duration = ((endTime - startTime) / 1000).toFixed(1);
+//     //     console.log(`\n⚡ Parallel AI processing complete in ${duration}s`);
+//     //     console.log(`📊 Cache Statistics:`);
+//     //     console.log(`   💾 Cache Hits: ${cacheHits}/${questions.length} (${((cacheHits / questions.length) * 100).toFixed(0)}%)`);
+//     //     console.log(`   📡 API Calls: ${cacheMisses}/${questions.length} (${((cacheMisses / questions.length) * 100).toFixed(0)}%)`);
+//     //     console.log(`✅ Successfully answered: ${aiAnswers.length}/${questions.length} questions`);
+//     //     if (aiAnswers.length < questions.length) {
+//     //         console.log(`⚠️  Failed to answer: ${questions.length - aiAnswers.length} question(s)`);
+//     //     }
+//     //     return aiAnswers;
+//     // }
+//     private async requestAIAnswers(questions: ScannedQuestion[], profile: any): Promise<MappedAnswer[]> {
+//         console.log(`⚡ Processing ${questions.length} AI question(s) with concurrency limit...`);
+//         const startTime = Date.now();
+//         console.log(`⏱️  AI request started at ${new Date().toLocaleTimeString()}\n`);
+//         let cacheHits = 0;
+//         let cacheMisses = 0;
+//         const CONCURRENCY_LIMIT = 3;
+//         const MAX_RETRIES = 3;
+//         const BASE_DELAY_MS = 1000;
+//         const processQuestion = async (q: ScannedQuestion, index: number): Promise<MappedAnswer | null> => {
+//             try {
+//                 // 💾 PHASE 1: Check cache first
+//                 const cached = await getCachedResponse(q.questionText, q.fieldType, q.options);
+//                 if (cached) {
+//                     cacheHits++;
+//                     console.log(`   💾 [${index + 1}/${questions.length}] Cache HIT: "${q.questionText}" (${Math.round((Date.now() - cached.timestamp) / (60 * 1000))} min old)`);
+//                     window.dispatchEvent(new CustomEvent('AI_PROGRESS', {
+//                         detail: {
+//                             current: index + 1,
+//                             total: questions.length,
+//                             question: q.questionText,
+//                             status: 'complete',
+//                             answer: cached.answer,
+//                             cached: true
+//                         }
+//                     }));
+//                     return {
+//                         selector: q.selector,
+//                         questionText: q.questionText,
+//                         answer: cached.answer,
+//                         source: 'AI' as const,
+//                         confidence: cached.confidence,
+//                         required: q.required,
+//                         fieldType: q.fieldType,
+//                         options: q.options || undefined,
+//                         canonicalKey: cached.intent
+//                     } as MappedAnswer;
+//                 }
+//                 // 📡 PHASE 2: Cache miss - call AI (with retry)
+//                 cacheMisses++;
+//                 window.dispatchEvent(new CustomEvent('AI_PROGRESS', {
+//                     detail: {
+//                         current: index + 1,
+//                         total: questions.length,
+//                         question: q.questionText,
+//                         status: 'processing'
+//                     }
+//                 }));
+//                 console.log(`   📤 [${index + 1}/${questions.length}] Cache MISS - Asking AI: "${q.questionText}"`);
+//                 if (q.options && q.options.length > 0 && q.options.length <= 20) {
+//                     console.log(`      Options provided: [${q.options.slice(0, 3).join(', ')}${q.options.length > 3 ? '...' : ''}]`);
+//                 }
+//                 // Retry loop
+//                 let aiResponse: any = null;
+//                 for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+//                     try {
+//                         const response = await askAI({
+//                             question: q.questionText,
+//                             fieldType: q.fieldType,
+//                             options: (q.options && q.options.length <= 20) ? q.options : [],
+//                             userProfile: profile
+//                         });
+//                         // Treat empty/null answer as a retryable failure
+//                         if (!response?.answer) {
+//                             throw new Error(`AI returned empty answer (attempt ${attempt})`);
+//                         }
+//                         aiResponse = response;
+//                         break; // Success - exit retry loop
+//                     } catch (error: any) {
+//                         const isRetryable =
+//                             error?.message?.includes('502') ||
+//                             error?.message?.includes('503') ||
+//                             error?.message?.includes('429') ||
+//                             error?.message?.includes('empty answer') ||
+//                             error?.status === 502 ||
+//                             error?.status === 503 ||
+//                             error?.status === 429;
+//                         if (isRetryable && attempt < MAX_RETRIES) {
+//                             const delay = BASE_DELAY_MS * Math.pow(2, attempt - 1); // 1s, 2s, 4s
+//                             console.warn(`   🔄 [${index + 1}/${questions.length}] Attempt ${attempt}/${MAX_RETRIES} failed for "${q.questionText}" (${error.message}). Retrying in ${delay}ms...`);
+//                             await new Promise(res => setTimeout(res, delay));
+//                         } else {
+//                             if (attempt === MAX_RETRIES) {
+//                                 console.error(`   ❌ [${index + 1}/${questions.length}] All ${MAX_RETRIES} attempts failed for "${q.questionText}"`);
+//                             }
+//                             throw error;
+//                         }
+//                     }
+//                 }
+//                 // If we get here and still no aiResponse, bail out
+//                 if (!aiResponse?.answer) {
+//                     console.warn(`   ⚠️ [${index + 1}/${questions.length}] AI returned no answer for: "${q.questionText}"`);
+//                     window.dispatchEvent(new CustomEvent('AI_PROGRESS', {
+//                         detail: {
+//                             current: index + 1,
+//                             total: questions.length,
+//                             question: q.questionText,
+//                             status: 'failed'
+//                         }
+//                     }));
+//                     return null;
+//                 }
+//                 const intentInfo = aiResponse.intent
+//                     ? `, intent: ${aiResponse.intent}${aiResponse.isNewIntent ? ' (NEW)' : ''}`
+//                     : '';
+//                 console.log(`   📥 [${index + 1}/${questions.length}] AI Response: "${aiResponse.answer}" (${(aiResponse.confidence * 100).toFixed(0)}% confidence${intentInfo})`);
+//                 // CRITICAL: Validate AI answer against available options
+//                 let finalAnswer = aiResponse.answer;
+//                 if (q.options && q.options.length > 0) {
+//                     const exactMatch = q.options.find(opt =>
+//                         opt.toLowerCase().trim() === aiResponse.answer.toLowerCase().trim()
+//                     );
+//                     if (!exactMatch) {
+//                         console.warn(`      ⚠️ AI answer "${aiResponse.answer}" not in options, trying fuzzy match...`);
+//                         const fuzzyMatch = this.fuzzyMatchOption(aiResponse.answer, q.options);
+//                         if (fuzzyMatch) {
+//                             console.log(`      ✅ Fuzzy matched "${aiResponse.answer}" → "${fuzzyMatch}"`);
+//                             finalAnswer = fuzzyMatch;
+//                         } else {
+//                             console.error(`      ❌ AI answer "${aiResponse.answer}" not found in options for "${q.questionText}"`);
+//                             window.dispatchEvent(new CustomEvent('AI_PROGRESS', {
+//                                 detail: {
+//                                     current: index + 1,
+//                                     total: questions.length,
+//                                     question: q.questionText,
+//                                     status: 'failed'
+//                                 }
+//                             }));
+//                             return null;
+//                         }
+//                     } else {
+//                         finalAnswer = exactMatch;
+//                         console.log(`      ✓ Exact match found in options`);
+//                     }
+//                 }
+//                 // 💾 PHASE 3: Store in cache for future use
+//                 await setCachedResponse(
+//                     q.questionText,
+//                     q.fieldType,
+//                     q.options,
+//                     {
+//                         answer: finalAnswer,
+//                         confidence: aiResponse.confidence || 0.8,
+//                         intent: aiResponse.intent
+//                     }
+//                 );
+//                 window.dispatchEvent(new CustomEvent('AI_PROGRESS', {
+//                     detail: {
+//                         current: index + 1,
+//                         total: questions.length,
+//                         question: q.questionText,
+//                         status: 'complete',
+//                         answer: finalAnswer
+//                     }
+//                 }));
+//                 return {
+//                     selector: q.selector,
+//                     questionText: q.questionText,
+//                     answer: finalAnswer,
+//                     source: 'AI' as const,
+//                     confidence: aiResponse.confidence || 0.8,
+//                     required: q.required,
+//                     fieldType: q.fieldType,
+//                     options: q.options || undefined,
+//                     canonicalKey: aiResponse.intent,
+//                     ...(aiResponse.isNewIntent && {
+//                         isNewIntent: aiResponse.isNewIntent,
+//                         suggestedIntentName: aiResponse.suggestedIntentName
+//                     })
+//                 } as MappedAnswer;
+//             } catch (error) {
+//                 console.error(`   ❌ [${index + 1}/${questions.length}] AI error for "${q.questionText}":`, error);
+//                 window.dispatchEvent(new CustomEvent('AI_PROGRESS', {
+//                     detail: {
+//                         current: index + 1,
+//                         total: questions.length,
+//                         question: q.questionText,
+//                         status: 'failed'
+//                     }
+//                 }));
+//                 return null;
+//             }
+//         };
+//         // Process in batches to limit concurrency and avoid 502s
+//         const aiAnswers: MappedAnswer[] = [];
+//         for (let i = 0; i < questions.length; i += CONCURRENCY_LIMIT) {
+//             const batch = questions.slice(i, i + CONCURRENCY_LIMIT);
+//             const batchNum = Math.floor(i / CONCURRENCY_LIMIT) + 1;
+//             const totalBatches = Math.ceil(questions.length / CONCURRENCY_LIMIT);
+//             console.log(`   🔄 Batch ${batchNum}/${totalBatches}: processing ${batch.length} question(s)...`);
+//             const batchResults = await Promise.all(
+//                 batch.map((q, batchIndex) => processQuestion(q, i + batchIndex))
+//             );
+//             for (const result of batchResults) {
+//                 if (result) aiAnswers.push(result);
+//             }
+//             // Small pause between batches to avoid hammering the API
+//             if (i + CONCURRENCY_LIMIT < questions.length) {
+//                 await new Promise(res => setTimeout(res, 500));
+//             }
+//         }
+//         const endTime = Date.now();
+//         const duration = ((endTime - startTime) / 1000).toFixed(1);
+//         console.log(`\n⚡ AI processing complete in ${duration}s`);
+//         console.log(`📊 Cache Statistics:`);
+//         console.log(`   💾 Cache Hits: ${cacheHits}/${questions.length} (${((cacheHits / questions.length) * 100).toFixed(0)}%)`);
+//         console.log(`   📡 API Calls: ${cacheMisses}/${questions.length} (${((cacheMisses / questions.length) * 100).toFixed(0)}%)`);
+//         console.log(`✅ Successfully answered: ${aiAnswers.length}/${questions.length} questions`);
+//         if (aiAnswers.length < questions.length) {
+//             console.log(`⚠️  Failed to answer: ${questions.length - aiAnswers.length} question(s)`);
+//         }
+//         return aiAnswers;
+//     }
+//     /**
+//      * Convert mapped answers to Selenium fill plan format
+//      */
+//     async convertToFillPlan(answers: MappedAnswer[], jobUrl: string): Promise<any> {
+//         // Load profile to get file names
+//         const profile = await loadProfile();
+//         console.log(`\n[QuestionMapper] Converting ${answers.length} answers to fill plan...`);
+//         return {
+//             jobUrl,
+//             actions: answers.map(a => {
+//                 const actionType = this.mapFieldTypeToAction(a.fieldType);
+//                 const action: any = {
+//                     id: a.selector,
+//                     type: actionType,
+//                     selector: a.selector,
+//                     value: a.answer,
+//                     required: a.required
+//                 };
+//                 console.log(`[QuestionMapper] 📋 "${a.questionText}" → ${actionType} = "${a.answer}"`);
+//                 // Add fileName for file uploads
+//                 if (a.fieldType === 'file' && profile) {
+//                     if (a.selector.includes('resume') && profile.documents?.resume?.fileName) {
+//                         action.fileName = profile.documents.resume.fileName;
+//                     } else if (a.selector.includes('cover') && profile.documents?.coverLetter?.fileName) {
+//                         action.fileName = profile.documents.coverLetter.fileName;
+//                     }
+//                 }
+//                 return action;
+//             })
+//         };
+//     }
+//     private mapFieldTypeToAction(fieldType: string): string {
+//         const typeMap: Record<string, string> = {
+//             'text': 'input_text',
+//             'email': 'input_text',
+//             'tel': 'input_text',
+//             'number': 'input_text',
+//             'textarea': 'input_text',
+//             'select': 'dropdown_native',          // Native HTML <select> elements
+//             'dropdown_custom': 'dropdown_custom',  // React-Select / Greenhouse dropdowns
+//             'radio': 'radio',
+//             'checkbox': 'checkbox',
+//             'date': 'input_text',
+//             'file': 'input_file'
+//         };
+//         return typeMap[fieldType] || 'input_text';
+//     }
+// }
 
 
 /***/ },
@@ -39583,6 +42331,10 @@ function findQuestionIntent(questionText, fieldType, parentContext, previousAnsw
  * @returns Value from profile or null
  */
 function getValueByIntent(profile, intent) {
+    // 🟢 Priority Fallback: Check customAnswers first (Virtual Profile)
+    if (profile?.customAnswers && profile.customAnswers[intent]) {
+        return profile.customAnswers[intent];
+    }
     const parts = intent.split('.');
     let value = profile;
     let lastPart = parts[parts.length - 1];
@@ -39626,6 +42378,14 @@ function getValueByIntent(profile, intent) {
             return null;
         }
     }
+    // SAFETY CHECK: Prevent returning file data objects (containing base64/url) for non-document intents.
+    // This prevents text fields (like "Location") from being contaminated with PDF data.
+    if (value && typeof value === 'object' && (value.base64 || value.url)) {
+        if (!intent.startsWith('documents.')) {
+            console.log(`[QuestionPatternDB] 🛡️ Blocked returning file object for non-document intent: ${intent}`);
+            return null;
+        }
+    }
     return value;
 }
 /**
@@ -39634,13 +42394,10 @@ function getValueByIntent(profile, intent) {
  */
 function shouldSkipField(questionText) {
     const skipPatterns = [
-        /why do you want/i,
-        /why are you interested/i,
+        // Only skip if they are very generic and we don't have a specific screening intent for them
         /tell us about/i,
-        /describe your/i,
         /explain your/i,
         /what makes you/i,
-        /additional information/i
     ];
     const normalized = questionText.toLowerCase();
     return skipPatterns.some(pattern => pattern.test(normalized));
@@ -40137,23 +42894,22 @@ class FormScanner {
                 console.log(`${LOG_PREFIX} Processing field ${i + 1}/${fields.length}...`);
                 const question = await this.processField(field);
                 if (question) {
-                    // Check for duplicate immediately
-                    const questionKey = question.questionText.toLowerCase().trim();
+                    // RELAXED DEDUPLICATION:
+                    // Only treat as a duplicate if the LABEL and the FIELD TYPE are identical.
+                    // This allows "Phone" (dropdown, country code) and "Phone" (input, number) to co-exist.
+                    const questionKey = `${question.questionText.toLowerCase().trim()}|${question.fieldType}`;
                     if (seenQuestions.has(questionKey)) {
-                        // CRITICAL FIX: "Keep First" strategy for file inputs
-                        // If we find a duplicate "Attach" button, we assume the FIRST one is the Resume (primary)
-                        // and the subsequent ones are Cover Letters or other docs.
-                        // If we failed to distinguish them by label, it's better to fill ONLY Resume
-                        // than to fill both with Resume (or overwrite Resume with Cover Letter field).
+                        // For identical type duplicates, we still apply "Keep First" for files
+                        // but for others we usually want the latest/most visible one.
                         if (question.fieldType === 'file') {
-                            console.log(`${LOG_PREFIX} 📎 Ignoring duplicate file input: "${question.questionText}" (Keeping first found)`);
-                            // Do NOT add to questions array
-                            // Do NOT overwrite existing question
+                            console.log(`${LOG_PREFIX} 📎 Ignoring duplicate file input: "${question.questionText}"`);
                         }
                         else {
-                            console.log(`${LOG_PREFIX} ⚠️ Found duplicate question: "${question.questionText}" - Replacing with newest version`);
-                            // Find and replace the existing question
-                            const index = questions.findIndex(q => q.questionText.toLowerCase().trim() === questionKey);
+                            console.log(`${LOG_PREFIX} ⚠️ Found identical duplicate: "${question.questionText}" (${question.fieldType}) - Replacing with newest`);
+                            const index = questions.findIndex(q => {
+                                const k = `${q.questionText.toLowerCase().trim()}|${q.fieldType}`;
+                                return k === questionKey;
+                            });
                             if (index !== -1) {
                                 questions[index] = question;
                             }
@@ -40165,7 +42921,7 @@ class FormScanner {
                     }
                 }
             }
-            console.log(`${LOG_PREFIX} ✅ Scan complete: ${questions.length} unique questions found`);
+            console.log(`${LOG_PREFIX} ✅ Scan complete: ${questions.length} fields found`);
         }
         catch (error) {
             console.error(`${LOG_PREFIX} ❌ Scan error:`, error);
@@ -40185,9 +42941,6 @@ class FormScanner {
         inputs.forEach(input => {
             const htmlInput = input;
             const isFile = htmlInput.type === 'file';
-            // VISIBILITY RELAXATION FOR FILE INPUTS
-            // ATS platforms (Greenhouse, ASK, Jobvite) often hide real file inputs with opacity: 0
-            // or by moving them off-screen. As long as it's not display: none, we treat it as a candidate.
             if (this.isVisible(htmlInput)) {
                 fields.push(htmlInput);
             }
@@ -40213,24 +42966,19 @@ class FormScanner {
                 fields.push(select);
             }
         });
-        // Find custom dropdowns (React-Select, etc.)
-        // Look for elements with role="combobox" or common React-Select classes
-        const customDropdowns = doc.querySelectorAll('[role="combobox"], [aria-haspopup="listbox"]');
+        // Find custom dropdowns (React-Select, Greenhouse, etc.)
+        // Look for elements with role="combobox", aria-haspopup="listbox", role="listbox" or common framework-specific class names
+        const customDropdowns = doc.querySelectorAll('[role="combobox"], [aria-haspopup="listbox"], [role="listbox"], [aria-autocomplete], .select2-container, .css-container, [class*="-select-container"], [data-automation-id*="select"], [data-testid*="select"]');
         customDropdowns.forEach(dropdown => {
             if (!this.isVisible(dropdown))
                 return;
-            // DEDUPLICATION LOGIC:
             // If the dropdown container has an internal input that we already found,
-            // we should replace that input with the dropdown container in our fields list,
-            // OR skip the container if we prefer the input. 
-            // For production-grade interaction, the CONTAINER is often better for opening,
-            // but the INPUT is better for typing. 
+            // we should replace that input with the dropdown container in our fields list.
             const input = dropdown.querySelector('input');
             if (input) {
                 const inputIdx = fields.indexOf(input);
                 if (inputIdx !== -1) {
-                    console.log(`${LOG_PREFIX} 🔄 Merging dropdown container with its internal input`);
-                    // Replace the input with the container (which selectDropdownKeyboardFirst prefers)
+                    console.log(`${LOG_PREFIX} 🔄 Merging custom dropdown container with its internal input`);
                     fields[inputIdx] = dropdown;
                     return;
                 }
@@ -40240,20 +42988,22 @@ class FormScanner {
                 fields.push(dropdown);
             }
         });
-        // Find radio button groups (group by name attribute)
+        // Find radio button groups (group by name attribute, or by parent container if nameless)
         const radioGroups = new Map();
         const radios = doc.querySelectorAll('input[type="radio"]');
         radios.forEach(radio => {
             const input = radio;
             if (!this.isVisible(input))
                 return;
+            // Group key: prefer name attribute, fallback to parent container path for Ashby-style radios
             const name = input.name;
-            if (!name)
-                return;
-            if (!radioGroups.has(name)) {
-                radioGroups.set(name, []);
+            const groupKey = name
+                ? `name_${name}`
+                : `container_${this.getContainerKey(input)}`;
+            if (!radioGroups.has(groupKey)) {
+                radioGroups.set(groupKey, []);
             }
-            radioGroups.get(name).push(input);
+            radioGroups.get(groupKey).push(input);
         });
         // Add one representative radio from each group
         radioGroups.forEach((radios, name) => {
@@ -40272,13 +43022,16 @@ class FormScanner {
                 return;
             // Find the parent container that groups this checkbox
             // Try fieldset first (most semantic), then divs with common field classes
+            // Added Ashby-specific selectors: [data-testid*="question"], [class*="_question"] etc.
             let container = input.closest('fieldset');
             if (!container) {
-                container = input.closest('[role="group"], .field, .form-field, .question, .form-group, [class*="Question"], [class*="Field"]');
+                container = input.closest('[role="group"], .field, .form-field, .question, .form-group, ' +
+                    '[class*="Question"], [class*="Field"], [data-testid*="question"], ' +
+                    '[class*="_question"], [class*="application-question"], [class*="checkbox-group"]');
             }
             if (!container) {
-                // Fallback: use parent element
-                container = input.parentElement;
+                // Ashby fallback: group by grandparent (checkbox is inside label which is inside a group div)
+                container = input.parentElement?.parentElement || input.parentElement;
             }
             if (container) {
                 if (!checkboxContainerGroups.has(container)) {
@@ -40294,11 +43047,22 @@ class FormScanner {
             }
         });
         // Find custom upload buttons that might not be inputs (click-to-find-input types)
+        // IMPORTANT: Skip generic UI buttons that are not real upload controls
+        const genericUITexts = [
+            'or drag and drop here',
+            'drag and drop',
+            'drag & drop',
+            'click to upload',
+            'browse files',
+        ];
         const uploadButtons = doc.querySelectorAll('button, [role="button"], .upload-btn, .attach-btn');
         uploadButtons.forEach(btn => {
             if (!this.isVisible(btn))
                 return;
-            const text = btn.textContent?.toLowerCase() || '';
+            const text = btn.textContent?.toLowerCase().trim() || '';
+            // Skip generic UI text that is not a real field
+            if (genericUITexts.some(g => text === g || text.startsWith(g)))
+                return;
             if (text.includes('upload') || text.includes('attach') || text.includes('resume')) {
                 // If this is a button-only uploader (common in ASK Consulting), add it if no direct file input found
                 const hasFileInput = btn.querySelector('input[type="file"]') || btn.parentElement?.querySelector('input[type="file"]');
@@ -40309,6 +43073,21 @@ class FormScanner {
             }
         });
         return fields;
+    }
+    /**
+     * Get a stable key for a container element (used for grouping nameless radios)
+     */
+    getContainerKey(element) {
+        // Walk up the DOM to find a meaningful container
+        let container = element.closest('fieldset, [role="group"], [class*="Question"], [class*="Field"], [class*="_field"], [class*="application-question"]') || element.parentElement?.parentElement || element.parentElement;
+        if (!container)
+            return Math.random().toString(36);
+        // Use class + DOM position as the key
+        const className = typeof container.className === 'string' ? container.className : '';
+        const classKey = className.split(' ').filter(c => c && !c.startsWith('css-')).slice(0, 3).join('.');
+        const siblings = Array.from(container.parentElement?.children || []);
+        const idx = siblings.indexOf(container);
+        return `${classKey}_${idx}`;
     }
     /**
      * Process a single field and extract information
@@ -40517,11 +43296,15 @@ class FormScanner {
     isVisible(element) {
         const rect = element.getBoundingClientRect();
         const style = getComputedStyle(element);
+        // Ashby and many other platforms hide native inputs with opacity: 0
+        // while their custom wrappers are visible. We must allow these.
+        const isHiddenInput = element instanceof HTMLInputElement &&
+            (element.type === 'radio' || element.type === 'checkbox' || element.type === 'file');
         return (rect.width > 0 &&
             rect.height > 0 &&
             style.display !== 'none' &&
             style.visibility !== 'hidden' &&
-            style.opacity !== '0');
+            (style.opacity !== '0' || isHiddenInput));
     }
     /**
      * Generate unique CSS selector for field
@@ -40924,19 +43707,90 @@ const STYLES = `
   align-items: center;
 }
 
-.header-actions .action-btn {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+.header-actions .action-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+/* Feedback Form Styles */
+.feedback-container {
+  padding: 16px;
+  background: #fdfdfd;
+  border-top: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feedback-message {
+  font-size: 13px;
+  color: #333;
+  line-height: 1.5;
+  font-weight: 500;
+  text-align: center;
+}
+
+.feedback-inputs {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  align-items: center;
+}
+
+.feedback-input-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.feedback-input-group label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #666;
+  font-weight: 700;
+}
+
+.feedback-input-group input {
+  width: 50px;
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.feedback-submit-btn {
+  background: #00d084;
   color: white;
-  width: 28px;
-  height: 28px;
+  border: none;
+  padding: 10px;
   border-radius: 6px;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  transition: all 0.2s;
+  gap: 8px;
+}
+
+.feedback-submit-btn:hover {
+  background: #00b371;
+  transform: translateY(-1px);
+}
+
+.feedback-timer {
+  font-size: 11px;
+  color: #999;
+  text-align: center;
+  font-style: italic;
+}
+
+.feedback-timer span {
+  color: #ff3b30;
+  font-weight: 600;
 }
 
 .header-actions .action-btn:hover {
@@ -41528,6 +44382,59 @@ const OverlayPanel = ({ fields: initialFields, onAutoFill, onFieldUpdate }) => {
     const [aiLog, setAILog] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
     const [statsSummary, setStatsSummary] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
     const [notification, setNotification] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
+    // Manual Feedback State
+    const [manualSuccess, setManualSuccess] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(0);
+    const [manualFail, setManualFail] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(0);
+    const [feedbackTimer, setFeedbackTimer] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(60);
+    const [isFeedbackVisible, setIsFeedbackVisible] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+    const [showFeedbackIntimation, setShowFeedbackIntimation] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
+    const [feedbackSubmittedMessage, setFeedbackSubmittedMessage] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
+    const feedbackTimerRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(null);
+    // Handle Feedback Submission (Manual or Auto)
+    const submitFeedback = async (isAuto = false) => {
+        if (feedbackTimerRef.current)
+            clearInterval(feedbackTimerRef.current);
+        // Record the message before hiding the intimation but don't hide the overall visibility yet
+        // so we can show the "Thanks" message in the panel
+        setFeedbackSubmittedMessage(isAuto ? "Data submitted automatically" : "Thanks for submit");
+        setShowFeedbackIntimation(false); // Hide the popup immediately
+        const tracker = _core_analytics_AnalyticsTracker__WEBPACK_IMPORTED_MODULE_8__.AnalyticsTracker.getInstance();
+        tracker.setManualCounts(manualSuccess, manualFail);
+        console.log(`[Ext] Submitting ${isAuto ? 'AUTO' : 'MANUAL'} feedback and syncing patterns...`);
+        // 1. Submit Analytics
+        const analyticsSuccess = await tracker.submit();
+        // 2. Batch Sync Patterns
+        try {
+            await _core_storage_patternStorage__WEBPACK_IMPORTED_MODULE_5__.patternStorage.syncUnsyncedPatterns();
+            // Optional: setNotification or just let the "Thanks" message handle it
+        }
+        catch (e) {
+            console.warn("[Ext] Pattern sync failed:", e);
+        }
+        // Keep the "Thanks" message visible for 3 seconds, then hide the feedback section entirely
+        setTimeout(() => {
+            setIsFeedbackVisible(false);
+            setFeedbackSubmittedMessage(null);
+        }, 3000);
+    };
+    // Feedback Timer Effect
+    (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+        if (isFeedbackVisible && feedbackTimer > 0) {
+            feedbackTimerRef.current = setInterval(() => {
+                setFeedbackTimer(prev => {
+                    if (prev <= 1) {
+                        submitFeedback(true); // Auto-submit on timeout
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+        return () => {
+            if (feedbackTimerRef.current)
+                clearInterval(feedbackTimerRef.current);
+        };
+    }, [isFeedbackVisible]);
     // Use a ref to always have the latest fields for async closures (like handleScan timeouts)
     const fieldsRef = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(fields);
     (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
@@ -41805,6 +44712,7 @@ const OverlayPanel = ({ fields: initialFields, onAutoFill, onFieldUpdate }) => {
             const detectedFields = map.data.map((answer) => ({
                 element: null, // Not needed for display-only
                 questionText: answer.questionText,
+                selector: answer.selector || "",
                 fieldType: answer.fieldType,
                 isRequired: answer.required || false,
                 options: answer.options || undefined,
@@ -41984,21 +44892,28 @@ const OverlayPanel = ({ fields: initialFields, onAutoFill, onFieldUpdate }) => {
                         failed: isProcessed && !isSuccess
                     };
                 }));
-                // Allow UI to render timestamp before showing notification
+                // Allow UI to render timestamp before showing feedback prompt
                 setTimeout(async () => {
                     const currentFields = fieldsRef.current;
                     if (result.successes > 0 || result.failures > 0) {
+                        // Pre-populate manual inputs with extension's analysis
+                        setManualSuccess(result.successes);
+                        setManualFail(result.failures);
+                        // Show feedback UI and start 40s timer
+                        setIsFeedbackVisible(true);
+                        setShowFeedbackIntimation(true); // Show the popup
+                        setFeedbackTimer(60);
                         // Find questions that failed or were required but not filled
                         const missed = currentFields.filter(f => f.failed || (f.isRequired && !f.filled && !f.filledValue))
                             .map(f => f.questionText);
-                        console.log(`[Ext] Completion list calculated: Found ${missed.length} missed questions out of ${result.failures} reported failures.`);
+                        console.log(`[Ext] Completion calculated: ${result.successes} succ, ${result.failures} fail. Missed: ${missed.length}`);
+                        // We still set this if we want to show the 'missed' list in the sidebar, 
+                        // but we won't show the POPUP anymore.
                         setCompletionResult({
                             ...result,
-                            missedQuestions: Array.from(new Set(missed)) // Deduplicate
+                            missedQuestions: Array.from(new Set(missed))
                         });
-                        // Submit analytics data
-                        await tracker.submit();
-                        // Automatically switch to missed filter in the side panel
+                        // Automatically switch to missed filter in the side panel if there are failures
                         if (result.failures > 0) {
                             setSelectedSection("missed");
                         }
@@ -42247,6 +45162,27 @@ const OverlayPanel = ({ fields: initialFields, onAutoFill, onFieldUpdate }) => {
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "view-tabs" },
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: viewMode === "fields" ? "active" : "", onClick: () => setViewMode("fields") }, "Detection List")),
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "autofill-content" }, viewMode === "fields" ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement((react__WEBPACK_IMPORTED_MODULE_0___default().Fragment), null,
+                isFeedbackVisible && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "feedback-container", style: { margin: '0 16px 12px 16px', borderRadius: '8px', border: '1px solid #eee', background: '#f8fdfb', display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px', minHeight: '60px', justifyContent: 'center', alignItems: 'center' } }, feedbackSubmittedMessage ? (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { style: { color: '#00d084', fontWeight: '700', fontSize: '14px', animation: 'fadeIn 0.3s ease-out' } },
+                    "\u2728 ",
+                    feedbackSubmittedMessage)) : (react__WEBPACK_IMPORTED_MODULE_0___default().createElement((react__WEBPACK_IMPORTED_MODULE_0___default().Fragment), null,
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "feedback-message", style: { fontSize: '12px', textAlign: 'center', fontWeight: '500' } }, "Please verify the counts below and submit:"),
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "feedback-inputs", style: { display: 'flex', gap: '15px', justifyContent: 'center' } },
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "feedback-input-group", style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' } },
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", { style: { fontSize: '10px', fontWeight: '700', color: '#666' } }, "SUCCESS"),
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", { type: "number", readOnly: true, style: { width: '50px', textAlign: 'center', border: '1px solid #ddd', borderRadius: '4px', background: '#f5f5f5', color: '#888', cursor: 'not-allowed' }, value: manualSuccess })),
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "feedback-input-group", style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' } },
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", { style: { fontSize: '10px', fontWeight: '700', color: '#666' } }, "FAILED"),
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", { type: "number", style: { width: '50px', textAlign: 'center', border: '1px solid #00d084', borderRadius: '4px', fontWeight: '700' }, value: manualFail, onChange: (e) => {
+                                    const val = Math.max(0, parseInt(e.target.value) || 0);
+                                    setManualFail(val);
+                                    setManualSuccess(Math.max(0, fields.length - val));
+                                } }))),
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "feedback-submit-btn", onClick: () => submitFeedback(false), style: { background: '#00d084', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', width: '100%' } }, "Submit Feedback"),
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "feedback-timer", style: { fontSize: '10px', color: '#999', textAlign: 'center', fontStyle: 'italic' } },
+                        "Auto-syncing in ",
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { style: { color: '#ff3b30', fontWeight: '700' } },
+                            feedbackTimer,
+                            "s")))))),
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "autofill-stats" },
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "stat" },
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "stat-label" }, "Required:"),
@@ -42347,7 +45283,7 @@ const OverlayPanel = ({ fields: initialFields, onAutoFill, onFieldUpdate }) => {
                         ")")))),
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "fields-list" }, (selectedSection === "missed"
                     ? fields.filter(f => f.failed || (f.isRequired && !f.filled && !f.filledValue))
-                    : filteredFields).map((field, index) => (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(FieldItem, { key: index, field: field, onUpdate: (val) => handleFieldUpdate(fields.indexOf(field), val) })))))) : (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "resume-viewer" },
+                    : filteredFields).map((field, index) => (react__WEBPACK_IMPORTED_MODULE_0___default().createElement(FieldItem, { key: field.selector || index, field: field, onUpdate: (val) => handleFieldUpdate(fields.indexOf(field), val) })))))) : (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "resume-viewer" },
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "resume-viewer-header" },
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "copy-btn", onClick: () => {
                             navigator.clipboard.writeText(resumeText);
@@ -42369,22 +45305,54 @@ const OverlayPanel = ({ fields: initialFields, onAutoFill, onFieldUpdate }) => {
                     whiteSpace: 'nowrap',
                     animation: 'fadeInOut 3s forwards'
                 } }, notification.message)),
-            completionResult && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "completion-backdrop", onClick: () => setCompletionResult(null) },
-                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "completion-notification", onClick: e => e.stopPropagation() },
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "completion-header" }, "\uD83C\uDF89 Application Fill Completed"),
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "completion-stats" },
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "stat-row success" },
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null, "Fields Succeeded"),
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null, completionResult.successes)),
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "stat-row missed" },
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null, "Fields Missed"),
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null, completionResult.failures))),
-                    completionResult.missedQuestions.length > 0 && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "missed-questions-list" },
-                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { style: { fontWeight: '600', marginBottom: '4px', borderBottom: '1px solid #eee', paddingBottom: '2px' } }, "Missed Questions:"),
-                        completionResult.missedQuestions.map((q, i) => (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { key: i, className: "missed-question-item", title: q },
-                            "\u2022 ",
-                            q))))),
-                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "close-notification-btn", onClick: () => setCompletionResult(null) }, "Got it!")))))),
+            (showFeedbackIntimation && isFeedbackVisible) && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "completion-backdrop" },
+                react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "completion-notification", style: { maxWidth: '300px' }, onClick: e => e.stopPropagation() },
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "completion-header", style: { background: '#f8f9fa', color: '#333', borderBottom: '1px solid #eee' } }, "\uD83D\uDCCA Feedback Required"),
+                    react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "feedback-container", style: { padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' } },
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "feedback-message", style: { fontSize: '13px', lineHeight: '1.5', color: '#666', textAlign: 'center' } }, "Application filled! Please check the application and enter how many are filled and how many failed in the side panel. Your feedback is very important."),
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "feedback-submit-btn", onClick: () => {
+                                setShowFeedbackIntimation(false);
+                                setViewState("DETAILS");
+                            }, style: { background: '#212529', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' } }, "Go to Panel"),
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "feedback-timer", style: { fontSize: '11px', color: '#999', textAlign: 'center' } },
+                            "Auto-syncing in ",
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { style: { color: '#ff3b30', fontWeight: '600' } },
+                                feedbackTimer,
+                                "s")))))
+            // ) : completionResult && !isFeedbackVisible && (
+            //         <div className="completion-notification" onClick={e => e.stopPropagation()}>
+            //             <div className="completion-header">🎉 Analysis Complete</div>
+            //             <div className="completion-stats">
+            //                 <div className="stat-row success">
+            //                     <span>Fields Succeeded</span>
+            //                     <span>{completionResult.successes}</span>
+            //                 </div>
+            //                 <div className="stat-row missed">
+            //                     <span>Fields Missed</span>
+            //                     <span>{completionResult.failures}</span>
+            //                 </div>
+            //             </div>
+            //             {completionResult.missedQuestions.length > 0 && (
+            //                 <div className="missed-questions-list">
+            //                     <div style={{ fontWeight: '600', marginBottom: '4px', borderBottom: '1px solid #eee', paddingBottom: '2px' }}>
+            //                         Missed Questions:
+            //                     </div>
+            //                     {completionResult.missedQuestions.map((q: string, i: number) => (
+            //                         <div key={i} className="missed-question-item" title={q}>
+            //                             • {q}
+            //                         </div>
+            //                     ))}
+            //                 </div>
+            //             )}
+            //             <button
+            //                 className="close-notification-btn"
+            //                 onClick={() => setCompletionResult(null)}
+            //             >
+            //                 Got it!
+            //             </button>
+            //         </div>
+            //     )}
+            ))),
         viewState === "SETTINGS" && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "details-panel" },
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "autofill-header" },
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "drag-handle", style: { marginRight: '8px' } }, "\u283F"),
@@ -42429,6 +45397,10 @@ const OverlayPanel = ({ fields: initialFields, onAutoFill, onFieldUpdate }) => {
 const FieldItem = ({ field, onUpdate }) => {
     const [isEditing, setIsEditing] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
     const [editValue, setEditValue] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(field.filledValue || "");
+    // Sync state when field prop changes (e.g. after background mapping completes)
+    (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+        setEditValue(field.filledValue || "");
+    }, [field.filledValue]);
     const handleFocus = () => {
         field.element.scrollIntoView({ behavior: "smooth", block: "center" });
         field.element.focus();
@@ -42449,9 +45421,15 @@ const FieldItem = ({ field, onUpdate }) => {
             const currentProfile = await (0,_core_storage_profileStorage__WEBPACK_IMPORTED_MODULE_3__.loadProfile)();
             if (currentProfile) {
                 // ALWAYS store as custom answer to ensure Phase -2 (Manual Override) picks it up next time.
-                // This is crucial because hardcoded rules (Phase -1) often ignore profile values,
-                // and the only way to bypass them is via Phase -2.
-                const customAnswers = { ...currentProfile.customAnswers, [field.questionText]: editValue };
+                // We store under BOTH Question Text (for exact matching) and Intent (for cross-page consistency)
+                const customAnswers = {
+                    ...currentProfile.customAnswers,
+                    [field.questionText]: editValue
+                };
+                // If we have a known intent, also store under the intent key
+                if (!isUnknown && field.canonicalKey) {
+                    customAnswers[field.canonicalKey] = editValue;
+                }
                 let updatedProfile = { ...currentProfile, customAnswers };
                 // Also update the specific canonical field if known
                 if (!isUnknown) {
@@ -42916,10 +45894,13 @@ function getQuestionText(element) {
  * Usually found in a <legend> of a <fieldset> or a leading div in a group container.
  */
 function findGroupQuestion(element) {
-    // Strategy 1: Check for ARIA-labelledby or labelledby on a parent container
-    const container = element.closest('fieldset, [role="group"], .field, .form-field, .question, .form-group, [class*="Question"], [class*="Field"]');
-    if (container) {
-        const labelledBy = container.getAttribute('aria-labelledby');
+    // Strategy 1: Check for ARIA-labelledby or labelledby on any ancestor
+    // This catches Workday and well-structured forms first
+    let el = element;
+    for (let i = 0; i < 6; i++) {
+        if (!el)
+            break;
+        const labelledBy = el.getAttribute('aria-labelledby');
         if (labelledBy) {
             const labelEl = document.getElementById(labelledBy);
             if (labelEl && labelEl.textContent) {
@@ -42928,57 +45909,51 @@ function findGroupQuestion(element) {
                     return text;
             }
         }
+        el = el.parentElement;
     }
-    if (!container)
-        return null;
-    // Strategy 2: Check for fieldset legend
-    const legend = container.querySelector('legend');
-    if (legend && legend.textContent) {
-        const text = cleanLabelText(legend.textContent);
-        if (text.length > 3)
-            return text;
+    // Strategy 2: Try known semantic containers (works for Greenhouse, BambooHR etc.)
+    const knownContainer = element.closest('fieldset, [role="group"]');
+    if (knownContainer) {
+        const legend = knownContainer.querySelector('legend');
+        if (legend && legend.textContent) {
+            const text = cleanLabelText(legend.textContent);
+            if (text.length > 3)
+                return text;
+        }
     }
-    // Strategy 3: Look for descriptive text in container that looks like a question
-    // We search for elements that are LIKELY to be the question text
-    const selectors = [
-        'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-        'legend', '.field-label', '.question-label', '.application-label',
-        '[data-automation-id="promptLabel"]', '[class*="label"]', '[class*="title"]', '[class*="question"]',
-        'p', 'span', 'div'
-    ];
-    for (const selector of selectors) {
-        const headings = container.querySelectorAll(selector);
-        for (const heading of Array.from(headings)) {
-            // A group question should:
-            // 1. Not contain the element itself (usually)
-            // 2. Have substantial text
-            // 3. Be before the element in the DOM (usually)
-            if (heading.textContent && !heading.contains(element)) {
-                const text = cleanLabelText(heading.textContent);
-                // A group question should:
-                // 1. Be reasonably long
-                // 2. Not be a generic option (Yes/No)
-                // 3. Not be a direct label for an input (e.g. have a 'for' attribute)
-                const isDirectLabel = heading.tagName === 'LABEL' && heading.htmlFor;
-                if (text.length > 5 && !isGenericLabel(text) && !isDirectLabel) {
-                    // One more check: make sure it's not actually an option text
-                    // (Option texts are usually shorter or have a specific structure)
-                    if (text.length > 10 || text.includes('?') || text.includes('Confirm')) {
-                        return text;
-                    }
+    // Strategy 3: Walk UP the DOM tree and look for text that looks like a question
+    // This is the key strategy for Ashby, which uses CSS-module class names
+    // We go up level by level, and at each level we look for a sibling/child
+    // element that comes BEFORE our element and contains substantial question text
+    let current = element.parentElement;
+    for (let depth = 0; depth < 6 && current; depth++) {
+        // Look at all children of `current` that come BEFORE our element/branch
+        const children = Array.from(current.children);
+        const elementIndex = children.findIndex(c => c.contains(element) || c === element);
+        // Check elements that appear BEFORE the inputs in the DOM
+        for (let i = 0; i < (elementIndex === -1 ? children.length : elementIndex); i++) {
+            const child = children[i];
+            const childText = child.textContent || '';
+            // Skip elements that contain the actual radio/checkbox inputs
+            if (child.contains(element))
+                continue;
+            const text = cleanLabelText(childText);
+            // A valid group question must:
+            // 1. Have meaningful length (more than a short option label like "Yes", "1", "PST")
+            // 2. Not be a generic label
+            if (text.length > 10 && !isGenericLabel(text)) {
+                // Extra check: prefer text that ends with ? or * (question marks)
+                // or contains question-like words
+                const looksLikeQuestion = text.includes('?') || text.includes('scale') ||
+                    text.includes('proficiency') || text.includes('timezone') ||
+                    text.includes('live') || text.includes('require') ||
+                    text.includes('authorized') || text.includes('Confirm');
+                if (text.length > 15 || looksLikeQuestion) {
+                    return text;
                 }
             }
         }
-    }
-    // Strategy 4: Substantial text node before the inputs
-    const containerText = container.textContent || '';
-    if (containerText.includes('?') || containerText.includes('*')) {
-        const questionMatch = containerText.match(/^(.+?[\?\*])/);
-        if (questionMatch) {
-            const text = cleanLabelText(questionMatch[1]);
-            if (text.length > 5)
-                return text;
-        }
+        current = current.parentElement;
     }
     return null;
 }
@@ -42993,7 +45968,8 @@ function cleanLabelText(text) {
     // These often appear in the same container as the label
     const noise = [
         /loading/gi, /success!/gi, /analyzing resume/gi, /couldn't auto-read/gi,
-        /no location found/gi, /try entering a different/gi, /type your response/gi
+        /no location found/gi, /try entering a different/gi, /type your response/gi,
+        /SVGs? not supported by this browser\.?/gi // Filter out SVG fallback text
     ];
     let cleaned = text.trim();
     noise.forEach(n => {
@@ -44808,6 +47784,13 @@ class AnalyticsTracker {
             this.missedQuestions.push(question);
         }
     }
+    /**
+     * Override auto-calculated counts with manual user feedback
+     */
+    setManualCounts(success, fail) {
+        this.successCount = success;
+        this.failCount = fail;
+    }
     // --- Submission ---
     async submit() {
         try {
@@ -44839,23 +47822,27 @@ class AnalyticsTracker {
                 total_process_time_ms: totalDuration > 0 ? totalDuration : 0
             };
             console.log('📊 Submitting Analytics:', payload);
-            // Send to background to proxy to backend
-            chrome.runtime.sendMessage({
-                action: 'proxyFetch',
-                url: `${_config__WEBPACK_IMPORTED_MODULE_0__.CONFIG.API.AI_SERVICE}/api/analytics/track`,
-                options: {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                }
-            }, (response) => {
-                console.log('📊 Analytics Response:', response);
+            // Send to background to proxy to backend and AWAIT response
+            return new Promise((resolve) => {
+                chrome.runtime.sendMessage({
+                    action: 'proxyFetch',
+                    url: `${_config__WEBPACK_IMPORTED_MODULE_0__.CONFIG.API.AI_SERVICE}/api/analytics/track`,
+                    options: {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    }
+                }, (response) => {
+                    console.log('📊 Analytics Response:', response);
+                    resolve(!!response?.success);
+                });
             });
         }
         catch (e) {
             console.error('❌ Failed to submit analytics:', e);
+            return false;
         }
     }
 }
@@ -45357,17 +48344,52 @@ const AI_SERVICE_URL = _config__WEBPACK_IMPORTED_MODULE_2__.CONFIG.API.AI_SERVIC
 // -------------------------------------------------------------------
 const GLOBAL_PATTERNS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 let globalPatternsCache = null;
-// Shareable intents (must match backend)
-const SHAREABLE_INTENTS = [
-    'eeo.gender', 'eeo.hispanic', 'eeo.veteran', 'eeo.disability', 'eeo.race', 'eeo.lgbtq',
-    'workAuth.sponsorship', 'workAuth.usAuthorized', 'workAuth.driverLicense', 'workAuth.visaType',
-    'location.country', 'location.state',
-    'application.hasRelatives', 'application.previouslyApplied', 'application.ageVerification',
-    'application.willingToRelocate', 'application.willingToTravel', 'application.workArrangement',
-    // Pattern-only (no answer sharing)
-    'personal.firstName', 'personal.lastName', 'personal.email', 'personal.phone', 'personal.city',
-    'education.degree', 'education.school', 'education.major',
-    'experience.company', 'experience.title'
+// ==========================================
+// 1) Universal shareable intents (Global learning OK)
+// These share Question + Answer variants.
+const UNIVERSAL_SHAREABLE_INTENTS = [
+    'eeo.gender', 'eeo.race', 'eeo.hispanic', 'eeo.veteran', 'eeo.disability', 'eeo.lgbtq', 'eeo.transgender', 'eeo.preferNotToAnswer',
+    'workAuthorization.authorizedUS', 'workAuthorization.authorizedCountry', 'workAuthorization.needsSponsorship',
+    'workAuthorization.needsSponsorshipNow', 'workAuthorization.needsSponsorshipFuture', 'workAuthorization.citizenshipStatus',
+    'workAuthorization.visaType', 'workAuthorization.workPermitType', 'workAuthorization.workPermitValidUntil',
+    'workAuthorization.driverLicense', 'workAuthorization.securityClearance', 'workAuthorization.securityClearanceLevel',
+    'workAuthorization.exportControlEligible',
+    'application.workArrangement', 'application.workType', 'application.shiftAvailability', 'application.weekendAvailability',
+    'application.nightShiftAvailability', 'application.overtimeWillingness', 'application.willingToRelocate',
+    'application.willingToTravel', 'application.travelPercentage',
+    'application.startDateAvailability', 'application.noticePeriod',
+    'application.agreeToTerms', 'application.privacyPolicyConsent', 'application.dataProcessingConsent',
+    'application.backgroundCheckConsent', 'application.drugTestConsent', 'application.rightToWorkConfirmation',
+    'application.equalOpportunityAcknowledgement',
+    'application.howDidYouHear', 'application.wasReferred', 'application.previouslyApplied',
+    'application.previouslyInterviewed', 'application.previouslyEmployed', 'application.hasRelatives',
+    'location.country', 'location.state', 'location.city', 'location.postalCode',
+    'application.allowSmsMessages', 'application.allowEmailUpdates', 'application.marketingConsent',
+    'application.talentCommunityOptIn',
+    'experience.yearsTotal', 'experience.managementExperience', 'experience.peopleManagement',
+    'education.level', 'education.degreeType', 'education.graduationStatus'
+];
+// 2) Pattern-only intents (Global patterns YES, answers NO)
+// Only stores Question + Intent. Values are private.
+const PATTERN_ONLY_INTENTS = [
+    'personal.firstName', 'personal.middleName', 'personal.lastName', 'personal.fullName',
+    'personal.preferredName', 'personal.email', 'personal.phone', 'personal.linkedin',
+    'personal.github', 'personal.portfolio', 'personal.website',
+    'personal.addressLine1', 'personal.addressLine2', 'personal.city', 'personal.state',
+    'personal.postalCode', 'personal.country',
+    'documents.resume', 'documents.coverLetter', 'documents.transcript', 'documents.workAuthorizationDocument',
+    'education.school', 'education.major', 'education.gpa', 'education.startDate', 'education.endDate',
+    'experience.company', 'experience.title', 'experience.startDate', 'experience.endDate', 'experience.currentlyWorking'
+];
+// 3) Free-text screening intents (Pattern-only + User Templates)
+// Shared patterns, but answers are unique/templated per user.
+const SCREENING_TEXT_INTENTS = [
+    'screening.whyCompany', 'screening.whyRole', 'screening.whyYou', 'screening.whyChange', 'screening.whyNow',
+    'screening.aboutYourself', 'screening.professionalSummary', 'screening.careerGoals',
+    'screening.strengths', 'screening.weaknesses', 'screening.biggestAchievement',
+    'screening.leadershipExample', 'screening.teamworkExample', 'screening.conflictExample', 'screening.problemSolved',
+    'screening.projectHighlights', 'screening.recentProject', 'screening.projectChallenge',
+    'screening.additionalInfo', 'screening.coverLetterLike'
 ];
 /**
  * Helper to perform fetch via background script to bypass CORS
@@ -45408,6 +48430,23 @@ class PatternStorage {
             console.error('[PatternStorage] Error getting local patterns:', error);
             return [];
         }
+    }
+    /**
+     * Get all patterns (Local + Global)
+     */
+    async getAllPatterns() {
+        const local = await this.getLocalPatterns();
+        const global = await this.fetchGlobalPatterns();
+        // Merge them, prioritizing local ones for same question phrasing
+        const combined = [...local];
+        const localPhrases = new Set(local.map(p => p.questionPattern?.toLowerCase().trim()));
+        for (const gp of global) {
+            const normalizedGP = gp.questionPattern?.toLowerCase().trim();
+            if (!localPhrases.has(normalizedGP)) {
+                combined.push(gp);
+            }
+        }
+        return combined;
     }
     /**
      * Save patterns locally
@@ -45458,11 +48497,7 @@ class PatternStorage {
                     }
                 });
             }
-            existing.lastUsed = new Date().toISOString();
-            existing.synced = false; // Mark for re-sync
             await this.saveLocalPatterns(patterns);
-            // Sync to Supabase
-            await this.syncPatternToSupabase(existing);
         }
         else {
             // Add new pattern
@@ -45477,8 +48512,6 @@ class PatternStorage {
             patterns.push(newPattern);
             console.log(`[PatternStorage] 🎓 Learned new pattern: "${pattern.questionPattern}" → ${pattern.intent}`);
             await this.saveLocalPatterns(patterns);
-            // Sync to Supabase
-            await this.syncPatternToSupabase(newPattern);
         }
     }
     /**
@@ -45750,6 +48783,57 @@ class PatternStorage {
         }
     }
     /**
+     * Sync all unsynced patterns to Supabase in a single batch
+     */
+    async syncUnsyncedPatterns() {
+        try {
+            const patterns = await this.getLocalPatterns();
+            const unsynced = patterns.filter(p => !p.synced);
+            if (unsynced.length === 0) {
+                console.log("[PatternStorage] ✨ No new patterns to sync");
+                return;
+            }
+            const profile = await (0,_profileStorage__WEBPACK_IMPORTED_MODULE_1__.loadProfile)();
+            if (!profile?.personal.email) {
+                console.warn("[PatternStorage] No email found in profile, cannot sync batch");
+                return;
+            }
+            console.log(`[PatternStorage] 🔄 Batch syncing ${unsynced.length} patterns to AI Service...`);
+            // 🔒 PRIVACY STRIPPING
+            const syncPayloads = unsynced.map(pattern => {
+                const isUniversal = UNIVERSAL_SHAREABLE_INTENTS.includes(pattern.intent);
+                return {
+                    ...pattern,
+                    answerMappings: isUniversal ? pattern.answerMappings : []
+                };
+            });
+            const response = await proxyFetch(`${AI_SERVICE_URL}/api/patterns/upload-batch?email=${encodeURIComponent(profile.personal.email)}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ patterns: syncPayloads }),
+            });
+            if (response && response.success) {
+                console.log(`[PatternStorage] ✅ Batch sync successful: ${unsynced.length} patterns`);
+                // Update local synced status
+                const updatedPatterns = patterns.map(p => {
+                    if (!p.synced) {
+                        return { ...p, synced: true };
+                    }
+                    return p;
+                });
+                await this.saveLocalPatterns(updatedPatterns);
+            }
+            else {
+                console.error("[PatternStorage] ❌ Batch sync failed:", response?.error || 'Unknown error');
+            }
+        }
+        catch (error) {
+            console.warn("[PatternStorage] Batch sync error:", error);
+        }
+    }
+    /**
      * Sync a single pattern to Supabase via AI Service
      */
     async syncPatternToSupabase(pattern) {
@@ -45760,12 +48844,22 @@ class PatternStorage {
                 return;
             }
             console.log(`[PatternStorage] 🔄 Syncing pattern to AI Service: ${pattern.intent}`);
+            // 🔒 PRIVACY STRIPPING: If NOT a universal shareable intent, remove the answer mappings.
+            // This ensures for personal/screening items, we only share the "Question -> Intent" link, not the private answer.
+            const isUniversal = UNIVERSAL_SHAREABLE_INTENTS.includes(pattern.intent);
+            const syncPayload = {
+                ...pattern,
+                answerMappings: isUniversal ? pattern.answerMappings : []
+            };
+            if (!isUniversal) {
+                console.log(`[PatternStorage] 🔒 Stripped private answer mappings for non-universal intent: ${pattern.intent}`);
+            }
             const response = await proxyFetch(`${AI_SERVICE_URL}/api/patterns/upload?email=${encodeURIComponent(profile.personal.email)}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ pattern }),
+                body: JSON.stringify({ pattern: syncPayload }),
             });
             if (response && (response.success || response.message?.includes('successfully'))) {
                 console.log("[PatternStorage] ✅ Pattern synced to AI Service");
@@ -46118,7 +49212,9 @@ const EMPTY_PROFILE = {
     education: [],
     experience: [],
     skills: [],
-    preferences: {},
+    preferences: {
+        desiredSalary: "100000",
+    },
     workAuthorization: {
         authorizedUS: true,
         needsSponsorship: false,
@@ -46148,7 +49244,13 @@ const EMPTY_PROFILE = {
         apwId: "",
     },
     apiFields: {},
-    customAnswers: {},
+    customAnswers: {
+        "screening.whyRole": "I have a strong track record of success in similar roles and am highly motivated to contribute to your team. My experience aligns perfectly with the requirements of this position, and I am eager to apply my skills to help the company achieve its goals.",
+        "screening.whyCompany": "I have long admired your company's reputation for innovation and excellence. Your values and mission resonate with my own professional goals, and I am excited about the possibility of contributing to such a forward-thinking organization.",
+        "screening.professionalSummary": "Results-oriented professional with a strong foundation in [Industry/Field]. Proven ability to deliver high-quality results, adapt to new challenges, and collaborate effectively in team environments.",
+        "screening.strengths": "My key strengths include analytical problem-solving, strong communication, and a dedicated work ethic. I am a fast learner and consistently meet or exceed performance targets.",
+        "screening.additionalInfo": "I am a proactive and dependable professional who is 100% committed to this opportunity. I am ready to start immediately and dedicate my full energy to ensuring the team's success.",
+    },
 };
 
 

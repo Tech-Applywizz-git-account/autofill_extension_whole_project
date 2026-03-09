@@ -1,6 +1,7 @@
 import { DetectedField, FieldType } from "../../types/fieldDetection";
 import {
     fillInput,
+    typeLikeHuman,
     selectRadioByLabel,
     setCheckbox,
     selectNativeOption,
@@ -59,6 +60,17 @@ export async function fillField(
                     field.element as HTMLInputElement | HTMLTextAreaElement,
                     String(value)
                 );
+
+                // RELIABILITY FALLBACK:
+                // If initial fast-fill fails verification, OR if the field is required and we want to be extra safe,
+                // try character-by-character typing. This bypasses many complex framework validations.
+                if (!success || (field.isRequired && !success)) {
+                    console.log(`[Autofill] ⚠️ Fast-fill failed or required field: Retrying with typeLikeHuman for "${field.questionText}"`);
+                    success = await typeLikeHuman(
+                        field.element as HTMLInputElement | HTMLTextAreaElement,
+                        String(value)
+                    );
+                }
                 break;
 
             case FieldType.SELECT_NATIVE:
@@ -230,8 +242,8 @@ export async function fillAllFields(
         const result = await fillField(field, field.filledValue);
         results.set(field, result);
 
-        // Small delay between fields to avoid overwhelming the page
-        await sleep(50);
+        // Tiny delay between fields to keep events orderly but fast
+        await sleep(10);
     }
 
     return results;

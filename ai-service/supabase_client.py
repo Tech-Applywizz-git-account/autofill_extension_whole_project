@@ -57,6 +57,11 @@ class SupabaseTable:
         self.params[column] = f"eq.{value}"
         return self
 
+    def update(self, data: dict):
+        self.method = "PATCH"
+        self.json_data = data
+        return self
+
     def delete(self):
         self.method = "DELETE"
         return self
@@ -71,6 +76,8 @@ class SupabaseTable:
                 response = requests.get(self.url, headers=self.headers, params=self.params, timeout=15)
             elif self.method == "POST":
                 response = requests.post(self.url, headers=self.headers, params=self.params, json=self.json_data, timeout=15)
+            elif self.method == "PATCH":
+                response = requests.patch(self.url, headers=self.headers, params=self.params, json=self.json_data, timeout=15)
             elif self.method == "DELETE":
                 response = requests.delete(self.url, headers=self.headers, params=self.params, timeout=15)
             else:

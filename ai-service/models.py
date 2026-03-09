@@ -42,6 +42,10 @@ class PatternUploadRequest(BaseModel):
     """Upload new pattern"""
     pattern: Pattern
 
+class BatchPatternUploadRequest(BaseModel):
+    """Upload multiple patterns at once"""
+    patterns: List[Pattern]
+
 # ===== User/Resume Models =====
 class UserProfile(BaseModel):
     """User profile data"""

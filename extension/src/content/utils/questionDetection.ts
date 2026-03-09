@@ -89,10 +89,12 @@ export function getQuestionText(element: HTMLElement): string {
  * Usually found in a <legend> of a <fieldset> or a leading div in a group container.
  */
 function findGroupQuestion(element: HTMLInputElement): string | null {
-    // Strategy 1: Check for ARIA-labelledby or labelledby on a parent container
-    const container = element.closest('fieldset, [role="group"], .field, .form-field, .question, .form-group, [class*="Question"], [class*="Field"]');
-    if (container) {
-        const labelledBy = container.getAttribute('aria-labelledby');
+    // Strategy 1: Check for ARIA-labelledby or labelledby on any ancestor
+    // This catches Workday and well-structured forms first
+    let el: HTMLElement | null = element;
+    for (let i = 0; i < 6; i++) {
+        if (!el) break;
+        const labelledBy = el.getAttribute('aria-labelledby');
         if (labelledBy) {
             const labelEl = document.getElementById(labelledBy);
             if (labelEl && labelEl.textContent) {
@@ -100,60 +102,57 @@ function findGroupQuestion(element: HTMLInputElement): string | null {
                 if (text.length > 3) return text;
             }
         }
+        el = el.parentElement;
     }
 
-    if (!container) return null;
-
-    // Strategy 2: Check for fieldset legend
-    const legend = container.querySelector('legend');
-    if (legend && legend.textContent) {
-        const text = cleanLabelText(legend.textContent);
-        if (text.length > 3) return text;
+    // Strategy 2: Try known semantic containers (works for Greenhouse, BambooHR etc.)
+    const knownContainer = element.closest('fieldset, [role="group"]');
+    if (knownContainer) {
+        const legend = knownContainer.querySelector('legend');
+        if (legend && legend.textContent) {
+            const text = cleanLabelText(legend.textContent);
+            if (text.length > 3) return text;
+        }
     }
 
-    // Strategy 3: Look for descriptive text in container that looks like a question
-    // We search for elements that are LIKELY to be the question text
-    const selectors = [
-        'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-        'legend', '.field-label', '.question-label', '.application-label',
-        '[data-automation-id="promptLabel"]', '[class*="label"]', '[class*="title"]', '[class*="question"]',
-        'p', 'span', 'div'
-    ];
+    // Strategy 3: Walk UP the DOM tree and look for text that looks like a question
+    // This is the key strategy for Ashby, which uses CSS-module class names
+    // We go up level by level, and at each level we look for a sibling/child
+    // element that comes BEFORE our element and contains substantial question text
+    let current: HTMLElement | null = element.parentElement;
+    for (let depth = 0; depth < 6 && current; depth++) {
+        // Look at all children of `current` that come BEFORE our element/branch
+        const children = Array.from(current.children);
+        const elementIndex = children.findIndex(c => c.contains(element) || c === element);
 
-    for (const selector of selectors) {
-        const headings = container.querySelectorAll(selector);
-        for (const heading of Array.from(headings)) {
-            // A group question should:
-            // 1. Not contain the element itself (usually)
-            // 2. Have substantial text
-            // 3. Be before the element in the DOM (usually)
-            if (heading.textContent && !heading.contains(element)) {
-                const text = cleanLabelText(heading.textContent);
-                // A group question should:
-                // 1. Be reasonably long
-                // 2. Not be a generic option (Yes/No)
-                // 3. Not be a direct label for an input (e.g. have a 'for' attribute)
-                const isDirectLabel = heading.tagName === 'LABEL' && (heading as HTMLLabelElement).htmlFor;
+        // Check elements that appear BEFORE the inputs in the DOM
+        for (let i = 0; i < (elementIndex === -1 ? children.length : elementIndex); i++) {
+            const child = children[i];
+            const childText = child.textContent || '';
 
-                if (text.length > 5 && !isGenericLabel(text) && !isDirectLabel) {
-                    // One more check: make sure it's not actually an option text
-                    // (Option texts are usually shorter or have a specific structure)
-                    if (text.length > 10 || text.includes('?') || text.includes('Confirm')) {
-                        return text;
-                    }
+            // Skip elements that contain the actual radio/checkbox inputs
+            if (child.contains(element)) continue;
+
+            const text = cleanLabelText(childText);
+
+            // A valid group question must:
+            // 1. Have meaningful length (more than a short option label like "Yes", "1", "PST")
+            // 2. Not be a generic label
+            if (text.length > 10 && !isGenericLabel(text)) {
+                // Extra check: prefer text that ends with ? or * (question marks)
+                // or contains question-like words
+                const looksLikeQuestion = text.includes('?') || text.includes('scale') ||
+                    text.includes('proficiency') || text.includes('timezone') ||
+                    text.includes('live') || text.includes('require') ||
+                    text.includes('authorized') || text.includes('Confirm');
+
+                if (text.length > 15 || looksLikeQuestion) {
+                    return text;
                 }
             }
         }
-    }
 
-    // Strategy 4: Substantial text node before the inputs
-    const containerText = container.textContent || '';
-    if (containerText.includes('?') || containerText.includes('*')) {
-        const questionMatch = containerText.match(/^(.+?[\?\*])/);
-        if (questionMatch) {
-            const text = cleanLabelText(questionMatch[1]);
-            if (text.length > 5) return text;
-        }
+        current = current.parentElement;
     }
 
     return null;
@@ -170,7 +169,8 @@ export function cleanLabelText(text: string): string {
     // These often appear in the same container as the label
     const noise = [
         /loading/gi, /success!/gi, /analyzing resume/gi, /couldn't auto-read/gi,
-        /no location found/gi, /try entering a different/gi, /type your response/gi
+        /no location found/gi, /try entering a different/gi, /type your response/gi,
+        /SVGs? not supported by this browser\.?/gi // Filter out SVG fallback text
     ];
 
     let cleaned = text.trim();

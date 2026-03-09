@@ -34669,30 +34669,30 @@ __webpack_require__.r(__webpack_exports__);
 const CONFIG = {
     // API Endpoints
     API: {
-        AI_SERVICE: "https://autofill-extension-backend.onrender.com" || 0,
-        PATTERN_API: "https://autofill-extension-backend.onrender.com/api/patterns" || 0,
-        USER_DATA: "https://autofill-extension-backend.onrender.com/api/user-data" || 0,
-        VERCEL_CRM: "https://ticketingtoolapplywizz.vercel.app/api/get-client-details" || 0,
-        BACKEND_URL: "http://localhost:3000" || 0,
-        STATS_URL: "https://autofill-extension-backend.onrender.com" || 0,
-        AI_API_KEY: "K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl" || 0,
+        AI_SERVICE: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_AI_URL || 'https://autofill-extension-backend.onrender.com',
+        PATTERN_API: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_PATTERN_URL || 'https://autofill-extension-backend.onrender.com/api/patterns',
+        USER_DATA: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_USER_DATA_URL || 'https://autofill-extension-backend.onrender.com/api/user-data',
+        VERCEL_CRM: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_VERCEL_CRM_URL || 'https://ticketingtoolapplywizz.vercel.app/api/get-client-details',
+        BACKEND_URL: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_BACKEND_URL || 'http://localhost:3000',
+        STATS_URL: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_AI_URL || 'https://autofill-extension-backend.onrender.com',
+        AI_API_KEY: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_AI_API_KEY || '',
     },
     // Timeouts (milliseconds)
     TIMEOUTS: {
-        DROPDOWN_SCAN: parseInt("3000" || 0, 10),
-        AI_REQUEST: parseInt("30000" || 0, 10),
-        PATTERN_SYNC: parseInt("5000" || 0, 10),
+        DROPDOWN_SCAN: parseInt({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_DROPDOWN_TIMEOUT || '3000', 10),
+        AI_REQUEST: parseInt({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_AI_TIMEOUT || '30000', 10),
+        PATTERN_SYNC: parseInt({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_PATTERN_SYNC_TIMEOUT || '5000', 10),
     },
     // Retry Configuration
     RETRIES: {
-        DROPDOWN_SCAN: parseInt("2" || 0, 10),
-        AI_REQUEST: parseInt("1" || 0, 10),
+        DROPDOWN_SCAN: parseInt({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_DROPDOWN_RETRIES || '2', 10),
+        AI_REQUEST: parseInt({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_AI_RETRIES || '1', 10),
     },
     // Confidence Thresholds (0.0 to 1.0)
     THRESHOLDS: {
-        MIN_CONFIDENCE: parseFloat("0.6" || 0),
-        FUZZY_MATCH: parseFloat("0.7" || 0),
-        PATTERN_MEMORY: parseFloat("0.95" || 0),
+        MIN_CONFIDENCE: parseFloat({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_MIN_CONFIDENCE || '0.6'),
+        FUZZY_MATCH: parseFloat({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_FUZZY_THRESHOLD || '0.7'),
+        PATTERN_MEMORY: parseFloat({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:8001","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_PATTERN_MEMORY_CONFIDENCE || '0.95'),
     },
     // Canonical Field Patterns (for intent detection)
     CANONICAL_PATTERNS: {
@@ -35460,7 +35460,7 @@ const Onboarding = () => {
                 window.close(); // Close onboarding as they are already set up
             }
             else {
-                alert("No backup found for this email. Please start as a new user.");
+                alert("You are a new user. Please complete the onboarding form.");
                 setStep(1);
             }
         }
@@ -35591,6 +35591,7 @@ const StepPersonal = ({ profile, updateProfile, apwId, setApwId, onApiFetch, fet
         reader.readAsDataURL(file);
     };
     return (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "step" },
+        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "back-btn justify-end", onClick: onBack, style: { flex: 1, background: '#f5f5f5', color: '#666', border: '1px solid #ddd', borderRadius: '8px', padding: '10px', cursor: 'pointer' } }, "Back to Home"),
         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "step-header" },
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h1", null, "\uD83C\uDF89 Great! Let's get started with your basic info.")),
         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "step-header", style: { marginTop: '10px', marginBottom: '20px', background: '#f0f4ff', padding: '15px', borderRadius: '12px', border: '1px solid #d0d7f7' } },
@@ -35666,7 +35667,6 @@ const StepPersonal = ({ profile, updateProfile, apwId, setApwId, onApiFetch, fet
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", null, "Github URL"),
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", { type: "url", value: profile.personal.github || "", onChange: (e) => updateProfile({ personal: { ...profile.personal, github: e.target.value } }), placeholder: "https://github.com/yourusername" }))),
         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "form-actions", style: { display: 'flex', gap: '10px', marginTop: '20px' } },
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "back-btn", onClick: onBack, style: { flex: 1, background: '#f5f5f5', color: '#666', border: '1px solid #ddd', borderRadius: '8px', padding: '10px', cursor: 'pointer' } }, "Back to Home"),
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "next-btn", onClick: onNext, style: { flex: 2 } }, "Next"))));
 };
 const StepEducation = ({ profile, updateProfile, onNext, onBack }) => {
@@ -36122,7 +36122,9 @@ const EMPTY_PROFILE = {
     education: [],
     experience: [],
     skills: [],
-    preferences: {},
+    preferences: {
+        desiredSalary: "100000",
+    },
     workAuthorization: {
         authorizedUS: true,
         needsSponsorship: false,
@@ -36152,7 +36154,13 @@ const EMPTY_PROFILE = {
         apwId: "",
     },
     apiFields: {},
-    customAnswers: {},
+    customAnswers: {
+        "screening.whyRole": "I have a strong track record of success in similar roles and am highly motivated to contribute to your team. My experience aligns perfectly with the requirements of this position, and I am eager to apply my skills to help the company achieve its goals.",
+        "screening.whyCompany": "I have long admired your company's reputation for innovation and excellence. Your values and mission resonate with my own professional goals, and I am excited about the possibility of contributing to such a forward-thinking organization.",
+        "screening.professionalSummary": "Results-oriented professional with a strong foundation in [Industry/Field]. Proven ability to deliver high-quality results, adapt to new challenges, and collaborate effectively in team environments.",
+        "screening.strengths": "My key strengths include analytical problem-solving, strong communication, and a dedicated work ethic. I am a fast learner and consistently meet or exceed performance targets.",
+        "screening.additionalInfo": "I am a proactive and dependable professional who is 100% committed to this opportunity. I am ready to start immediately and dedicate my full energy to ensuring the team's success.",
+    },
 };
 
 

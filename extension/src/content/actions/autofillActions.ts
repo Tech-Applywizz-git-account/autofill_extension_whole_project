@@ -17,6 +17,7 @@ export async function typeLikeHuman(
 ): Promise<boolean> {
     try {
         element.focus();
+        element.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true }));
 
         // Clear existing value
         element.value = "";
@@ -28,7 +29,12 @@ export async function typeLikeHuman(
                 action: "trustedType",
                 text: value
             });
-            if (response?.success) return verifyInputValue(element, value);
+            if (response?.success) {
+                element.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, cancelable: true }));
+                element.dispatchEvent(new Event("change", { bubbles: true }));
+                element.blur();
+                return verifyInputValue(element, value);
+            }
         } catch (e) {
             console.warn("[Autofill] Trusted typing failed, falling back to DOM simulation", e);
         }
@@ -37,10 +43,12 @@ export async function typeLikeHuman(
         for (const char of value) {
             element.value += char;
             element.dispatchEvent(new Event("input", { bubbles: true }));
-            await sleep(10); // Balanced: 3x faster than original 30ms, safe for all sites
+            element.dispatchEvent(new KeyboardEvent("keypress", { key: char, bubbles: true }));
+            await sleep(2); // Ultra-fast
         }
 
-        // Dispatch change event
+        // Dispatch final events
+        element.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, cancelable: true }));
         element.dispatchEvent(new Event("change", { bubbles: true }));
         element.blur();
 
@@ -59,24 +67,29 @@ export async function fillInput(
     value: string
 ): Promise<boolean> {
     try {
+        // 1. Focus and initial state
         element.focus();
+        element.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true }));
 
-        // Set value using multiple methods to ensure it works
-        element.value = value;
+        // 2. Multi-method value setting (React/Vue/Vanilla)
+        const prototype = element instanceof HTMLTextAreaElement
+            ? window.HTMLTextAreaElement.prototype
+            : window.HTMLInputElement.prototype;
 
-        // Trigger React/Vue/Angular change detection
-        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-            window.HTMLInputElement.prototype,
-            "value"
-        )?.set;
+        const nativeSetter = Object.getOwnPropertyDescriptor(prototype, "value")?.set;
 
-        if (nativeInputValueSetter) {
-            nativeInputValueSetter.call(element, value);
+        if (nativeSetter) {
+            nativeSetter.call(element, value);
+        } else {
+            element.value = value;
         }
 
-        // Dispatch events
+        // 3. Comprehensive Event Sequence
         element.dispatchEvent(new Event("input", { bubbles: true }));
+        element.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, cancelable: true }));
         element.dispatchEvent(new Event("change", { bubbles: true }));
+
+        // 4. Final blur triggers many validation frameworks
         element.blur();
 
         return verifyInputValue(element, value);
@@ -162,46 +175,68 @@ async function clickRadio(radio: HTMLInputElement, labelText: string): Promise<b
     try {
         const labelElement = getLabelElement(radio);
 
-        // Strategy: Greenhouse/Workday/Ashby often hide the real input. 
-        // We should click the LABEL or the visible container.
-        const greenhouseWrapper = radio.closest('.radio_button, .radio-button-container, [class*="radio"]');
-        const ashbyWrapper = radio.closest('[class*="Radio_container"], [class*="Radio_box"]');
-        const customControl = radio.parentElement?.querySelector('span[class*="custom-radio"], span[class*="radio-label"], [class*="RadioButton_checkmark"]');
+        // Build a prioritized list of click targets
+        // Try from most specific (label) to the raw input
+        const targets: HTMLElement[] = [];
 
-        const target = ashbyWrapper || greenhouseWrapper || customControl || labelElement || radio;
+        // 1. The label is the most reliable click target
+        if (labelElement) targets.push(labelElement);
+
+        // 2. Ashby wraps radio in a span/div inside the label
+        //    e.g. <label><span class="...Radio_box"><input .../></span>YES</label>
+        const ashbyWrapper = radio.closest('[class*="Radio_container"], [class*="Radio_box"], [class*="Radio_pill"], [class*="radio-item"]') as HTMLElement | null;
+        if (ashbyWrapper && !targets.includes(ashbyWrapper)) targets.push(ashbyWrapper);
+
+        // 3. Greenhouse radio wrappers
+        const greenhouseWrapper = radio.closest('.radio_button, .radio-button-container') as HTMLElement | null;
+        if (greenhouseWrapper && !targets.includes(greenhouseWrapper)) targets.push(greenhouseWrapper);
+
+        // 4. Lever/generic wrapper
+        const leverWrapper = radio.closest('.application-question, .application-field') as HTMLElement | null;
+        if (leverWrapper && !targets.includes(leverWrapper)) targets.push(leverWrapper);
+
+        // 5. Parent element as a generic fallback
+        if (radio.parentElement && !targets.includes(radio.parentElement)) targets.push(radio.parentElement);
+
+        // 6. The input itself as the last resort
+        if (!targets.includes(radio)) targets.push(radio);
 
         console.log(`[clickRadio] 🖱️ Clicking radio for: "${labelText}"`, {
             checkedBefore: radio.checked,
-            targetTag: target.tagName,
-            targetClass: target.className
+            targetsCount: targets.length
         });
 
-        // Event sequence for React-Select/Custom components
-        target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }));
-        target.dispatchEvent(new MouseEvent("mouseup", { bubbles: true, cancelable: true }));
-        (target as HTMLElement).click();
+        // Try each target in order until the radio is checked
+        for (const target of targets) {
+            target.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+            target.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
+            target.click();
 
-        // Fallback: Click the label and input directly if they are different from target
+            // Give React/Vue time to update state (Ashby needs ~300ms)
+            const success = await waitForCommit(() => radio.checked, 400);
+            if (success) {
+                console.log(`[clickRadio] ✅ Radio selected via target: ${target.tagName}.${target.className.split(' ').slice(0, 2).join('.')}`);
+                return true;
+            }
+        }
+
+        // Final fallback: force React event dispatch on the input directly
         if (!radio.checked) {
-            if (labelElement && labelElement !== target) labelElement.click();
-            if (radio !== target) radio.click();
+            radio.checked = true;
+            radio.dispatchEvent(new Event('change', { bubbles: true }));
+            radio.dispatchEvent(new Event('input', { bubbles: true }));
+            await waitForCommit(() => radio.checked, 200);
         }
 
-        // Wait for selection to commit
-        const success = await waitForCommit(() => radio.checked, 800);
-
-        if (success) {
-            console.log(`[selectRadioByLabel] ✅ Radio selected: ${labelText}`);
+        if (radio.checked) {
+            console.log(`[clickRadio] ✅ Radio selected (forced React dispatch): ${labelText}`);
             return true;
-        } else {
-            console.warn(`[selectRadioByLabel] ⚠️ Radio NOT selected after click: ${labelText}`);
-            // Last resort: force checked (though this won't trigger React state usually)
-            // radio.checked = true;
-            // radio.dispatchEvent(new Event('change', { bubbles: true }));
-            return radio.checked;
         }
+
+        console.warn(`[clickRadio] ⚠️ Radio NOT selected after all attempts: ${labelText}`);
+        return false;
     } catch (error) {
-        console.error("[clickRadio] ❌ Error:", error);
+        console.error('[clickRadio] ❌ Error:', error);
         return false;
     }
 }
@@ -232,32 +267,58 @@ export async function setCheckbox(
         if (currentState !== checked) {
             console.log(`[setCheckbox] 🔘 Toggling checkbox to ${checked}`);
 
-            // Broadened list of containers to click (added Ashby and generic patterns)
             const label = getLabelElement(element);
-            const greenhouseWrapper = element.closest('.checkbox, .checkbox-container, [class*="checkbox"]');
-            const ashbyWrapper = element.closest('[class*="Checkbox_container"], [class*="Checkbox_box"]');
-            const customControl = element.parentElement?.querySelector('span[class*="custom-checkbox"], span[class*="checkbox-label"], [class*="box"], [class*="checkmark"]');
 
-            const target = ashbyWrapper || greenhouseWrapper || customControl || label || element;
+            // Build ordered list of targets to try
+            const targets: HTMLElement[] = [];
+            if (label) targets.push(label);
 
-            console.log(`[setCheckbox] 🖱️ Clicking target for checkbox`, {
-                targetTag: target.tagName,
-                targetClass: target.className
-            });
+            // Ashby wrappers
+            const ashbyWrapper = element.closest('[class*="Checkbox_container"], [class*="Checkbox_box"], [class*="Checkbox_pill"], [class*="checkbox-item"]') as HTMLElement | null;
+            if (ashbyWrapper) targets.push(ashbyWrapper);
 
-            target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-            target.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
-            (target as HTMLElement).click();
+            // Greenhouse/BambooHR wrappers
+            const greenhouseWrapper = element.closest('.checkbox, .checkbox-container') as HTMLElement | null;
+            if (greenhouseWrapper && !targets.includes(greenhouseWrapper)) targets.push(greenhouseWrapper);
 
-            // Verification with wait
-            await waitForCommit(() => element.checked === checked, 500);
+            // Lever/generic wrapper
+            const leverWrapper = element.closest('.application-question, .application-field') as HTMLElement | null;
+            if (leverWrapper && !targets.includes(leverWrapper)) targets.push(leverWrapper);
+
+            // Parent element as a generic fallback  
+            if (element.parentElement && !targets.includes(element.parentElement)) targets.push(element.parentElement);
+
+            // The input itself as last resort
+            if (!targets.includes(element)) targets.push(element);
+
+            console.log(`[setCheckbox] 🖱️ Trying ${targets.length} targets for checkbox`);
+
+            for (const target of targets) {
+                target.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+                target.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+                target.click();
+
+                const committed = await waitForCommit(() => element.checked === checked, 400);
+                if (committed) {
+                    console.log(`[setCheckbox] ✅ Checked via target: ${target.tagName}.${target.className?.split?.(' ')?.slice(0, 2)?.join('.')}`);
+                    break;
+                }
+            }
+
+            // Final forced fallback
+            if (element.checked !== checked) {
+                element.checked = checked;
+                element.dispatchEvent(new Event('change', { bubbles: true }));
+                element.dispatchEvent(new Event('input', { bubbles: true }));
+                await waitForCommit(() => element.checked === checked, 200);
+            }
         }
 
         const success = element.checked === checked;
         console.log(`[setCheckbox] ${success ? '✅' : '❌'} Result: ${element.checked}`);
         return success;
     } catch (error) {
-        console.error("Failed to set checkbox:", error);
+        console.error('Failed to set checkbox:', error);
         return false;
     }
 }

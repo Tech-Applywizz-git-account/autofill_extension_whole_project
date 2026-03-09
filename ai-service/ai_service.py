@@ -29,9 +29,10 @@ SYSTEM_PROMPT = """You are the job applicant described in the provided user prof
 
 # CRITICAL RULES (MUST FOLLOW):
 
-1. **ANSWER LENGTH**: 
-   - Give SHORT, SINGLE-LINE answers
-   - NO paragraphs, NO explanations, NO extra details
+1. **ANSWER LENGTH & BREVITY**: 
+   - Give EXTREMELY SHORT, SINGLE-LINE answers (ideally < 5 words).
+   - NO paragraphs, NO descriptions, NO extra details unless EXPLICITLY asked to "explain in detail" or "provide many examples".
+   - If the question asks for a brief explanation, keep it to ONE short sentence.
    - If it's a Yes/No question, answer ONLY "Yes" or "No"
    - If it's a date, answer ONLY the date
    - If it's a name, answer ONLY the name
@@ -91,6 +92,7 @@ SYSTEM_PROMPT = """You are the job applicant described in the provided user prof
 
 10. **SALARY QUESTIONS**:
     - Answer with numbers only, no dollar signs or "k" notation
+    - If no specific salary is provided in profile, default to "100000"
     - Example: "120000" NOT "$120k"
 
 # OUTPUT FORMAT:
@@ -104,33 +106,48 @@ Return ONLY the answer, nothing else. No preamble, no explanation, no quotes aro
 # -----------------------------
 
 ALLOWED_INTENTS = {
-    # Personal
-    "personal.firstName",
-    "personal.lastName",
-    "personal.email",
-    "personal.phone",
-    "personal.linkedin",
-    "personal.city",
-    "personal.state",
-    "personal.country",
+    # 1) Universal
+    "eeo.gender", "eeo.race", "eeo.hispanic", "eeo.veteran", "eeo.disability", "eeo.lgbtq", "eeo.transgender", "eeo.preferNotToAnswer",
+    "workAuthorization.authorizedUS", "workAuthorization.authorizedCountry", "workAuthorization.needsSponsorship",
+    "workAuthorization.needsSponsorshipNow", "workAuthorization.needsSponsorshipFuture", "workAuthorization.citizenshipStatus",
+    "workAuthorization.visaType", "workAuthorization.workPermitType", "workAuthorization.workPermitValidUntil",
+    "workAuthorization.driverLicense", "workAuthorization.securityClearance", "workAuthorization.securityClearanceLevel",
+    "workAuthorization.exportControlEligible",
+    "application.workArrangement", "application.workType", "application.shiftAvailability", "application.weekendAvailability",
+    "application.nightShiftAvailability", "application.overtimeWillingness", "application.willingToRelocate",
+    "application.willingToTravel", "application.travelPercentage",
+    "application.startDateAvailability", "application.noticePeriod",
+    "application.agreeToTerms", "application.privacyPolicyConsent", "application.dataProcessingConsent",
+    "application.backgroundCheckConsent", "application.drugTestConsent", "application.rightToWorkConfirmation",
+    "application.equalOpportunityAcknowledgement",
+    "application.howDidYouHear", "application.wasReferred", "application.previouslyApplied",
+    "application.previouslyInterviewed", "application.previouslyEmployed", "application.hasRelatives",
+    "location.country", "location.state", "location.city", "location.postalCode",
+    "application.allowSmsMessages", "application.allowEmailUpdates", "application.marketingConsent",
+    "application.talentCommunityOptIn",
+    "experience.yearsTotal", "experience.managementExperience", "experience.peopleManagement",
+    "education.level", "education.degreeType", "education.graduationStatus",
 
-    # Common job app
-    "personal.desiredSalary",
-    "personal.additionalInfo",
-    "experience.whyFit",
-    "experience.summary",
+    # 2) Pattern-only
+    "personal.firstName", "personal.middleName", "personal.lastName", "personal.fullName",
+    "personal.preferredName", "personal.email", "personal.phone", "personal.linkedin",
+    "personal.github", "personal.portfolio", "personal.website",
+    "personal.addressLine1", "personal.addressLine2", "personal.city", "personal.state",
+    "personal.postalCode", "personal.country",
+    "documents.resume", "documents.coverLetter", "documents.transcript", "documents.workAuthorizationDocument",
+    "education.school", "education.major", "education.gpa", "education.startDate", "education.endDate",
+    "experience.company", "experience.title", "experience.startDate", "experience.endDate", "experience.currentlyWorking",
 
-    # Work auth
-    "workAuthorization.authorizedUS",
-    "workAuthorization.needsSponsorship",
+    # 3) Screening
+    "screening.whyCompany", "screening.whyRole", "screening.whyYou", "screening.whyChange", "screening.whyNow",
+    "screening.aboutYourself", "screening.professionalSummary", "screening.careerGoals",
+    "screening.strengths", "screening.weaknesses", "screening.biggestAchievement",
+    "screening.leadershipExample", "screening.teamworkExample", "screening.conflictExample", "screening.problemSolved",
+    "screening.projectHighlights", "screening.recentProject", "screening.projectChallenge",
+    "screening.additionalInfo", "screening.coverLetterLike",
+    "preferences.desiredSalary",
 
-    # EEO
-    "eeo.gender",
-    "eeo.race",
-    "eeo.veteran",
-    "eeo.disability",
-
-    # fallback
+    # Fallback
     "unknown",
 }
 
@@ -292,28 +309,21 @@ def _sanitize_profile(profile: dict) -> dict:
         if isinstance(obj, dict):
             cleaned = {}
             for k, v in obj.items():
-                # Skip known binary keys
-                if k.lower().replace('_', '').replace('-', '') in {s.lower().replace('_', '') for s in STRIP_KEYS}:
+                # Normalize key to check against strip list
+                k_norm = str(k).lower().replace('_', '').replace('-', '')
+                if k_norm in {s.lower().replace('_', '') for s in STRIP_KEYS}:
                     continue
-                # Skip any string value > 500 chars (likely base64 or encoded data)
-                if isinstance(v, str) and len(v) > 500:
+                # Skip any string value > 1000 chars (likely base64 or encoded data)
+                if isinstance(v, str) and len(v) > 1000:
                     continue
                 cleaned[k] = _clean(v, depth + 1)
             return cleaned
         elif isinstance(obj, list):
-            # Only keep first 3 items of arrays to save tokens
-            return [_clean(item, depth + 1) for item in obj[:3]]
+            # Only keep first 5 items of arrays to save tokens
+            return [_clean(item, depth + 1) for item in obj[:5]]
         return obj
 
-    cleaned = _clean(profile)
-
-    # Final safety: cap total JSON length at 4000 characters
-    result = json.dumps(cleaned, indent=2)
-    if len(result) > 4000:
-        result = result[:4000] + "\n... (truncated)"
-        return json.loads(json.dumps(cleaned)[:3990] + "}")
-
-    return cleaned
+    return _clean(profile)
 
 
 def predict_answer(request: AIRequest) -> AIResponse:

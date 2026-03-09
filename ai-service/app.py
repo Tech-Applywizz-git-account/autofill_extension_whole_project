@@ -25,7 +25,7 @@ from typing import Optional, Dict, Any
 
 from models import (
     AIRequest, AIResponse, Pattern, PatternUploadRequest,
-    UserProfile, AnalyticsEvent, BackupRequest
+    BatchPatternUploadRequest, UserProfile, AnalyticsEvent, BackupRequest
 )
 
 from config import config
@@ -276,6 +276,26 @@ def upload_pattern(req: PatternUploadRequest, email: str = None):
         _cache.delete("patterns:all")
         return {"success": True, "message": "Pattern uploaded successfully"}
 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/patterns/upload-batch", dependencies=[Depends(verify_api_key)])
+def upload_patterns_batch(req: BatchPatternUploadRequest, email: str = None):
+    """Upload multiple patterns at once"""
+    try:
+        from pattern_service import save_patterns_batch
+        summary = save_patterns_batch(req.patterns, user_email=email)
+        
+        # Invalidate cache if any succeeded
+        if summary["success"] > 0:
+            _cache.delete("patterns:all")
+            
+        return {
+            "success": True, 
+            "message": f"Batch completed: {summary['success']} saved, {summary['failed']} failed",
+            "summary": summary
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

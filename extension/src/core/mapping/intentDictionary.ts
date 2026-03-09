@@ -1,112 +1,219 @@
 export enum CanonicalIntent {
-    // Personal Information
-    FIRST_NAME = "personal.firstName",
-    LAST_NAME = "personal.lastName",
-    FULL_NAME = "personal.fullName",
-    PREFERRED_NAME = "personal.preferredName",
-    EMAIL = "personal.email",
-    PHONE = "personal.phone",
-    CITY = "personal.city",
-    STATE = "personal.state",
-    COUNTRY = "personal.country",
-    ZIP_CODE = "personal.zipCode",
-    ADDRESS = "personal.address",
-    LINKEDIN = "personal.linkedin",
-    GITHUB = "personal.github",
-    PORTFOLIO = "personal.portfolio",
+    // ==========================================
+    // 1) Universal Shareable Intents
+    // ==========================================
 
-    // Work Authorization
-    AUTHORIZED_US = "workAuthorization.authorizedUS",
-    CITIZENSHIP_STATUS = "workAuthorization.citizenshipStatus",
-    NEEDS_SPONSORSHIP = "workAuthorization.needsSponsorship",
-    NEEDS_FUTURE_SPONSORSHIP = "workAuthorization.needsFutureSponsorship",
-
-    // Application Questions
-    PREVIOUSLY_APPLIED = "application.previouslyApplied",
-    PREVIOUSLY_EMPLOYED = "application.previouslyEmployed",
-    CONFLICT_OF_INTEREST = "application.conflictOfInterest",
-    GOVERNMENT_BACKGROUND = "application.governmentBackground",
-
-    // EEO/Compliance (NEVER use AI for these)
+    // EEO / DEI
     GENDER = "eeo.gender",
     RACE = "eeo.race",
     HISPANIC = "eeo.hispanic",
     VETERAN = "eeo.veteran",
     DISABILITY = "eeo.disability",
     LGBTQ = "eeo.lgbtq",
-    SEXUAL_ORIENTATION = "eeo.sexualOrientation",
+    TRANSGENDER = "eeo.transgender",
+    PREFER_NOT_TO_ANSWER = "eeo.preferNotToAnswer",
 
-    // Education
+    // Work authorization / immigration
+    AUTHORIZED_US = "workAuthorization.authorizedUS",
+    AUTHORIZED_COUNTRY = "workAuthorization.authorizedCountry",
+    NEEDS_SPONSORSHIP = "workAuthorization.needsSponsorship",
+    NEEDS_SPONSORSHIP_NOW = "workAuthorization.needsSponsorshipNow",
+    NEEDS_SPONSORSHIP_FUTURE = "workAuthorization.needsSponsorshipFuture",
+    CITIZENSHIP_STATUS = "workAuthorization.citizenshipStatus",
+    VISA_TYPE = "workAuthorization.visaType",
+    WORK_PERMIT_TYPE = "workAuthorization.workPermitType",
+    WORK_PERMIT_VALID_UNTIL = "workAuthorization.workPermitValidUntil",
+    DRIVER_LICENSE = "workAuthorization.driverLicense",
+    SECURITY_CLEARANCE = "workAuthorization.securityClearance",
+    SECURITY_CLEARANCE_LEVEL = "workAuthorization.securityClearanceLevel",
+    EXPORT_CONTROL_ELIGIBLE = "workAuthorization.exportControlEligible",
+
+    // Work conditions / arrangement
+    WORK_ARRANGEMENT = "application.workArrangement",
+    WORK_TYPE = "application.workType",
+    SHIFT_AVAILABILITY = "application.shiftAvailability",
+    WEEKEND_AVAILABILITY = "application.weekendAvailability",
+    NIGHT_SHIFT_AVAILABILITY = "application.nightShiftAvailability",
+    OVERTIME_WILLINGNESS = "application.overtimeWillingness",
+    WILLING_TO_RELOCATE = "application.willingToRelocate",
+    WILLING_TO_TRAVEL = "application.willingToTravel",
+    TRAVEL_PERCENTAGE = "application.travelPercentage",
+
+    // Timing
+    START_DATE_AVAILABILITY = "application.startDateAvailability",
+    NOTICE_PERIOD = "application.noticePeriod",
+
+    // Compliance / consents
+    AGREE_TO_TERMS = "application.agreeToTerms",
+    PRIVACY_POLICY_CONSENT = "application.privacyPolicyConsent",
+    DATA_PROCESSING_CONSENT = "application.dataProcessingConsent",
+    BACKGROUND_CHECK_CONSENT = "application.backgroundCheckConsent",
+    DRUG_TEST_CONSENT = "application.drugTestConsent",
+    RIGHT_TO_WORK_CONFIRMATION = "application.rightToWorkConfirmation",
+    EEO_ACKNOWLEDGEMENT = "application.equalOpportunityAcknowledgement",
+
+    // Referral / engagement history
+    HOW_HEARD_ABOUT_US = "application.howDidYouHear",
+    WAS_REFERRED = "application.wasReferred",
+    PREVIOUSLY_APPLIED = "application.previouslyApplied",
+    PREVIOUSLY_INTERVIEWED = "application.previouslyInterviewed",
+    PREVIOUSLY_EMPLOYED = "application.previouslyEmployed",
+    HAS_RELATIVES = "application.hasRelatives",
+
+    // Location (structured)
+    COUNTRY = "location.country",
+    STATE = "location.state",
+    CITY = "location.city",
+    POSTAL_CODE = "location.postalCode",
+
+    // Communication preferences
+    ALLOW_SMS = "application.allowSmsMessages",
+    ALLOW_EMAIL_UPDATES = "application.allowEmailUpdates",
+    MARKETING_CONSENT = "application.marketingConsent",
+    TALENT_COMMUNITY_OPT_IN = "application.talentCommunityOptIn",
+
+    // Experience summary (structured)
+    YEARS_TOTAL = "experience.yearsTotal",
+    MANAGEMENT_EXPERIENCE = "experience.managementExperience",
+    PEOPLE_MANAGEMENT = "experience.peopleManagement",
+
+    // Education summary (structured)
+    EDUCATION_LEVEL = "education.level",
+    DEGREE_TYPE = "education.degreeType",
+    GRADUATION_STATUS = "education.graduationStatus",
+
+    // ==========================================
+    // 2) Pattern-only Intents
+    // ==========================================
+
+    // Personal identifiers
+    FIRST_NAME = "personal.firstName",
+    MIDDLE_NAME = "personal.middleName",
+    LAST_NAME = "personal.lastName",
+    FULL_NAME = "personal.fullName",
+    PREFERRED_NAME = "personal.preferredName",
+    EMAIL = "personal.email",
+    PHONE = "personal.phone",
+    LINKEDIN = "personal.linkedin",
+    GITHUB = "personal.github",
+    PORTFOLIO = "personal.portfolio",
+    WEBSITE = "personal.website",
+    ADDRESS_LINE_1 = "personal.addressLine1",
+    ADDRESS_LINE_2 = "personal.addressLine2",
+    PERSONAL_CITY = "personal.city",
+    PERSONAL_STATE = "personal.state",
+    PERSONAL_POSTAL_CODE = "personal.postalCode",
+    PERSONAL_COUNTRY = "personal.country",
+
+    // Documents
+    RESUME = "documents.resume",
+    COVER_LETTER = "documents.coverLetter",
+    TRANSCRIPT = "documents.transcript",
+    WORK_AUTH_DOCUMENT = "documents.workAuthorizationDocument",
+
+    // Education (unique values)
     SCHOOL = "education.school",
-    DEGREE = "education.degree",
     MAJOR = "education.major",
     GPA = "education.gpa",
-    GRADUATION_DATE = "education.graduationDate",
-    START_DATE_EDUCATION = "education.startDate",
+    EDUCATION_START_DATE = "education.startDate",
+    EDUCATION_END_DATE = "education.endDate",
 
-    // Experience
+    // Experience (unique values)
     COMPANY = "experience.company",
     JOB_TITLE = "experience.title",
-    START_DATE_WORK = "experience.startDate",
-    END_DATE_WORK = "experience.endDate",
-    WORK_LOCATION = "experience.location",
+    EXPERIENCE_START_DATE = "experience.startDate",
+    EXPERIENCE_END_DATE = "experience.endDate",
+    CURRENTLY_WORKING = "experience.currentlyWorking",
 
-    // Skills & Preferences
+    // ==========================================
+    // 3) Free-text Screening Intents
+    // ==========================================
+
+    // Motivation
+    WHY_COMPANY = "screening.whyCompany",
+    WHY_ROLE = "screening.whyRole",
+    WHY_YOU = "screening.whyYou",
+    WHY_CHANGE = "screening.whyChange",
+    WHY_NOW = "screening.whyNow",
+
+    // About / summary
+    ABOUT_YOURSELF = "screening.aboutYourself",
+    PROFESSIONAL_SUMMARY = "screening.professionalSummary",
+    CAREER_GOALS = "screening.careerGoals",
+
+    // Strengths / weaknesses / behavior
+    STRENGTHS = "screening.strengths",
+    WEAKNESSES = "screening.weaknesses",
+    BIGGEST_ACHIEVEMENT = "screening.biggestAchievement",
+    LEADERSHIP_EXAMPLE = "screening.leadershipExample",
+    TEAMWORK_EXAMPLE = "screening.teamworkExample",
+    CONFLICT_EXAMPLE = "screening.conflictExample",
+    PROBLEM_SOLVED = "screening.problemSolved",
+
+    // Projects / portfolio
+    PROJECT_HIGHLIGHTS = "screening.projectHighlights",
+    RECENT_PROJECT = "screening.recentProject",
+    PROJECT_CHALLENGE = "screening.projectChallenge",
+
+    // Extra
+    ADDITIONAL_INFO = "screening.additionalInfo",
+    COVER_LETTER_LIKE = "screening.coverLetterLike",
+
+    // ==========================================
+    // 4) Miscellaneous / Legacy (Fixed Lints)
+    // ==========================================
+    ZIP_CODE = "personal.zipCode",
+    ADDRESS = "personal.address",
+    MARITAL_STATUS = "personal.maritalStatus",
+    NATIONALITY = "personal.nationality",
+    SALARY_EXPECTATIONS = "preferences.salaryExpectations",
+    CONFLICT_OF_INTEREST = "application.conflictOfInterest",
+    GOVERNMENT_BACKGROUND = "application.governmentBackground",
+    NEEDS_FUTURE_SPONSORSHIP = "workAuthorization.needsFutureSponsorship",
+    SEXUAL_ORIENTATION = "eeo.sexualOrientation",
+    DEGREE = "education.degree",
+    GRADUATION_DATE = "education.graduationDate",
+    START_DATE_WORK = "experience.startDateWork",
+    END_DATE_WORK = "experience.endDateWork",
     SKILLS = "skills",
     YEARS_OF_EXPERIENCE = "yearsOfExperience",
     EMPLOYMENT_TYPE = "preferences.employmentTypes",
     REMOTE_PREFERENCE = "preferences.remoteOk",
     PREFERRED_LOCATION = "preferences.locations",
-    PREFERRED_LOCATION_MULTI = "preferences.locationsMulti",  // For multi-select location preferences
-    NOTICE_PERIOD = "preferences.noticePeriod",
-    AVAILABILITY_DATE = "preferences.availabilityDate",
     REASON_LEAVING = "application.reasonLeaving",
     HAS_DIPLOMA = "education.hasDiploma",
     HAS_NON_COMPETE = "application.hasNonCompete",
-    HAS_RELATIVES = "application.hasRelatives",
-    WORKED_FOR_COMPANY = "application.workedForCompany",
     SIGNED_AGREEMENT = "application.signedAgreement",
     PROVIDING_SERVICES = "application.providingServices",
     WORKED_FOR_US_GOV = "application.workedForUSGov",
     MILITARY_HOUSEHOLD = "eeo.militaryHousehold",
     DATE_OF_BIRTH = "personal.dateOfBirth",
     AGE = "personal.age",
-    NATIONALITY = "personal.nationality",
-    MARITAL_STATUS = "personal.maritalStatus",
-    SALARY_EXPECTATIONS = "preferences.salaryExpectations",
-    SALARY_RANGE_ACKNOWLEDGMENT = "application.salaryRangeAcknowledgment",  // Acknowledge posted salary range
-    SECURITY_CLEARANCE = "workAuthorization.securityClearance",
     REFERENCE_NAME = "application.referenceName",
     REFERENCE_PHONE = "application.referencePhone",
-    DRIVER_LICENSE = "workAuthorization.driverLicense",
     DEBARRED_SUSPENDED = "application.debarredSuspended",
     RETAINED_BY_US_GOV = "application.retainedByUSGov",
     TOP_SECRET_CLEARANCE = "workAuthorization.topSecretClearance",
     APPLICANT_SIGNATURE = "personal.applicantSignature",
     AUTHORIZE_RESUME_USE = "application.authorizeResumeUse",
     CAPABLE_OF_DUTIES = "application.capableOfDuties",
-    ALLOW_SMS = "application.allowSmsMessages",
-    AGREE_TO_TERMS = "application.agreeToTerms",
     CONSENT_TO_CALLS = "application.consentToPhoneCalls",
     MARYLAND_RESIDENT = "personal.marylandResident",
     OPEN_TO_W2 = "preferences.openToW2Contract",
     CURRENT_COMPENSATION = "preferences.currentCompensation",
-    PROJECT_HIGHLIGHTS = "personal.keyProjectHighlights",
-    OVERALL_SUMMARY = "personal.overallSummary",
     PROFILE_BULLETS = "personal.profileBulletPoints",
     SKILLS_CAPABILITIES = "personal.skillsAndCapabilities",
     CORE_COMPETENCIES = "personal.coreCompetencies",
-    RESUME = "documents.resume.base64",
-    COVER_LETTER = "documents.coverLetter.base64",
-
-    // NEW: Application source tracking
-    REFERRAL_SOURCE = "application.referralSource",  // Who referred you
-    HOW_HEARD_ABOUT_US = "application.howHeardAboutUs",  // "I found you" vs "You found me"
-    WHERE_HEARD_ABOUT_US = "application.whereHeardAboutUs",  // LinkedIn, Indeed, etc.
-
-    // NEW: Company-specific questions
-    CONSULTING_FIRM = "application.consultingFirm",  // Which consulting firm
+    REFERRAL_SOURCE = "application.referralSource",
+    WHERE_HEARD_ABOUT_US = "application.whereHeardAboutUs",
+    CONSULTING_FIRM = "application.consultingFirm",
     PREVIOUS_COMPANY = "experience.previousCompany",
+    WORK_LOCATION = "experience.location",
+    AVAILABILITY_DATE = "preferences.availabilityDate",
+    SALARY_RANGE_ACKNOWLEDGMENT = "application.salaryRangeAcknowledgment",
+    PREFERRED_LOCATION_MULTI = "preferences.locationsMulti",
+    PROJECT_HIGHLIGHTS_LEGACY = "personal.keyProjectHighlights",
+    OVERALL_SUMMARY = "personal.overallSummary",
 }
 
 export const INTENT_PATTERNS: {

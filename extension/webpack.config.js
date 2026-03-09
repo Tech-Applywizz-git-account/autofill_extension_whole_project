@@ -11,12 +11,16 @@ const localEnv = dotenv.config({ path: './src/.env' }).parsed || dotenv.config()
 const mergedEnv = { ...process.env, ...localEnv };
 
 // Extract all REACT_APP_ variables and stringify them for DefinePlugin
-const envKeys = Object.keys(mergedEnv)
+const filteredEnv = Object.keys(mergedEnv)
     .filter(key => key.startsWith('REACT_APP_') || key === 'NODE_ENV')
     .reduce((prev, next) => {
-        prev[`process.env.${next}`] = JSON.stringify(mergedEnv[next]);
+        prev[next] = mergedEnv[next];
         return prev;
     }, {});
+
+const envConfig = {
+    'process.env': JSON.stringify(filteredEnv)
+};
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -94,6 +98,6 @@ module.exports = {
             filename: 'settings.html',
             chunks: ['settings'],
         }),
-        new webpack.DefinePlugin(envKeys)
+        new webpack.DefinePlugin(envConfig)
     ],
 };

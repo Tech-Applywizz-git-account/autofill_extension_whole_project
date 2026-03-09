@@ -49,23 +49,22 @@ export class FormScanner {
 
                 const question = await this.processField(field);
                 if (question) {
-                    // Check for duplicate immediately
-                    const questionKey = question.questionText.toLowerCase().trim();
+                    // RELAXED DEDUPLICATION:
+                    // Only treat as a duplicate if the LABEL and the FIELD TYPE are identical.
+                    // This allows "Phone" (dropdown, country code) and "Phone" (input, number) to co-exist.
+                    const questionKey = `${question.questionText.toLowerCase().trim()}|${question.fieldType}`;
 
                     if (seenQuestions.has(questionKey)) {
-                        // CRITICAL FIX: "Keep First" strategy for file inputs
-                        // If we find a duplicate "Attach" button, we assume the FIRST one is the Resume (primary)
-                        // and the subsequent ones are Cover Letters or other docs.
-                        // If we failed to distinguish them by label, it's better to fill ONLY Resume
-                        // than to fill both with Resume (or overwrite Resume with Cover Letter field).
+                        // For identical type duplicates, we still apply "Keep First" for files
+                        // but for others we usually want the latest/most visible one.
                         if (question.fieldType === 'file') {
-                            console.log(`${LOG_PREFIX} 📎 Ignoring duplicate file input: "${question.questionText}" (Keeping first found)`);
-                            // Do NOT add to questions array
-                            // Do NOT overwrite existing question
+                            console.log(`${LOG_PREFIX} 📎 Ignoring duplicate file input: "${question.questionText}"`);
                         } else {
-                            console.log(`${LOG_PREFIX} ⚠️ Found duplicate question: "${question.questionText}" - Replacing with newest version`);
-                            // Find and replace the existing question
-                            const index = questions.findIndex(q => q.questionText.toLowerCase().trim() === questionKey);
+                            console.log(`${LOG_PREFIX} ⚠️ Found identical duplicate: "${question.questionText}" (${question.fieldType}) - Replacing with newest`);
+                            const index = questions.findIndex(q => {
+                                const k = `${q.questionText.toLowerCase().trim()}|${q.fieldType}`;
+                                return k === questionKey;
+                            });
                             if (index !== -1) {
                                 questions[index] = question;
                             }
@@ -77,7 +76,7 @@ export class FormScanner {
                 }
             }
 
-            console.log(`${LOG_PREFIX} ✅ Scan complete: ${questions.length} unique questions found`);
+            console.log(`${LOG_PREFIX} ✅ Scan complete: ${questions.length} fields found`);
 
         } catch (error) {
             console.error(`${LOG_PREFIX} ❌ Scan error:`, error);
@@ -102,9 +101,6 @@ export class FormScanner {
             const htmlInput = input as HTMLInputElement;
             const isFile = htmlInput.type === 'file';
 
-            // VISIBILITY RELAXATION FOR FILE INPUTS
-            // ATS platforms (Greenhouse, ASK, Jobvite) often hide real file inputs with opacity: 0
-            // or by moving them off-screen. As long as it's not display: none, we treat it as a candidate.
             if (this.isVisible(htmlInput)) {
                 fields.push(htmlInput);
             } else if (isFile) {
@@ -132,24 +128,19 @@ export class FormScanner {
             }
         });
 
-        // Find custom dropdowns (React-Select, etc.)
-        // Look for elements with role="combobox" or common React-Select classes
-        const customDropdowns = doc.querySelectorAll('[role="combobox"], [aria-haspopup="listbox"]');
+        // Find custom dropdowns (React-Select, Greenhouse, etc.)
+        // Look for elements with role="combobox", aria-haspopup="listbox", role="listbox" or common framework-specific class names
+        const customDropdowns = doc.querySelectorAll('[role="combobox"], [aria-haspopup="listbox"], [role="listbox"], [aria-autocomplete], .select2-container, .css-container, [class*="-select-container"], [data-automation-id*="select"], [data-testid*="select"]');
         customDropdowns.forEach(dropdown => {
             if (!this.isVisible(dropdown as HTMLElement)) return;
 
-            // DEDUPLICATION LOGIC:
             // If the dropdown container has an internal input that we already found,
-            // we should replace that input with the dropdown container in our fields list,
-            // OR skip the container if we prefer the input. 
-            // For production-grade interaction, the CONTAINER is often better for opening,
-            // but the INPUT is better for typing. 
+            // we should replace that input with the dropdown container in our fields list.
             const input = dropdown.querySelector('input');
             if (input) {
                 const inputIdx = fields.indexOf(input as HTMLElement);
                 if (inputIdx !== -1) {
-                    console.log(`${LOG_PREFIX} 🔄 Merging dropdown container with its internal input`);
-                    // Replace the input with the container (which selectDropdownKeyboardFirst prefers)
+                    console.log(`${LOG_PREFIX} 🔄 Merging custom dropdown container with its internal input`);
                     fields[inputIdx] = dropdown as HTMLElement;
                     return;
                 }
@@ -161,20 +152,23 @@ export class FormScanner {
             }
         });
 
-        // Find radio button groups (group by name attribute)
+        // Find radio button groups (group by name attribute, or by parent container if nameless)
         const radioGroups = new Map<string, HTMLInputElement[]>();
         const radios = doc.querySelectorAll('input[type="radio"]');
         radios.forEach(radio => {
             const input = radio as HTMLInputElement;
             if (!this.isVisible(input)) return;
 
+            // Group key: prefer name attribute, fallback to parent container path for Ashby-style radios
             const name = input.name;
-            if (!name) return;
+            const groupKey = name
+                ? `name_${name}`
+                : `container_${this.getContainerKey(input)}`;
 
-            if (!radioGroups.has(name)) {
-                radioGroups.set(name, []);
+            if (!radioGroups.has(groupKey)) {
+                radioGroups.set(groupKey, []);
             }
-            radioGroups.get(name)!.push(input);
+            radioGroups.get(groupKey)!.push(input);
         });
 
         // Add one representative radio from each group
@@ -196,13 +190,18 @@ export class FormScanner {
 
             // Find the parent container that groups this checkbox
             // Try fieldset first (most semantic), then divs with common field classes
+            // Added Ashby-specific selectors: [data-testid*="question"], [class*="_question"] etc.
             let container: HTMLElement | null = input.closest('fieldset');
             if (!container) {
-                container = input.closest('[role="group"], .field, .form-field, .question, .form-group, [class*="Question"], [class*="Field"]');
+                container = input.closest(
+                    '[role="group"], .field, .form-field, .question, .form-group, ' +
+                    '[class*="Question"], [class*="Field"], [data-testid*="question"], ' +
+                    '[class*="_question"], [class*="application-question"], [class*="checkbox-group"]'
+                );
             }
             if (!container) {
-                // Fallback: use parent element
-                container = input.parentElement;
+                // Ashby fallback: group by grandparent (checkbox is inside label which is inside a group div)
+                container = input.parentElement?.parentElement || input.parentElement;
             }
 
             if (container) {
@@ -221,10 +220,20 @@ export class FormScanner {
         });
 
         // Find custom upload buttons that might not be inputs (click-to-find-input types)
+        // IMPORTANT: Skip generic UI buttons that are not real upload controls
+        const genericUITexts = [
+            'or drag and drop here',
+            'drag and drop',
+            'drag & drop',
+            'click to upload',
+            'browse files',
+        ];
         const uploadButtons = doc.querySelectorAll('button, [role="button"], .upload-btn, .attach-btn');
         uploadButtons.forEach(btn => {
             if (!this.isVisible(btn as HTMLElement)) return;
-            const text = btn.textContent?.toLowerCase() || '';
+            const text = btn.textContent?.toLowerCase().trim() || '';
+            // Skip generic UI text that is not a real field
+            if (genericUITexts.some(g => text === g || text.startsWith(g))) return;
             if (text.includes('upload') || text.includes('attach') || text.includes('resume')) {
                 // If this is a button-only uploader (common in ASK Consulting), add it if no direct file input found
                 const hasFileInput = btn.querySelector('input[type="file"]') || btn.parentElement?.querySelector('input[type="file"]');
@@ -236,6 +245,25 @@ export class FormScanner {
         });
 
         return fields;
+    }
+
+    /**
+     * Get a stable key for a container element (used for grouping nameless radios)
+     */
+    private getContainerKey(element: HTMLElement): string {
+        // Walk up the DOM to find a meaningful container
+        let container = element.closest(
+            'fieldset, [role="group"], [class*="Question"], [class*="Field"], [class*="_field"], [class*="application-question"]'
+        ) || element.parentElement?.parentElement || element.parentElement;
+
+        if (!container) return Math.random().toString(36);
+
+        // Use class + DOM position as the key
+        const className = typeof container.className === 'string' ? container.className : '';
+        const classKey = className.split(' ').filter(c => c && !c.startsWith('css-')).slice(0, 3).join('.');
+        const siblings = Array.from(container.parentElement?.children || []);
+        const idx = siblings.indexOf(container as Element);
+        return `${classKey}_${idx}`;
     }
 
     /**
@@ -474,12 +502,17 @@ export class FormScanner {
         const rect = element.getBoundingClientRect();
         const style = getComputedStyle(element);
 
+        // Ashby and many other platforms hide native inputs with opacity: 0
+        // while their custom wrappers are visible. We must allow these.
+        const isHiddenInput = element instanceof HTMLInputElement &&
+            (element.type === 'radio' || element.type === 'checkbox' || element.type === 'file');
+
         return (
             rect.width > 0 &&
             rect.height > 0 &&
             style.display !== 'none' &&
             style.visibility !== 'hidden' &&
-            style.opacity !== '0'
+            (style.opacity !== '0' || isHiddenInput)
         );
     }
 

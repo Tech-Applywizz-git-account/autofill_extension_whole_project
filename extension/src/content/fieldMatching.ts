@@ -142,7 +142,21 @@ export function detectFieldsInCurrentDOM(): Detected[] {
     }
 
     // Filter: keep only entries with question text
-    const filtered = out.filter(x => (x.questionText ?? "").trim().length > 0);
+    // And exclude generic UI elements like "or drag and drop here"
+    const genericUITexts = [
+        'or drag and drop here',
+        'drag and drop',
+        'drag & drop',
+        'click to upload',
+        'browse files',
+    ];
+
+    const filtered = out.filter(x => {
+        const text = (x.questionText ?? "").trim().toLowerCase();
+        if (text.length === 0) return false;
+        if (genericUITexts.some(g => text === g || text.startsWith(g))) return false;
+        return true;
+    });
 
     console.log(`${LOG_PREFIX} Detected ${filtered.length} fields:`, filtered.map(f => ({ text: f.questionText.substring(0, 30), kind: f.kind })));
 
@@ -151,15 +165,22 @@ export function detectFieldsInCurrentDOM(): Detected[] {
 
 /**
  * Helper to get a semi-stable identifier for a container to group anonymous controls
+ * Aligned with FormScanner.ts logic for consistency
  */
-function getContainerHash(el: HTMLElement): string {
-    const container = el.closest('fieldset, [role="group"], .field, .form-group') || el.parentElement;
-    if (!container) return Math.random().toString(); // Fallback
+function getContainerHash(element: HTMLElement): string {
+    // Walk up the DOM to find a meaningful container
+    let container = element.closest(
+        'fieldset, [role="group"], [class*="Question"], [class*="Field"], [class*="_field"], [class*="application-question"]'
+    ) || element.parentElement?.parentElement || element.parentElement;
 
-    // Use a combination of class and index if possible
-    const className = container.className || 'no-class';
-    const index = Array.from(document.querySelectorAll(`.${className.split(' ')[0]}`)).indexOf(container);
-    return `${className}_${index}`;
+    if (!container) return Math.random().toString(36);
+
+    // Use class + DOM position as the key
+    const className = typeof container.className === 'string' ? container.className : '';
+    const classKey = className.split(' ').filter(c => c && !c.startsWith('css-')).slice(0, 3).join('.');
+    const siblings = Array.from(container.parentElement?.children || []);
+    const idx = siblings.indexOf(container as Element);
+    return `${classKey}_${idx}`;
 }
 
 /**
@@ -212,7 +233,19 @@ function getLabelFor(el: HTMLElement): HTMLLabelElement | null {
 function isVisible(el: HTMLElement): boolean {
     const r = el.getBoundingClientRect();
     const style = window.getComputedStyle(el);
-    return r.width > 0 && r.height > 0 && style.visibility !== "hidden" && style.display !== "none";
+
+    // Ashby and many other platforms hide native inputs with opacity: 0
+    // while their custom wrappers are visible. We must allow these.
+    const isHiddenInput = el instanceof HTMLInputElement &&
+        (el.type === 'radio' || el.type === 'checkbox' || el.type === 'file');
+
+    return (
+        r.width > 0 &&
+        r.height > 0 &&
+        style.visibility !== "hidden" &&
+        style.display !== "none" &&
+        (style.opacity !== '0' || isHiddenInput)
+    );
 }
 
 /**

@@ -18,8 +18,10 @@ SHAREABLE_INTENTS = config.SHAREABLE_INTENTS
 from supabase_client import supabase
 
 def is_shareable_intent(intent: str) -> bool:
-    """Check if intent is shareable for privacy"""
-    return intent in SHAREABLE_INTENTS
+    """Check if intent is allowed for global promotion (any of the 3 tiers)"""
+    return (intent in config.SHAREABLE_INTENTS or 
+            intent in config.PATTERN_ONLY_INTENTS or 
+            intent in config.SCREENING_TEXT_INTENTS)
 
 def read_patterns() -> List[dict]:
     """Read all patterns from Supabase (Global)"""
@@ -167,9 +169,69 @@ def save_pattern(pattern: Pattern, user_email: Optional[str] = None) -> bool:
             return False
             
         print(f"✅ Pattern {pattern_id} saved successfully.")
+
+        # 🟢 GLOBAL PROMOTION: If intent is shareable, promote to global_patterns
+        if is_shareable_intent(pattern_dict['intent']):
+            promote_to_global(pattern_dict)
+
         return True
     except Exception as e:
         print(f"❌ Exception saving pattern to Supabase: {e}")
+        return False
+
+def promote_to_global(pattern_dict: dict) -> bool:
+    """
+    Promote a captured pattern to global_patterns table.
+    Uses question_pattern as the unique key to prevent UUID mismatch errors.
+    """
+    try:
+        normalized_q = pattern_dict['questionPattern'].lower().strip()
+        intent = pattern_dict['intent']
+        
+        # Prepare data (Omit ID to let Supabase generate UUID)
+        # 🔒 DEFENSE IN DEPTH: Strip answer mappings if NOT universal shareable
+        from config import config
+        is_universal = intent in config.SHAREABLE_INTENTS
+        
+        global_data = {
+            "question_pattern": normalized_q,
+            "intent": intent,
+            "canonical_key": pattern_dict.get('canonicalKey'),
+            "field_type": pattern_dict.get('fieldType'),
+            "answer_mappings": pattern_dict.get('answerMappings', []) if is_universal else [],
+            "popularity": 1,
+            "created_at": datetime.now().isoformat()
+        }
+        
+        if not is_universal:
+            print(f"🔒 Server-side stripped private mappings for: {intent}")
+        
+        # Check if already in global by question_pattern
+        existing = supabase.table('global_patterns')\
+            .select('id', 'popularity')\
+            .eq('question_pattern', normalized_q)\
+            .execute()
+        
+        if existing.data:
+            # Update existing global pattern (increment popularity)
+            g_id = existing.data[0]['id']
+            new_popularity = (existing.data[0].get('popularity') or 1) + 1
+            print(f"🌍 Global pattern exists, boosting popularity: {g_id} ({new_popularity})")
+            
+            supabase.table('global_patterns').update({
+                "popularity": new_popularity,
+                "answer_mappings": pattern_dict.get('answerMappings', []) if is_universal else []
+            }).eq('id', g_id).execute()
+        else:
+            # Insert new global pattern
+            print(f"🆕 Promoting to GLOBAL: {normalized_q} -> {intent}")
+            supabase.table('global_patterns').insert(global_data).execute()
+            
+        return True
+    except Exception as e:
+        print(f"⚠️ Exception promoting to global: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def get_stats() -> dict:
@@ -199,3 +261,25 @@ def get_user_patterns(email: str) -> list:
     except Exception as e:
         print(f"Error getting user patterns: {e}")
         return []
+
+def save_patterns_batch(patterns: List[Pattern], user_email: str) -> dict:
+    """
+    Save multiple patterns at once.
+    Returns summary of results.
+    """
+    results = {"success": 0, "failed": 0, "errors": []}
+    
+    if not user_email:
+        return {"success": 0, "failed": len(patterns), "errors": ["User email required"]}
+        
+    for p in patterns:
+        try:
+            if save_pattern(p, user_email):
+                results["success"] += 1
+            else:
+                results["failed"] += 1
+        except Exception as e:
+            results["failed"] += 1
+            results["errors"].append(str(e))
+            
+    return results

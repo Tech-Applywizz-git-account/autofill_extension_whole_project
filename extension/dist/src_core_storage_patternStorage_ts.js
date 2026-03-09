@@ -255,17 +255,52 @@ const AI_SERVICE_URL = _config__WEBPACK_IMPORTED_MODULE_2__.CONFIG.API.AI_SERVIC
 // -------------------------------------------------------------------
 const GLOBAL_PATTERNS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 let globalPatternsCache = null;
-// Shareable intents (must match backend)
-const SHAREABLE_INTENTS = [
-    'eeo.gender', 'eeo.hispanic', 'eeo.veteran', 'eeo.disability', 'eeo.race', 'eeo.lgbtq',
-    'workAuth.sponsorship', 'workAuth.usAuthorized', 'workAuth.driverLicense', 'workAuth.visaType',
-    'location.country', 'location.state',
-    'application.hasRelatives', 'application.previouslyApplied', 'application.ageVerification',
-    'application.willingToRelocate', 'application.willingToTravel', 'application.workArrangement',
-    // Pattern-only (no answer sharing)
-    'personal.firstName', 'personal.lastName', 'personal.email', 'personal.phone', 'personal.city',
-    'education.degree', 'education.school', 'education.major',
-    'experience.company', 'experience.title'
+// ==========================================
+// 1) Universal shareable intents (Global learning OK)
+// These share Question + Answer variants.
+const UNIVERSAL_SHAREABLE_INTENTS = [
+    'eeo.gender', 'eeo.race', 'eeo.hispanic', 'eeo.veteran', 'eeo.disability', 'eeo.lgbtq', 'eeo.transgender', 'eeo.preferNotToAnswer',
+    'workAuthorization.authorizedUS', 'workAuthorization.authorizedCountry', 'workAuthorization.needsSponsorship',
+    'workAuthorization.needsSponsorshipNow', 'workAuthorization.needsSponsorshipFuture', 'workAuthorization.citizenshipStatus',
+    'workAuthorization.visaType', 'workAuthorization.workPermitType', 'workAuthorization.workPermitValidUntil',
+    'workAuthorization.driverLicense', 'workAuthorization.securityClearance', 'workAuthorization.securityClearanceLevel',
+    'workAuthorization.exportControlEligible',
+    'application.workArrangement', 'application.workType', 'application.shiftAvailability', 'application.weekendAvailability',
+    'application.nightShiftAvailability', 'application.overtimeWillingness', 'application.willingToRelocate',
+    'application.willingToTravel', 'application.travelPercentage',
+    'application.startDateAvailability', 'application.noticePeriod',
+    'application.agreeToTerms', 'application.privacyPolicyConsent', 'application.dataProcessingConsent',
+    'application.backgroundCheckConsent', 'application.drugTestConsent', 'application.rightToWorkConfirmation',
+    'application.equalOpportunityAcknowledgement',
+    'application.howDidYouHear', 'application.wasReferred', 'application.previouslyApplied',
+    'application.previouslyInterviewed', 'application.previouslyEmployed', 'application.hasRelatives',
+    'location.country', 'location.state', 'location.city', 'location.postalCode',
+    'application.allowSmsMessages', 'application.allowEmailUpdates', 'application.marketingConsent',
+    'application.talentCommunityOptIn',
+    'experience.yearsTotal', 'experience.managementExperience', 'experience.peopleManagement',
+    'education.level', 'education.degreeType', 'education.graduationStatus'
+];
+// 2) Pattern-only intents (Global patterns YES, answers NO)
+// Only stores Question + Intent. Values are private.
+const PATTERN_ONLY_INTENTS = [
+    'personal.firstName', 'personal.middleName', 'personal.lastName', 'personal.fullName',
+    'personal.preferredName', 'personal.email', 'personal.phone', 'personal.linkedin',
+    'personal.github', 'personal.portfolio', 'personal.website',
+    'personal.addressLine1', 'personal.addressLine2', 'personal.city', 'personal.state',
+    'personal.postalCode', 'personal.country',
+    'documents.resume', 'documents.coverLetter', 'documents.transcript', 'documents.workAuthorizationDocument',
+    'education.school', 'education.major', 'education.gpa', 'education.startDate', 'education.endDate',
+    'experience.company', 'experience.title', 'experience.startDate', 'experience.endDate', 'experience.currentlyWorking'
+];
+// 3) Free-text screening intents (Pattern-only + User Templates)
+// Shared patterns, but answers are unique/templated per user.
+const SCREENING_TEXT_INTENTS = [
+    'screening.whyCompany', 'screening.whyRole', 'screening.whyYou', 'screening.whyChange', 'screening.whyNow',
+    'screening.aboutYourself', 'screening.professionalSummary', 'screening.careerGoals',
+    'screening.strengths', 'screening.weaknesses', 'screening.biggestAchievement',
+    'screening.leadershipExample', 'screening.teamworkExample', 'screening.conflictExample', 'screening.problemSolved',
+    'screening.projectHighlights', 'screening.recentProject', 'screening.projectChallenge',
+    'screening.additionalInfo', 'screening.coverLetterLike'
 ];
 /**
  * Helper to perform fetch via background script to bypass CORS
@@ -306,6 +341,23 @@ class PatternStorage {
             console.error('[PatternStorage] Error getting local patterns:', error);
             return [];
         }
+    }
+    /**
+     * Get all patterns (Local + Global)
+     */
+    async getAllPatterns() {
+        const local = await this.getLocalPatterns();
+        const global = await this.fetchGlobalPatterns();
+        // Merge them, prioritizing local ones for same question phrasing
+        const combined = [...local];
+        const localPhrases = new Set(local.map(p => p.questionPattern?.toLowerCase().trim()));
+        for (const gp of global) {
+            const normalizedGP = gp.questionPattern?.toLowerCase().trim();
+            if (!localPhrases.has(normalizedGP)) {
+                combined.push(gp);
+            }
+        }
+        return combined;
     }
     /**
      * Save patterns locally
@@ -356,11 +408,7 @@ class PatternStorage {
                     }
                 });
             }
-            existing.lastUsed = new Date().toISOString();
-            existing.synced = false; // Mark for re-sync
             await this.saveLocalPatterns(patterns);
-            // Sync to Supabase
-            await this.syncPatternToSupabase(existing);
         }
         else {
             // Add new pattern
@@ -375,8 +423,6 @@ class PatternStorage {
             patterns.push(newPattern);
             console.log(`[PatternStorage] 🎓 Learned new pattern: "${pattern.questionPattern}" → ${pattern.intent}`);
             await this.saveLocalPatterns(patterns);
-            // Sync to Supabase
-            await this.syncPatternToSupabase(newPattern);
         }
     }
     /**
@@ -648,6 +694,57 @@ class PatternStorage {
         }
     }
     /**
+     * Sync all unsynced patterns to Supabase in a single batch
+     */
+    async syncUnsyncedPatterns() {
+        try {
+            const patterns = await this.getLocalPatterns();
+            const unsynced = patterns.filter(p => !p.synced);
+            if (unsynced.length === 0) {
+                console.log("[PatternStorage] ✨ No new patterns to sync");
+                return;
+            }
+            const profile = await (0,_profileStorage__WEBPACK_IMPORTED_MODULE_1__.loadProfile)();
+            if (!profile?.personal.email) {
+                console.warn("[PatternStorage] No email found in profile, cannot sync batch");
+                return;
+            }
+            console.log(`[PatternStorage] 🔄 Batch syncing ${unsynced.length} patterns to AI Service...`);
+            // 🔒 PRIVACY STRIPPING
+            const syncPayloads = unsynced.map(pattern => {
+                const isUniversal = UNIVERSAL_SHAREABLE_INTENTS.includes(pattern.intent);
+                return {
+                    ...pattern,
+                    answerMappings: isUniversal ? pattern.answerMappings : []
+                };
+            });
+            const response = await proxyFetch(`${AI_SERVICE_URL}/api/patterns/upload-batch?email=${encodeURIComponent(profile.personal.email)}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ patterns: syncPayloads }),
+            });
+            if (response && response.success) {
+                console.log(`[PatternStorage] ✅ Batch sync successful: ${unsynced.length} patterns`);
+                // Update local synced status
+                const updatedPatterns = patterns.map(p => {
+                    if (!p.synced) {
+                        return { ...p, synced: true };
+                    }
+                    return p;
+                });
+                await this.saveLocalPatterns(updatedPatterns);
+            }
+            else {
+                console.error("[PatternStorage] ❌ Batch sync failed:", response?.error || 'Unknown error');
+            }
+        }
+        catch (error) {
+            console.warn("[PatternStorage] Batch sync error:", error);
+        }
+    }
+    /**
      * Sync a single pattern to Supabase via AI Service
      */
     async syncPatternToSupabase(pattern) {
@@ -658,12 +755,22 @@ class PatternStorage {
                 return;
             }
             console.log(`[PatternStorage] 🔄 Syncing pattern to AI Service: ${pattern.intent}`);
+            // 🔒 PRIVACY STRIPPING: If NOT a universal shareable intent, remove the answer mappings.
+            // This ensures for personal/screening items, we only share the "Question -> Intent" link, not the private answer.
+            const isUniversal = UNIVERSAL_SHAREABLE_INTENTS.includes(pattern.intent);
+            const syncPayload = {
+                ...pattern,
+                answerMappings: isUniversal ? pattern.answerMappings : []
+            };
+            if (!isUniversal) {
+                console.log(`[PatternStorage] 🔒 Stripped private answer mappings for non-universal intent: ${pattern.intent}`);
+            }
             const response = await proxyFetch(`${AI_SERVICE_URL}/api/patterns/upload?email=${encodeURIComponent(profile.personal.email)}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ pattern }),
+                body: JSON.stringify({ pattern: syncPayload }),
             });
             if (response && (response.success || response.message?.includes('successfully'))) {
                 console.log("[PatternStorage] ✅ Pattern synced to AI Service");

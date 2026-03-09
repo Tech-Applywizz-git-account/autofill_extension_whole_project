@@ -1204,6 +1204,11 @@ export function findQuestionIntent(
  * @returns Value from profile or null
  */
 export function getValueByIntent(profile: any, intent: string): any {
+    // 🟢 Priority Fallback: Check customAnswers first (Virtual Profile)
+    if (profile?.customAnswers && profile.customAnswers[intent]) {
+        return profile.customAnswers[intent];
+    }
+
     const parts = intent.split('.');
     let value = profile;
     let lastPart = parts[parts.length - 1];
@@ -1250,6 +1255,15 @@ export function getValueByIntent(profile: any, intent: string): any {
         }
     }
 
+    // SAFETY CHECK: Prevent returning file data objects (containing base64/url) for non-document intents.
+    // This prevents text fields (like "Location") from being contaminated with PDF data.
+    if (value && typeof value === 'object' && (value.base64 || value.url)) {
+        if (!intent.startsWith('documents.')) {
+            console.log(`[QuestionPatternDB] 🛡️ Blocked returning file object for non-document intent: ${intent}`);
+            return null;
+        }
+    }
+
     return value;
 }
 
@@ -1259,13 +1273,10 @@ export function getValueByIntent(profile: any, intent: string): any {
  */
 export function shouldSkipField(questionText: string): boolean {
     const skipPatterns = [
-        /why do you want/i,
-        /why are you interested/i,
+        // Only skip if they are very generic and we don't have a specific screening intent for them
         /tell us about/i,
-        /describe your/i,
         /explain your/i,
         /what makes you/i,
-        /additional information/i
     ];
 
     const normalized = questionText.toLowerCase();

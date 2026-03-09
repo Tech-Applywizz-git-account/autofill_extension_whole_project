@@ -30,6 +30,7 @@ export interface DetectedField {
 
     // Extracted metadata
     questionText: string;
+    selector: string;
     fieldType: FieldType;
     isRequired: boolean;
 

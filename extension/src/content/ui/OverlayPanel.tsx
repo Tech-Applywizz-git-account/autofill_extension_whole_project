@@ -185,19 +185,90 @@ const STYLES = `
   align-items: center;
 }
 
-.header-actions .action-btn {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+.header-actions .action-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+/* Feedback Form Styles */
+.feedback-container {
+  padding: 16px;
+  background: #fdfdfd;
+  border-top: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feedback-message {
+  font-size: 13px;
+  color: #333;
+  line-height: 1.5;
+  font-weight: 500;
+  text-align: center;
+}
+
+.feedback-inputs {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  align-items: center;
+}
+
+.feedback-input-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.feedback-input-group label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #666;
+  font-weight: 700;
+}
+
+.feedback-input-group input {
+  width: 50px;
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.feedback-submit-btn {
+  background: #00d084;
   color: white;
-  width: 28px;
-  height: 28px;
+  border: none;
+  padding: 10px;
   border-radius: 6px;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  transition: all 0.2s;
+  gap: 8px;
+}
+
+.feedback-submit-btn:hover {
+  background: #00b371;
+  transform: translateY(-1px);
+}
+
+.feedback-timer {
+  font-size: 11px;
+  color: #999;
+  text-align: center;
+  font-style: italic;
+}
+
+.feedback-timer span {
+  color: #ff3b30;
+  font-weight: 600;
 }
 
 .header-actions .action-btn:hover {
@@ -824,6 +895,66 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
     } | null>(null);
     const [notification, setNotification] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
 
+    // Manual Feedback State
+    const [manualSuccess, setManualSuccess] = useState<number>(0);
+    const [manualFail, setManualFail] = useState<number>(0);
+    const [feedbackTimer, setFeedbackTimer] = useState<number>(60);
+    const [isFeedbackVisible, setIsFeedbackVisible] = useState(false);
+    const [showFeedbackIntimation, setShowFeedbackIntimation] = useState(false);
+    const [feedbackSubmittedMessage, setFeedbackSubmittedMessage] = useState<string | null>(null);
+    const feedbackTimerRef = useRef<any>(null);
+
+    // Handle Feedback Submission (Manual or Auto)
+    const submitFeedback = async (isAuto = false) => {
+        if (feedbackTimerRef.current) clearInterval(feedbackTimerRef.current);
+
+        // Record the message before hiding the intimation but don't hide the overall visibility yet
+        // so we can show the "Thanks" message in the panel
+        setFeedbackSubmittedMessage(isAuto ? "Data submitted automatically" : "Thanks for submit");
+
+        setShowFeedbackIntimation(false); // Hide the popup immediately
+
+        const tracker = AnalyticsTracker.getInstance();
+        tracker.setManualCounts(manualSuccess, manualFail);
+
+        console.log(`[Ext] Submitting ${isAuto ? 'AUTO' : 'MANUAL'} feedback and syncing patterns...`);
+
+        // 1. Submit Analytics
+        const analyticsSuccess = await tracker.submit();
+
+        // 2. Batch Sync Patterns
+        try {
+            await patternStorage.syncUnsyncedPatterns();
+            // Optional: setNotification or just let the "Thanks" message handle it
+        } catch (e) {
+            console.warn("[Ext] Pattern sync failed:", e);
+        }
+
+        // Keep the "Thanks" message visible for 3 seconds, then hide the feedback section entirely
+        setTimeout(() => {
+            setIsFeedbackVisible(false);
+            setFeedbackSubmittedMessage(null);
+        }, 3000);
+    };
+
+    // Feedback Timer Effect
+    useEffect(() => {
+        if (isFeedbackVisible && feedbackTimer > 0) {
+            feedbackTimerRef.current = setInterval(() => {
+                setFeedbackTimer(prev => {
+                    if (prev <= 1) {
+                        submitFeedback(true); // Auto-submit on timeout
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+        return () => {
+            if (feedbackTimerRef.current) clearInterval(feedbackTimerRef.current);
+        };
+    }, [isFeedbackVisible]);
+
     // Use a ref to always have the latest fields for async closures (like handleScan timeouts)
     const fieldsRef = useRef(fields);
     useEffect(() => {
@@ -1145,6 +1276,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
             const detectedFields: DetectedField[] = map.data.map((answer: any) => ({
                 element: null as any, // Not needed for display-only
                 questionText: answer.questionText,
+                selector: answer.selector || "",
                 fieldType: answer.fieldType as any,
                 isRequired: answer.required || false,
                 options: answer.options || undefined,
@@ -1353,25 +1485,33 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                     };
                 }));
 
-                // Allow UI to render timestamp before showing notification
+                // Allow UI to render timestamp before showing feedback prompt
                 setTimeout(async () => {
                     const currentFields = fieldsRef.current;
                     if (result.successes > 0 || result.failures > 0) {
+                        // Pre-populate manual inputs with extension's analysis
+                        setManualSuccess(result.successes);
+                        setManualFail(result.failures);
+
+                        // Show feedback UI and start 40s timer
+                        setIsFeedbackVisible(true);
+                        setShowFeedbackIntimation(true); // Show the popup
+                        setFeedbackTimer(60);
+
                         // Find questions that failed or were required but not filled
                         const missed = currentFields.filter(f => f.failed || (f.isRequired && !f.filled && !f.filledValue))
                             .map(f => f.questionText);
 
-                        console.log(`[Ext] Completion list calculated: Found ${missed.length} missed questions out of ${result.failures} reported failures.`);
+                        console.log(`[Ext] Completion calculated: ${result.successes} succ, ${result.failures} fail. Missed: ${missed.length}`);
 
+                        // We still set this if we want to show the 'missed' list in the sidebar, 
+                        // but we won't show the POPUP anymore.
                         setCompletionResult({
                             ...result,
-                            missedQuestions: Array.from(new Set(missed)) // Deduplicate
+                            missedQuestions: Array.from(new Set(missed))
                         });
 
-                        // Submit analytics data
-                        await tracker.submit();
-
-                        // Automatically switch to missed filter in the side panel
+                        // Automatically switch to missed filter in the side panel if there are failures
                         if (result.failures > 0) {
                             setSelectedSection("missed");
                         }
@@ -1899,6 +2039,52 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                         {viewMode === "fields" ? (
                             <>
                                 {/* Stats Section */}
+                                {isFeedbackVisible && (
+                                    <div className="feedback-container" style={{ margin: '0 16px 12px 16px', borderRadius: '8px', border: '1px solid #eee', background: '#f8fdfb', display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px', minHeight: '60px', justifyContent: 'center', alignItems: 'center' }}>
+                                        {feedbackSubmittedMessage ? (
+                                            <div style={{ color: '#00d084', fontWeight: '700', fontSize: '14px', animation: 'fadeIn 0.3s ease-out' }}>
+                                                ✨ {feedbackSubmittedMessage}
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div className="feedback-message" style={{ fontSize: '12px', textAlign: 'center', fontWeight: '500' }}>
+                                                    Please verify the counts below and submit:
+                                                </div>
+                                                <div className="feedback-inputs" style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+                                                    <div className="feedback-input-group" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                                                        <label style={{ fontSize: '10px', fontWeight: '700', color: '#666' }}>SUCCESS</label>
+                                                        <input
+                                                            type="number"
+                                                            readOnly
+                                                            style={{ width: '50px', textAlign: 'center', border: '1px solid #ddd', borderRadius: '4px', background: '#f5f5f5', color: '#888', cursor: 'not-allowed' }}
+                                                            value={manualSuccess}
+                                                        />
+                                                    </div>
+                                                    <div className="feedback-input-group" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                                                        <label style={{ fontSize: '10px', fontWeight: '700', color: '#666' }}>FAILED</label>
+                                                        <input
+                                                            type="number"
+                                                            style={{ width: '50px', textAlign: 'center', border: '1px solid #00d084', borderRadius: '4px', fontWeight: '700' }}
+                                                            value={manualFail}
+                                                            onChange={(e) => {
+                                                                const val = Math.max(0, parseInt(e.target.value) || 0);
+                                                                setManualFail(val);
+                                                                setManualSuccess(Math.max(0, fields.length - val));
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <button className="feedback-submit-btn" onClick={() => submitFeedback(false)} style={{ background: '#00d084', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', width: '100%' }}>
+                                                    Submit Feedback
+                                                </button>
+                                                <div className="feedback-timer" style={{ fontSize: '10px', color: '#999', textAlign: 'center', fontStyle: 'italic' }}>
+                                                    Auto-syncing in <span style={{ color: '#ff3b30', fontWeight: '700' }}>{feedbackTimer}s</span>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+
                                 <div className="autofill-stats">
                                     <div className="stat">
                                         <span className="stat-label">Required:</span>
@@ -2057,7 +2243,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                                         ? fields.filter(f => f.failed || (f.isRequired && !f.filled && !f.filledValue))
                                         : filteredFields).map((field, index) => (
                                             <FieldItem
-                                                key={index}
+                                                key={field.selector || index}
                                                 field={field}
                                                 onUpdate={(val) => handleFieldUpdate(fields.indexOf(field), val)}
                                             />
@@ -2108,114 +2294,136 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                         </div>
                     )}
 
-                    {completionResult && (
-                        <div className="completion-backdrop" onClick={() => setCompletionResult(null)}>
-                            <div className="completion-notification" onClick={e => e.stopPropagation()}>
-                                <div className="completion-header">🎉 Application Fill Completed</div>
-                                <div className="completion-stats">
-                                    <div className="stat-row success">
-                                        <span>Fields Succeeded</span>
-                                        <span>{completionResult.successes}</span>
+                    {(showFeedbackIntimation && isFeedbackVisible) && (
+                        <div className="completion-backdrop">
+                            <div className="completion-notification" style={{ maxWidth: '300px' }} onClick={e => e.stopPropagation()}>
+                                <div className="completion-header" style={{ background: '#f8f9fa', color: '#333', borderBottom: '1px solid #eee' }}>📊 Feedback Required</div>
+                                <div className="feedback-container" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    <div className="feedback-message" style={{ fontSize: '13px', lineHeight: '1.5', color: '#666', textAlign: 'center' }}>
+                                        Application filled! Please check the application and enter how many are filled and how many failed in the side panel. Your feedback is very important.
                                     </div>
-                                    <div className="stat-row missed">
-                                        <span>Fields Missed</span>
-                                        <span>{completionResult.failures}</span>
+
+                                    <button className="feedback-submit-btn" onClick={() => {
+                                        setShowFeedbackIntimation(false);
+                                        setViewState("DETAILS");
+                                    }} style={{ background: '#212529', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>
+                                        Go to Panel
+                                    </button>
+
+                                    <div className="feedback-timer" style={{ fontSize: '11px', color: '#999', textAlign: 'center' }}>
+                                        Auto-syncing in <span style={{ color: '#ff3b30', fontWeight: '600' }}>{feedbackTimer}s</span>
                                     </div>
                                 </div>
-
-                                {completionResult.missedQuestions.length > 0 && (
-                                    <div className="missed-questions-list">
-                                        <div style={{ fontWeight: '600', marginBottom: '4px', borderBottom: '1px solid #eee', paddingBottom: '2px' }}>
-                                            Missed Questions:
-                                        </div>
-                                        {completionResult.missedQuestions.map((q: string, i: number) => (
-                                            <div key={i} className="missed-question-item" title={q}>
-                                                • {q}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-
-                                <button
-                                    className="close-notification-btn"
-                                    onClick={() => setCompletionResult(null)}
-                                >
-                                    Got it!
-                                </button>
                             </div>
                         </div>
+                        // ) : completionResult && !isFeedbackVisible && (
+                        //         <div className="completion-notification" onClick={e => e.stopPropagation()}>
+                        //             <div className="completion-header">🎉 Analysis Complete</div>
+                        //             <div className="completion-stats">
+                        //                 <div className="stat-row success">
+                        //                     <span>Fields Succeeded</span>
+                        //                     <span>{completionResult.successes}</span>
+                        //                 </div>
+                        //                 <div className="stat-row missed">
+                        //                     <span>Fields Missed</span>
+                        //                     <span>{completionResult.failures}</span>
+                        //                 </div>
+                        //             </div>
+
+                        //             {completionResult.missedQuestions.length > 0 && (
+                        //                 <div className="missed-questions-list">
+                        //                     <div style={{ fontWeight: '600', marginBottom: '4px', borderBottom: '1px solid #eee', paddingBottom: '2px' }}>
+                        //                         Missed Questions:
+                        //                     </div>
+                        //                     {completionResult.missedQuestions.map((q: string, i: number) => (
+                        //                         <div key={i} className="missed-question-item" title={q}>
+                        //                             • {q}
+                        //                         </div>
+                        //                     ))}
+                        //                 </div>
+                        //             )}
+
+                        //             <button
+                        //                 className="close-notification-btn"
+                        //                 onClick={() => setCompletionResult(null)}
+                        //             >
+                        //                 Got it!
+                        //             </button>
+                        //         </div>
+                        //     )}
                     )}
                 </div>
             )}
 
-            {viewState === "SETTINGS" && (
-                <div className="details-panel">
-                    <div className="autofill-header">
-                        <div className="drag-handle" style={{ marginRight: '8px' }}>⠿</div>
-                        <h3 style={{ margin: 0, fontSize: '14px', flex: 1 }}>⚙️ Settings & Tools</h3>
-                        <div className="header-actions">
-                            <button
-                                onClick={() => setViewState("DETAILS")}
-                                className="action-btn"
-                                title="Back to Detection"
-                            >
-                                ←
-                            </button>
-                            <button
-                                onClick={() => setViewState("ICON")}
-                                className="action-btn"
-                                title="Minimize"
-                            >
-                                −
-                            </button>
-                            <button
-                                onClick={handleClose}
-                                className="action-btn"
-                                style={{ background: 'rgba(255, 59, 48, 0.2)', border: '1px solid rgba(255, 59, 48, 0.3)' }}
-                                title="Close"
-                            >
-                                ×
-                            </button>
+            {
+                viewState === "SETTINGS" && (
+                    <div className="details-panel">
+                        <div className="autofill-header">
+                            <div className="drag-handle" style={{ marginRight: '8px' }}>⠿</div>
+                            <h3 style={{ margin: 0, fontSize: '14px', flex: 1 }}>⚙️ Settings & Tools</h3>
+                            <div className="header-actions">
+                                <button
+                                    onClick={() => setViewState("DETAILS")}
+                                    className="action-btn"
+                                    title="Back to Detection"
+                                >
+                                    ←
+                                </button>
+                                <button
+                                    onClick={() => setViewState("ICON")}
+                                    className="action-btn"
+                                    title="Minimize"
+                                >
+                                    −
+                                </button>
+                                <button
+                                    onClick={handleClose}
+                                    className="action-btn"
+                                    style={{ background: 'rgba(255, 59, 48, 0.2)', border: '1px solid rgba(255, 59, 48, 0.3)' }}
+                                    title="Close"
+                                >
+                                    ×
+                                </button>
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="autofill-content">
-                        <div className="settings-list">
-                            <span style={{ textAlign: 'center', fontSize: '14px' }}>For these all cards, confirmation box will show</span>
-                            <div className="settings-item" onClick={() => {
-                                if (confirm("Do you want to edit your profile? This will open your current info in a new tab.")) {
-                                    window.open(chrome.runtime.getURL('onboarding.html?mode=edit'), '_blank');
-                                }
-                            }}>
-                                <div className="settings-item-title">👤 Edit Profile</div>
-                                <div className="settings-item-desc">Modify your personal info, experience, and skills pre-filled with your current data.</div>
-                                <div className="settings-item-btn">Configure Profile →</div>
-                            </div>
-
-                            <div className="settings-item" onClick={() => {
-                                if (confirm("Report an Issue? This will open our feedback form in a new tab.")) {
-                                    window.open("https://extension-feedback-from.vercel.app/", '_blank');
-                                }
-                            }}>
-                                <div className="settings-item-title">📧 Report an Issue</div>
-                                <div className="settings-item-desc">Encountered a bug or have a suggestion? Reach out to our technical team.</div>
-                                <div className="settings-item-btn">Get Support →</div>
-                            </div>
-
-                            <div className={`settings-item ${isSyncing ? 'active' : ''}`} onClick={() => {
-                                if (isSyncing) return;
-                                if (confirm("Start Cloud Sync? This will backup your profile, patterns, and AI cache to the cloud.")) {
-                                    handleManualSync();
-                                }
-                            }}>
-                                <div className="settings-item-title">☁️ Cloud Sync - Backup your data</div>
-                                <div className="settings-item-desc">Independently backup your profile, patterns, and AI cache to the cloud to use from any device through email.</div>
-                                <div className="settings-item-btn">
-                                    {isSyncing ? <><span className="spinner" style={{ marginRight: '8px' }}></span> Syncing...</> : 'Sync Now →'}
+                        <div className="autofill-content">
+                            <div className="settings-list">
+                                <span style={{ textAlign: 'center', fontSize: '14px' }}>For these all cards, confirmation box will show</span>
+                                <div className="settings-item" onClick={() => {
+                                    if (confirm("Do you want to edit your profile? This will open your current info in a new tab.")) {
+                                        window.open(chrome.runtime.getURL('onboarding.html?mode=edit'), '_blank');
+                                    }
+                                }}>
+                                    <div className="settings-item-title">👤 Edit Profile</div>
+                                    <div className="settings-item-desc">Modify your personal info, experience, and skills pre-filled with your current data.</div>
+                                    <div className="settings-item-btn">Configure Profile →</div>
                                 </div>
-                            </div>
 
-                            {/* <div className={`settings-item ${isClearingCache ? 'active' : ''}`} onClick={async () => {
+                                <div className="settings-item" onClick={() => {
+                                    if (confirm("Report an Issue? This will open our feedback form in a new tab.")) {
+                                        window.open("https://extension-feedback-from.vercel.app/", '_blank');
+                                    }
+                                }}>
+                                    <div className="settings-item-title">📧 Report an Issue</div>
+                                    <div className="settings-item-desc">Encountered a bug or have a suggestion? Reach out to our technical team.</div>
+                                    <div className="settings-item-btn">Get Support →</div>
+                                </div>
+
+                                <div className={`settings-item ${isSyncing ? 'active' : ''}`} onClick={() => {
+                                    if (isSyncing) return;
+                                    if (confirm("Start Cloud Sync? This will backup your profile, patterns, and AI cache to the cloud.")) {
+                                        handleManualSync();
+                                    }
+                                }}>
+                                    <div className="settings-item-title">☁️ Cloud Sync - Backup your data</div>
+                                    <div className="settings-item-desc">Independently backup your profile, patterns, and AI cache to the cloud to use from any device through email.</div>
+                                    <div className="settings-item-btn">
+                                        {isSyncing ? <><span className="spinner" style={{ marginRight: '8px' }}></span> Syncing...</> : 'Sync Now →'}
+                                    </div>
+                                </div>
+
+                                {/* <div className={`settings-item ${isClearingCache ? 'active' : ''}`} onClick={async () => {
                                 if (isClearingCache) return;
                                 if (confirm("Are you sure you want to clear the AI cache? This will refresh all AI answers.")) {
                                     setIsClearingCache(true);
@@ -2239,7 +2447,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
 
 
 
-                            {/* <div className={`settings-item danger ${isClearingAll ? 'active' : ''}`} onClick={async () => {
+                                {/* <div className={`settings-item danger ${isClearingAll ? 'active' : ''}`} onClick={async () => {
                                 if (isClearingAll) return;
                                 if (confirm("⚠️ CRITICAL: Are you sure you want to clear ALL data? This includes your profile, patterns, and cloud link. This cannot be undone.")) {
                                     setIsClearingAll(true);
@@ -2255,21 +2463,27 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                                     {isClearingAll ? <><span className="spinner" style={{ marginRight: '8px' }}></span> Wiping...</> : 'Wipe Everything →'}
                                 </div>
                             </div> */}
+                            </div>
+                        </div>
+
+                        <div className="panel-footer" style={{ textAlign: 'center', fontSize: '10px', color: '#999', marginTop: '20px', paddingBottom: '10px' }}>
+                            Job Application Autofill v1.3.0
                         </div>
                     </div>
-
-                    <div className="panel-footer" style={{ textAlign: 'center', fontSize: '10px', color: '#999', marginTop: '20px', paddingBottom: '10px' }}>
-                        Job Application Autofill v1.3.0
-                    </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 
 const FieldItem: React.FC<{ field: DetectedField; onUpdate: (val: string) => void }> = ({ field, onUpdate }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState(field.filledValue || "");
+
+    // Sync state when field prop changes (e.g. after background mapping completes)
+    useEffect(() => {
+        setEditValue(field.filledValue || "");
+    }, [field.filledValue]);
 
     const handleFocus = () => {
         field.element.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -2294,9 +2508,17 @@ const FieldItem: React.FC<{ field: DetectedField; onUpdate: (val: string) => voi
             const currentProfile = await loadProfile();
             if (currentProfile) {
                 // ALWAYS store as custom answer to ensure Phase -2 (Manual Override) picks it up next time.
-                // This is crucial because hardcoded rules (Phase -1) often ignore profile values,
-                // and the only way to bypass them is via Phase -2.
-                const customAnswers = { ...currentProfile.customAnswers, [field.questionText]: editValue };
+                // We store under BOTH Question Text (for exact matching) and Intent (for cross-page consistency)
+                const customAnswers = {
+                    ...currentProfile.customAnswers,
+                    [field.questionText]: editValue
+                };
+
+                // If we have a known intent, also store under the intent key
+                if (!isUnknown && field.canonicalKey) {
+                    customAnswers[field.canonicalKey] = editValue;
+                }
+
                 let updatedProfile = { ...currentProfile, customAnswers };
 
                 // Also update the specific canonical field if known

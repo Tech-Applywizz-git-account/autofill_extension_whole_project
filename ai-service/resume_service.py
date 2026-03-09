@@ -88,8 +88,14 @@ def get_master_restore(email: str) -> dict:
     """
     try:
         # 1. Get Profile
-        profile_data = get_user_profile(email) or {}
+        profile_data = get_user_profile(email)
         
+        if profile_data is None:
+            return {
+                "success": False,
+                "error": "User profile not found. Please register as a new user."
+            }
+
         # 2. Extract AI Cache from profile_data if present
         ai_cache = {}
         if isinstance(profile_data, dict) and 'ai_cache' in profile_data:
