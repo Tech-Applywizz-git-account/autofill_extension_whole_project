@@ -131,6 +131,7 @@ export class AnalyticsTracker {
     public setManualCounts(success: number, fail: number) {
         this.successCount = success;
         this.failCount = fail;
+        this.totalQuestions = success + fail;
     }
 
     // --- Submission ---

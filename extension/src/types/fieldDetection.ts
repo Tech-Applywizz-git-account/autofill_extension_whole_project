@@ -11,6 +11,7 @@ export enum FieldType {
     MULTISELECT = "multiselect",
     DATE = "date",
     FILE_UPLOAD = "file_upload",
+    NAVIGATION_BUTTON = "navigation_button",
 }
 
 export enum QuestionSection {

@@ -1309,6 +1309,7 @@ export const HARDCODED_SYNONYMS: Record<string, string[]> = {
         'not applicable', 'none of the above', 'no military service'],
     'no disability': ['i do not have a disability', 'no, i do not have a disability',
         'i don\'t have a disability', 'no disability'],
+    'mobile': ['phone', 'cell phone', 'cellular', 'mobile device', 'personal phone'],
     // US State Mappings
     'alabama': ['al'], 'alaska': ['ak'], 'arizona': ['az'], 'arkansas': ['ar'], 'california': ['ca', 'calif'],
     'colorado': ['co'], 'connecticut': ['ct'], 'delaware': ['de'], 'florida': ['fl'], 'georgia': ['ga'],
@@ -1450,6 +1451,55 @@ function parseDate(date?: string): { year: string; month: string } | null {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const HARDCODED_RULES: HardcodedRule[] = [
+
+    // =========================================================================
+    // DYNAMIC OVERRIDES (USER REQUESTED)
+    // =========================================================================
+    {
+        patterns: ['country phone code', 'phone country code', 'country code', 'phone prefix', 'calling code'],
+        intent: 'personal.countryPhoneCode',
+        resolver: (p, opts) => {
+            // Priority: Exact match for "United States of America (+1)"
+            const target = 'United States of America (+1)';
+            return matchOption(target, opts) || target;
+        }
+    },
+    // {
+    //     patterns: ['country', 'residence', 'location', 'current location'],
+    //     excludes: ['phone', 'code', 'prefix', 'zip', 'postal', 'address', 'city', 'state'],
+    //     intent: 'personal.country',
+    //     resolver: (p, opts) => {
+    //         const target = 'United States';
+    //         return matchOption(target, opts) || target;
+    //     }
+    // },
+    {
+        patterns: ['password', 'create password', 'set password', 'new password'],
+        intent: 'account.password',
+        resolver: () => 'Created@123'
+    },
+
+    // =========================================================================
+    // PHONE / DEVICE TYPE
+    // =========================================================================
+    {
+        patterns: ['phone device type', 'device type', 'phone type'],
+        intent: 'personal.phoneType',
+        resolver: (p, opts) => {
+            const val = p.personal?.phoneType || 'Mobile';
+            return matchOption(val, opts) || matchOption('Mobile', opts) || val;
+        }
+    },
+    {
+        patterns: ['phone number', 'primary phone', 'mobile number', 'cell phone', 'contact number'],
+        excludes: ['type', 'country'],
+        intent: 'personal.phone',
+        resolver: (p, opts) => {
+            const val = p.personal?.phone || p.personal?.phoneNumber;
+            if (!val) return null;
+            return matchOption(val, opts) || val;
+        }
+    },
 
     // =========================================================================
     // WORK AUTHORIZATION — always YES

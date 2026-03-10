@@ -8,6 +8,20 @@ import { ScannedQuestion } from '../mapping/questionMapper';
 
 const LOG_PREFIX = '[WorkdayScanner]';
 
+// Result type that includes multipage classification
+export interface WorkdayScanResult {
+    questions: ScannedQuestion[];
+    pageType: 'single' | 'multi';
+    navigationButtons: WorkdayButtonInfo[];
+}
+
+export interface WorkdayButtonInfo {
+    text: string;
+    automationId: string;
+    element: HTMLElement;
+    isMultiPage: boolean; // true = 'next/continue', false = 'submit/apply'
+}
+
 // Configuration matching original
 const CONFIG = {
     SCAN_CLICK_DELAY: 600,
@@ -590,14 +604,135 @@ function scanCheckboxOptions(el: HTMLElement) {
 }
 
 /* ================================================================== */
-/*  MAIN SCANNER - EXACT COPY from original                           */
+/*  NAVIGATION BUTTON DETECTION - WORKDAY SPECIFIC                    */
+/* ================================================================== */
+
+/**
+ * Detects navigation and submit buttons on Workday forms.
+ * Uses data-automation-id first (most reliable for Workday), then text fallback.
+ */
+function detectNavigationButtons(): WorkdayButtonInfo[] {
+    const found: WorkdayButtonInfo[] = [];
+
+    // Workday-specific data-automation-id values for navigation buttons
+    // These are the most reliable - Workday uses these consistently across companies
+    const WORKDAY_MULTI_PAGE_AIDS = [
+        'bottomNavigationNext',
+        'bottomNavigationSaveAndContinue',
+        'nextButton',
+        'saveAndContinue',
+        'continueButton',
+        'navigationNext',
+        'pageFooterNextButton',
+        'pageFooterSaveButton',
+    ];
+
+    const WORKDAY_SINGLE_PAGE_AIDS = [
+        'bottomNavigationSubmit',
+        'submitButton',
+        'applyButton',
+        'pageFooterSubmitButton',
+    ];
+
+    // Text-based keywords as fallback
+    const MULTI_PAGE_TEXT_KWS = [
+        'next', 'continue', 'save & continue', 'save and continue',
+        'save & next', 'save and next', 'proceed', 'next step',
+        'go forward', 'move forward', 'next page'
+    ];
+
+    const SINGLE_PAGE_TEXT_KWS = [
+        'submit', 'apply', 'apply now', 'submit application',
+        'complete application', 'finish', 'send application', 'confirm'
+    ];
+
+    const seen = new Set<HTMLElement>();
+
+    // --- Pass 1: Scan by data-automation-id (Workday-specific, most reliable) ---
+    const allAutomationEls = Array.from(
+        document.querySelectorAll('[data-automation-id]')
+    ) as HTMLElement[];
+
+    console.log(`${LOG_PREFIX} 🔍 Scanning ${allAutomationEls.length} data-automation-id elements for buttons...`);
+
+    for (const el of allAutomationEls) {
+        const aid = (el.getAttribute('data-automation-id') || '').toLowerCase();
+        const tag = el.tagName.toLowerCase();
+        const role = el.getAttribute('role') || '';
+
+        // Only process button-like elements
+        const isButtonLike = tag === 'button' || tag === 'a' ||
+            tag === 'input' || role === 'button' || role === 'link';
+        if (!isButtonLike) continue;
+        if (el.offsetParent === null) continue; // skip hidden
+        if (seen.has(el)) continue;
+
+        const isMultiPageAid = WORKDAY_MULTI_PAGE_AIDS.some(a => aid === a.toLowerCase() || aid.includes(a.toLowerCase()));
+        const isSinglePageAid = WORKDAY_SINGLE_PAGE_AIDS.some(a => aid === a.toLowerCase() || aid.includes(a.toLowerCase()));
+
+        if (isMultiPageAid || isSinglePageAid) {
+            const text = (el.textContent || (el as HTMLInputElement).value || '').trim().replace(/\s+/g, ' ');
+            console.log(`${LOG_PREFIX} 🎯 BUTTON FOUND via data-automation-id="${el.getAttribute('data-automation-id')}": "${text || '[no text]'}"`
+                + ` → ${isMultiPageAid ? '🔄 MULTI-PAGE (next/continue)' : '✅ SINGLE-PAGE (submit/apply)'}`);
+            found.push({
+                text: text || aid,
+                automationId: el.getAttribute('data-automation-id') || '',
+                element: el,
+                isMultiPage: isMultiPageAid
+            });
+            seen.add(el);
+        }
+    }
+
+    // --- Pass 2: Text-based scan as fallback (catches generic/non-Workday-standard buttons) ---
+    const allButtons = Array.from(
+        document.querySelectorAll('button, input[type="submit"], input[type="button"], [role="button"]')
+    ) as HTMLElement[];
+
+    console.log(`${LOG_PREFIX} 🔍 Scanning ${allButtons.length} button elements for navigation keywords...`);
+
+    for (const btn of allButtons) {
+        if (btn.offsetParent === null) continue;
+        if (seen.has(btn)) continue;
+
+        const text = (btn.textContent || (btn as HTMLInputElement).value || '')
+            .toLowerCase().replace(/\s+/g, ' ').trim();
+        if (!text) continue;
+
+        const isMultiPage = MULTI_PAGE_TEXT_KWS.some(kw => text === kw || text.includes(kw));
+        const isSinglePage = SINGLE_PAGE_TEXT_KWS.some(kw => text === kw || text.includes(kw));
+
+        if (isMultiPage || isSinglePage) {
+            const aid = btn.getAttribute('data-automation-id') || '';
+            const displayText = (btn.textContent || '').trim().replace(/\s+/g, ' ');
+            console.log(`${LOG_PREFIX} 🎯 BUTTON FOUND via text: "${displayText}" (aid: ${aid || 'none'})`
+                + ` → ${isMultiPage ? '🔄 MULTI-PAGE (next/continue)' : '✅ SINGLE-PAGE (submit/apply)'}`);
+            found.push({
+                text: displayText,
+                automationId: aid,
+                element: btn,
+                isMultiPage
+            });
+            seen.add(btn);
+        }
+    }
+
+    console.log(`${LOG_PREFIX} 📊 Button detection summary: ${found.length} total button(s) found`);
+    console.log(`${LOG_PREFIX}    🔄 Multi-page buttons: ${found.filter(b => b.isMultiPage).length}`);
+    console.log(`${LOG_PREFIX}    ✅ Single-page buttons: ${found.filter(b => !b.isMultiPage).length}`);
+
+    return found;
+}
+
+/* ================================================================== */
+/*  MAIN SCANNER - EXACT COPY from original (extended with pageType)  */
 /* ================================================================== */
 
 
-export async function scanWorkdayApplication(shouldClickAddButtons: boolean = true): Promise<ScannedQuestion[]> {
+export async function scanWorkdayApplication(shouldClickAddButtons: boolean = true): Promise<WorkdayScanResult> {
     if (STATE.isScanningInProgress) {
         console.log(`${LOG_PREFIX} ⚠️  Scan already in progress`);
-        return [];
+        return { questions: [], pageType: 'single', navigationButtons: [] };
     }
 
     STATE.isScanningInProgress = true;
@@ -721,7 +856,41 @@ export async function scanWorkdayApplication(shouldClickAddButtons: boolean = tr
 
     STATE.isScanningInProgress = false;
 
-    return scannedQuestions;
+    // ==================== NAVIGATION BUTTON & PAGE TYPE DETECTION ====================
+    console.log(`\n${LOG_PREFIX} ═══════════════════════════════════════════════════`);
+    console.log(`${LOG_PREFIX} 🔍 DETECTING NAVIGATION BUTTONS & PAGE TYPE...`);
+    console.log(`${LOG_PREFIX} ═══════════════════════════════════════════════════`);
+
+    const navigationButtons = detectNavigationButtons();
+
+    const hasMultiPageButton = navigationButtons.some(b => b.isMultiPage);
+    const hasSinglePageButton = navigationButtons.some(b => !b.isMultiPage);
+
+    // Also check for step indicators in the page content
+    const pageText = document.body.textContent || '';
+    const hasStepIndicator = /step \d+ of \d+/i.test(pageText) ||
+        /page \d+ of \d+/i.test(pageText) ||
+        document.querySelector('[data-automation-id*="progressBar"], [data-automation-id*="stepIndicator"], [aria-label*="step"]') !== null;
+
+    // Classification: multi-page wins if ANY multi-page signal is detected
+    let pageType: 'single' | 'multi' = 'single';
+    if (hasMultiPageButton || hasStepIndicator) {
+        pageType = 'multi';
+    } else if (hasSinglePageButton || navigationButtons.length === 0) {
+        pageType = 'single';
+    }
+
+    console.log(`${LOG_PREFIX} 📋 PAGE TYPE RESULT: ${pageType.toUpperCase()}`);
+    if (hasStepIndicator && !hasMultiPageButton) {
+        console.log(`${LOG_PREFIX}    → Reason: Step indicator detected in page content`);
+    }
+    console.log(`${LOG_PREFIX} ═══════════════════════════════════════════════════\n`);
+
+    return {
+        questions: scannedQuestions,
+        pageType,
+        navigationButtons
+    };
 }
 
 export function clearScannerState(): void {

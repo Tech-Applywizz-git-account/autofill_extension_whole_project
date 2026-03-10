@@ -21,6 +21,13 @@ export interface ScannedQuestion {
     options?: string[];
     required: boolean;
     selector: string;
+    isNavigation?: boolean; // New flag for navigation buttons
+}
+
+export interface ScanResult {
+    questions: ScannedQuestion[];
+    pageType: 'single' | 'multi';
+    navigationButtons: string[];
 }
 
 /**
@@ -31,7 +38,7 @@ export class FormScanner {
     /**
      * Main scan function - scans all form fields on current page
      */
-    async scan(): Promise<ScannedQuestion[]> {
+    async scan(): Promise<ScanResult> {
         console.log(`${LOG_PREFIX} 🔍 Starting scan of current page...`);
 
         let questions: ScannedQuestion[] = [];
@@ -82,7 +89,97 @@ export class FormScanner {
             console.error(`${LOG_PREFIX} ❌ Scan error:`, error);
         }
 
-        return questions;
+        // Determine page type and navigation buttons
+        const navigationButtons = questions
+            .filter(q => q.isNavigation)
+            .map(q => q.questionText);
+
+        // ── Log all detected navigation buttons ──
+        console.log(`\n${LOG_PREFIX} ══════════════════════════════════════════════`);
+        console.log(`${LOG_PREFIX} 🔘 NAVIGATION BUTTONS (${navigationButtons.length} found):`);
+        if (navigationButtons.length === 0) {
+            console.log(`${LOG_PREFIX}    (none detected)`);
+        }
+        // Also check via Workday data-automation-id on the raw questions list
+        const WORKDAY_MULTI_PAGE_AIDS_CLASSIFY = [
+            'bottomNavigationNext', 'bottomNavigationSaveAndContinue', 'nextButton',
+            'saveAndContinue', 'continueButton', 'navigationNext', 'pageFooterNextButton', 'pageFooterSaveButton'
+        ];
+
+        // Keyword groups
+        const multiPageKeywords = [
+            'next', 'continue', 'save & continue', 'save and continue',
+            'save & next', 'save and next', 'proceed', 'go to next step',
+            'next step', 'go forward', 'move forward', 'next page', 'submit profile'
+        ];
+
+        const singlePageKeywords = [
+            'apply', 'submit application', 'submit', 'complete application',
+            'complete', 'finish', 'send', 'register', 'create account',
+            'post application', 'confirm application', 'finish application',
+            'apply now', 'send application'
+        ];
+
+        const hasNext = navigationButtons.some(b => {
+            const normalized = b.toLowerCase().replace(/\s+/g, ' ').trim();
+            const matchedKw = multiPageKeywords.find(kw => normalized === kw || normalized.includes(kw));
+            if (matchedKw) {
+                console.log(`${LOG_PREFIX}    🔄 MULTI-PAGE button: "${b}" (matched: "${matchedKw}")`);
+                return true;
+            }
+            console.log(`${LOG_PREFIX}    ✅ SINGLE-PAGE button: "${b}"`);
+            return false;
+        });
+
+        // Also check if any navigation-button questions had a Workday automation-id match
+        // (via the selector field which stores fingerprints, OR by re-scanning the DOM)
+        const workdayMultiPageEl = document.querySelector(
+            WORKDAY_MULTI_PAGE_AIDS_CLASSIFY.map(a => `[data-automation-id="${a}"]`).join(', ')
+        );
+        const hasWorkdayMultiPageBtn = workdayMultiPageEl !== null && (workdayMultiPageEl as HTMLElement).offsetParent !== null;
+        if (hasWorkdayMultiPageBtn) {
+            console.log(`${LOG_PREFIX}    🔄 Workday automation-id MULTI-PAGE button detected: [data-automation-id="${workdayMultiPageEl!.getAttribute('data-automation-id')}"]`);
+        }
+
+        // Also check for explicit single-page keywords
+        const hasSubmit = !hasNext && navigationButtons.some(b => {
+            const normalized = b.toLowerCase().replace(/\s+/g, ' ').trim();
+            return singlePageKeywords.some(kw => normalized === kw || normalized.includes(kw));
+        });
+
+        // Additional check: Look for step indicators in text content if no buttons are obvious
+        const hasStepIndicators = questions.some(q =>
+            /step \d+ of \d+/i.test(q.questionText) || /page \d+ of \d+/i.test(q.questionText)
+        );
+        if (hasStepIndicators) {
+            console.log(`${LOG_PREFIX}    📑 Step indicator pattern detected in question text`);
+        }
+
+        // Classification Priority:
+        // 1. Workday automation-id multi-page button → Multi-Page (most reliable signal)
+        // 2. Next/Step Indicators → Multi-Page
+        // 3. Submit/Apply → Single-Page
+        // 4. Default → Single-Page
+        let pageType: 'single' | 'multi' = 'single';
+        if (hasWorkdayMultiPageBtn || hasNext || hasStepIndicators) {
+            pageType = 'multi';
+        } else if (hasSubmit) {
+            pageType = 'single';
+        }
+
+        console.log(`${LOG_PREFIX} 📋 ═══ PAGE TYPE: ${pageType.toUpperCase()} ═══`);
+        if (hasWorkdayMultiPageBtn) console.log(`${LOG_PREFIX}    → Reason: Workday data-automation-id multi-page button found`);
+        else if (hasNext) console.log(`${LOG_PREFIX}    → Reason: Multi-page navigation button text detected`);
+        else if (hasStepIndicators) console.log(`${LOG_PREFIX}    → Reason: Step indicator in page content`);
+        else if (hasSubmit) console.log(`${LOG_PREFIX}    → Reason: Submit/apply button detected`);
+        else console.log(`${LOG_PREFIX}    → Reason: No navigation buttons found (default: single)`);
+        console.log(`${LOG_PREFIX} ══════════════════════════════════════════════\n`);
+
+        return {
+            questions,
+            pageType,
+            navigationButtons
+        };
     }
 
     /**
@@ -244,6 +341,90 @@ export class FormScanner {
             }
         });
 
+        // ================================================================
+        // Find Navigation/Submit Buttons - TWO-PASS DETECTION
+        // ================================================================
+
+        // === Workday data-automation-id values for navigation (most reliable) ===
+        const WORKDAY_MULTI_PAGE_AIDS = [
+            'bottomNavigationNext', 'bottomNavigationSaveAndContinue',
+            'nextButton', 'saveAndContinue', 'continueButton',
+            'navigationNext', 'pageFooterNextButton', 'pageFooterSaveButton',
+        ];
+        const WORKDAY_SINGLE_PAGE_AIDS = [
+            'bottomNavigationSubmit', 'submitButton', 'applyButton', 'pageFooterSubmitButton',
+        ];
+
+        // === Text keywords as fallback ===
+        const MULTI_PAGE_TEXT_KWS = [
+            'next', 'continue', 'save & continue', 'save and continue',
+            'save & next', 'save and next', 'proceed', 'next step',
+            'go to next step', 'go forward', 'move forward', 'next page'
+        ];
+        const SINGLE_PAGE_TEXT_KWS = [
+            'submit', 'apply', 'apply now', 'submit application', 'complete application',
+            'finish', 'send', 'register', 'create account', 'send application',
+            'confirm application', 'finish application'
+        ];
+
+        const seenButtons = new Set<Element>();
+
+        console.log(`${LOG_PREFIX} 🔍 PASS 1: Scanning for Workday data-automation-id buttons...`);
+        const allAutomationEls = Array.from(doc.querySelectorAll('[data-automation-id]'));
+        let pass1Count = 0;
+        allAutomationEls.forEach(el => {
+            const aid = (el.getAttribute('data-automation-id') || '').toLowerCase();
+            const tag = el.tagName.toLowerCase();
+            const role = el.getAttribute('role') || '';
+            const isButtonLike = tag === 'button' || tag === 'a' || tag === 'input' || role === 'button' || role === 'link';
+            if (!isButtonLike) return;
+            if (!this.isVisible(el as HTMLElement)) return;
+            if (seenButtons.has(el)) return;
+
+            const isMulti = WORKDAY_MULTI_PAGE_AIDS.some(a => aid === a.toLowerCase() || aid.includes(a.toLowerCase()));
+            const isSingle = WORKDAY_SINGLE_PAGE_AIDS.some(a => aid === a.toLowerCase() || aid.includes(a.toLowerCase()));
+
+            if (isMulti || isSingle) {
+                const displayText = (el.textContent || (el as HTMLInputElement).value || '').replace(/\s+/g, ' ').trim();
+                console.log(`${LOG_PREFIX} 🎯 [data-automation-id="${el.getAttribute('data-automation-id')}"] "${displayText || '[no text]'}" → ${isMulti ? '🔄 MULTI-PAGE' : '✅ SINGLE-PAGE'}`);
+                if (!fields.includes(el as HTMLElement)) {
+                    fields.push(el as HTMLElement);
+                }
+                seenButtons.add(el);
+                pass1Count++;
+            }
+        });
+        console.log(`${LOG_PREFIX} 🔍 PASS 1 done: ${pass1Count} Workday automation-id button(s) found`);
+
+        console.log(`${LOG_PREFIX} 🔍 PASS 2: Scanning buttons by text keywords...`);
+        let pass2Count = 0;
+        const allButtons = doc.querySelectorAll('button, input[type="submit"], input[type="button"], [role="button"]');
+        allButtons.forEach(btn => {
+            if (!this.isVisible(btn as HTMLElement)) return;
+            if (seenButtons.has(btn)) return; // Already caught by Pass 1
+
+            // Normalize text (handles icon text, whitespace, newlines inside buttons)
+            const raw = (btn.textContent || (btn as HTMLInputElement).value || '');
+            const text = raw.toLowerCase().replace(/\s+/g, ' ').trim();
+            if (!text) return;
+
+            const isMulti = MULTI_PAGE_TEXT_KWS.some(kw => text === kw || text.includes(kw));
+            const isSingle = SINGLE_PAGE_TEXT_KWS.some(kw => text === kw || text.includes(kw));
+
+            if (isMulti || isSingle) {
+                const aid = btn.getAttribute('data-automation-id') || 'none';
+                const displayText = raw.replace(/\s+/g, ' ').trim();
+                console.log(`${LOG_PREFIX} 🎯 [text match] "${displayText}" (aid: ${aid}) → ${isMulti ? '🔄 MULTI-PAGE' : '✅ SINGLE-PAGE'}`);
+                if (!fields.includes(btn as HTMLElement)) {
+                    fields.push(btn as HTMLElement);
+                }
+                seenButtons.add(btn);
+                pass2Count++;
+            }
+        });
+        console.log(`${LOG_PREFIX} 🔍 PASS 2 done: ${pass2Count} text-matched button(s) found`);
+        console.log(`${LOG_PREFIX} 🔍 Total navigation buttons detected: ${pass1Count + pass2Count}`);
+
         return fields;
     }
 
@@ -311,7 +492,8 @@ export class FormScanner {
                 fieldType,
                 options,
                 required,
-                selector
+                selector,
+                isNavigation: fieldType === 'navigation_button'
             };
 
         } catch (error) {
@@ -371,6 +553,36 @@ export class FormScanner {
                 default:
                     return 'text';
             }
+        }
+
+        // Check for Workday data-automation-id button patterns FIRST (most reliable)
+        const aid = (element.getAttribute('data-automation-id') || '').toLowerCase();
+        const WORKDAY_NAV_AIDS = [
+            'bottomNavigationNext', 'bottomNavigationSaveAndContinue', 'nextButton',
+            'saveAndContinue', 'continueButton', 'navigationNext', 'pageFooterNextButton',
+            'pageFooterSaveButton', 'bottomNavigationSubmit', 'submitButton', 'applyButton',
+            'pageFooterSubmitButton'
+        ];
+        if (aid && WORKDAY_NAV_AIDS.some(a => aid === a.toLowerCase() || aid.includes(a.toLowerCase()))) {
+            return 'navigation_button';
+        }
+
+        // Text-based button keyword detection (fallback for non-Workday platforms)
+        const text = (element.textContent || (element as HTMLInputElement).value || '')
+            .toLowerCase()
+            .replace(/\s+/g, ' ')
+            .trim();
+        const navKeywords = [
+            // Multi-page navigation
+            'next', 'continue', 'save & continue', 'save and continue', 'save & next', 'save and next',
+            'proceed', 'go to next step', 'next step', 'go forward', 'move forward', 'next page',
+            // Single-page submission
+            'submit', 'apply', 'apply now', 'complete', 'finish', 'send', 'register', 'create account',
+            'submit application', 'complete application', 'send application',
+            'confirm application', 'finish application'
+        ];
+        if (navKeywords.some(kw => text === kw || text.includes(kw))) {
+            return 'navigation_button';
         }
 
         // Default to text

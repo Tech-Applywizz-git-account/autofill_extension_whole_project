@@ -529,13 +529,27 @@ async function handleBroadcastScan(tabId: number | undefined) {
             .filter(r => r && r.success && Array.isArray(r.questions))
             .flatMap(r => r.questions);
 
+        // Aggregate navigation buttons
+        const allNavButtons = results
+            .filter(r => r && r.success && Array.isArray(r.navigationButtons))
+            .flatMap(r => r.navigationButtons);
+
+        // Determine if multi-page (if any frame is multi-page)
+        const isMultiPage = results.some(r => r && r.success && r.pageType === 'multi');
+
         // Get IDs of frames that actually found fields (active frames)
         const activeFrameIds = results
             .map((r, i) => (r && r.success && Array.isArray(r.questions) && r.questions.length > 0) ? frames[i].frameId : null)
             .filter(id => id !== null) as number[];
 
-        console.log(`[Background] ✅ Aggregated ${allQuestions.length} questions from ${activeFrameIds.length} active frames (IDs: ${activeFrameIds.join(',')})`);
-        return { success: true, questions: allQuestions, activeFrameIds };
+        console.log(`[Background] ✅ Aggregated ${allQuestions.length} questions. Page type: ${isMultiPage ? 'multi' : 'single'}`);
+        return {
+            success: true,
+            questions: allQuestions,
+            activeFrameIds,
+            pageType: isMultiPage ? 'multi' : 'single',
+            navigationButtons: Array.from(new Set(allNavButtons)) // Deduplicate
+        };
     } catch (error: any) {
         console.error("[Background] Broadcast Scan Error:", error);
         return { success: false, error: error.message };

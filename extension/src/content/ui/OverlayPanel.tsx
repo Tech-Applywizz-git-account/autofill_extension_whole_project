@@ -36,13 +36,20 @@ const STYLES = `
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  cursor: grab;
   position: relative;
   border: 4px solid #00d084;
   /* JobRight green */
   transition: transform 0.2s;
+}
+
+.icon-bird {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50% 50% 0 50%;
+  overflow: hidden;
 }
 
 .floating-icon:hover {
@@ -811,6 +818,56 @@ const STYLES = `
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+.page-analysis {
+  background: #fdfdfd;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.page-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.page-type-badge.multi {
+  background: rgba(0, 115, 230, 0.1);
+  color: #0073e6;
+  border: 1px solid rgba(0, 115, 230, 0.2);
+}
+
+.page-type-badge.single {
+  background: rgba(0, 208, 132, 0.1);
+  color: #00d084;
+  border: 1px solid rgba(0, 208, 132, 0.2);
+}
+
+.nav-buttons-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.nav-button-chip {
+  background: #f1f3f5;
+  color: #495057;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  border: 1px solid #dee2e6;
+}
 `;
 
 interface OverlayPanelProps {
@@ -894,10 +951,13 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
         feedback: { total: number; recent_24h: number };
     } | null>(null);
     const [notification, setNotification] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
+    const [pageType, setPageType] = useState<'single' | 'multi' | null>(null);
+    const [navigationButtons, setNavigationButtons] = useState<string[]>([]);
 
     // Manual Feedback State
     const [manualSuccess, setManualSuccess] = useState<number>(0);
     const [manualFail, setManualFail] = useState<number>(0);
+    const [totalAttempted, setTotalAttempted] = useState<number>(0);
     const [feedbackTimer, setFeedbackTimer] = useState<number>(60);
     const [isFeedbackVisible, setIsFeedbackVisible] = useState(false);
     const [showFeedbackIntimation, setShowFeedbackIntimation] = useState(false);
@@ -1233,7 +1293,12 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
             }
 
             const questions = scanResponse.questions;
-            console.log(`[Ext] ✓ Found ${questions.length} questions across all frames`);
+            const detectedPageType = scanResponse.pageType;
+            const detectedNavButtons = scanResponse.navigationButtons;
+
+            console.log(`[Ext] ✓ Found ${questions.length} questions across all frames. Page type: ${detectedPageType}`);
+            setPageType(detectedPageType);
+            setNavigationButtons(detectedNavButtons);
 
             // End scan tracking
             tracker.endScan(questions);
@@ -1330,8 +1395,9 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                 };
 
                 // Initialize progress
-                const totalMapped = payload.fields.length;
-                setFillProgress({ current: 0, total: totalMapped });
+                const attemptedCount = payload.fields.length;
+                setTotalAttempted(attemptedCount);
+                setFillProgress({ current: 0, total: attemptedCount });
 
                 console.log(`[Ext] 📊 Broadcasting autofill to all frames...`);
 
@@ -1366,7 +1432,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                     const checkAllDone = () => {
                         // We are done ONLY if all active frames have reported
                         const allActiveReported = activeIds.every((id: number) => reportingFrames.has(id));
-                        const allFieldsProcessed = processedFieldNames.size >= totalMapped;
+                        const allFieldsProcessed = processedFieldNames.size >= attemptedCount;
 
                         if (allActiveReported && allFieldsProcessed) {
                             console.log('[OverlayPanel] ✅ All active frames reported & all fields processed. Resolving...');
@@ -1403,7 +1469,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                             tracker.trackFillResult(questionText, ok);
 
                             // Update UI progress
-                            setFillProgress({ current: processedFieldNames.size, total: totalMapped });
+                            setFillProgress({ current: processedFieldNames.size, total: attemptedCount });
                         }
                         checkAllDone();
                     };
@@ -1419,7 +1485,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                         reportingFrames.add(0); // Top frame is ID 0
 
                         // Update UI progress in case it jumped
-                        setFillProgress({ current: processedFieldNames.size, total: totalMapped });
+                        setFillProgress({ current: processedFieldNames.size, total: attemptedCount });
                         checkAllDone();
                     };
 
@@ -1439,14 +1505,14 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                                 });
                             }
 
-                            setFillProgress({ current: processedFieldNames.size, total: totalMapped });
+                            setFillProgress({ current: processedFieldNames.size, total: attemptedCount });
                             checkAllDone();
                         } else if (message.type === 'FIELD_FILL_PROGRESS_RELAY') {
                             const { questionText, ok } = message.payload;
                             if (questionText) {
                                 processedFieldNames.add(questionText);
                                 if (ok) successfulFields.add(questionText);
-                                setFillProgress({ current: processedFieldNames.size, total: totalMapped });
+                                setFillProgress({ current: processedFieldNames.size, total: attemptedCount });
                             }
                             checkAllDone();
                         }
@@ -1459,7 +1525,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                     // Safety timeout
                     setTimeout(resolveResults, 90000);
 
-                    if (activeIds.length === 0 && totalMapped === 0) {
+                    if (activeIds.length === 0 && attemptedCount === 0) {
                         timer = setTimeout(resolveResults, 1000);
                     }
                 });
@@ -1742,7 +1808,13 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
         >
             {viewState === "ICON" && (
                 <div className="floating-icon" onClick={handleIconClick}>
-                    <div className="icon-bird">🤖</div>
+                    <div className="icon-bird">
+                        <img
+                            src={chrome.runtime.getURL('assets/icon256.png')}
+                            alt="Logo"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                    </div>
                     <div className="close-x" onClick={handleClose}>×</div>
                 </div>
             )}
@@ -1752,7 +1824,10 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                     <div className="menu-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div className="drag-handle">⠿</div>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
-                            <h3 style={{ margin: 0, fontSize: '14px' }}>🤖 Autofill Assistant</h3>
+                            <h3 style={{ margin: 0, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <img src={chrome.runtime.getURL('assets/icon256.png')} alt="logo" style={{ width: '18px', height: '18px' }} />
+                                Autofill Assistant
+                            </h3>
                             {statsSummary && (
                                 <div style={{ fontSize: '9px', opacity: 0.9, marginTop: '2px', display: 'flex', flexDirection: 'column', gap: '1px', textAlign: 'center' }}>
                                     <span>Total users in the last 24 hours: {statsSummary.users.recent_24h}</span>
@@ -1984,7 +2059,10 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                     <div className="autofill-header">
                         <div className="drag-handle" style={{ marginRight: '4px' }}>⠿</div>
                         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-                            <h3 style={{ margin: 0, fontSize: '13px', fontWeight: '700', whiteSpace: 'nowrap' }}>🤖 Autofill Assistant</h3>
+                            <h3 style={{ margin: 0, fontSize: '13px', fontWeight: '700', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <img src={chrome.runtime.getURL('assets/icon48.png')} alt="logo" style={{ width: '16px', height: '16px' }} />
+                                Autofill Assistant
+                            </h3>
                             {statsSummary && (
                                 <div style={{ fontSize: '9px', opacity: 0.9, marginTop: '1px', display: 'flex', gap: '5px' }}>
                                     <span>👥 {statsSummary.users.total} Users</span>
@@ -2069,13 +2147,13 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                                                             onChange={(e) => {
                                                                 const val = Math.max(0, parseInt(e.target.value) || 0);
                                                                 setManualFail(val);
-                                                                setManualSuccess(Math.max(0, fields.length - val));
+                                                                setManualSuccess(Math.max(0, totalAttempted - val));
                                                             }}
                                                         />
                                                     </div>
                                                 </div>
                                                 <button className="feedback-submit-btn" onClick={() => submitFeedback(false)} style={{ background: '#00d084', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', width: '100%' }}>
-                                                    Submit Feedback
+                                                    Submit success ratio
                                                 </button>
                                                 <div className="feedback-timer" style={{ fontSize: '10px', color: '#999', textAlign: 'center', fontStyle: 'italic' }}>
                                                     Auto-syncing in <span style={{ color: '#ff3b30', fontWeight: '700' }}>{feedbackTimer}s</span>
@@ -2105,6 +2183,20 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                                         </span>
                                     </div>
                                 </div>
+
+                                {/* Page Analysis Section */}
+                                {pageType && (
+                                    <div className="page-analysis">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ fontSize: '11px', fontWeight: '600', color: '#666' }}>Structure:</span>
+                                            <span className={`page-type-badge ${pageType}`}>
+                                                {pageType === 'multi' ? '📑 Multi-Page Form' : '📄 Single-Page Form'}
+                                            </span>
+                                        </div>
+
+                                    </div>
+                                )}
+
 
                                 {/* Performance Tracker */}
                                 {performanceMetrics.scanStarted && (
@@ -2151,8 +2243,8 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                                                 <div style={{ marginLeft: '20px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                                     {aiLog.map((log, idx) => (
                                                         <div key={idx} style={{ fontSize: '10px', color: '#666' }}>
-                                                            <span style={{ color: '#888', marginRight: '4px' }}>
-                                                                {log.cached ? '💾' : '🤖'} {truncate(log.question, 15)}:
+                                                            <span style={{ color: '#888', marginRight: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                {log.cached ? '💾' : <img src={chrome.runtime.getURL('assets/icon256.png')} alt="AI" style={{ width: '12px', height: '12px' }} />} {truncate(log.question, 15)}:
                                                             </span>
                                                             <span style={{ color: '#00d084', fontWeight: 'bold' }}>{truncate(log.answer, 20)}</span>
                                                         </div>

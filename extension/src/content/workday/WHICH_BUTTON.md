@@ -95,7 +95,7 @@ async function runAutofill(payload: FillPayload) {
 ### For Workday Applications:
 
 1. **Navigate** to the Workday application page
-2. **Click the floating icon** (🤖) to open the menu
+2. **Click the floating logo** to open the menu
 3. **Click "🔍 Scan Application"** (green button)
 4. **Wait** - You'll see:
    ```

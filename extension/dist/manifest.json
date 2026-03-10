@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Job Application Autofill",
-    "version": "1.3.3",
+    "version": "1.3.4",
     "description": "Autofill job applications with deterministic canonical mapping hard - updated",
     "permissions": [
         "storage",
@@ -30,16 +30,16 @@
     "action": {
         "default_popup": "settings.html",
         "default_icon": {
-            "16": "assets/icon16.png",
-            "48": "assets/icon48.png",
-            "128": "assets/icon128.png"
+            "16": "assets/icon256.png",
+            "48": "assets/icon256.png",
+            "128": "assets/icon256.png"
         }
     },
     "options_page": "settings.html",
     "icons": {
-        "16": "assets/icon16.png",
-        "48": "assets/icon48.png",
-        "128": "assets/icon128.png"
+        "16": "assets/icon256.png",
+        "48": "assets/icon256.png",
+        "128": "assets/icon256.png"
     },
     "web_accessible_resources": [
         {

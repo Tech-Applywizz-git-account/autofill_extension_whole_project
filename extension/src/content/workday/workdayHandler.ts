@@ -4,7 +4,7 @@
  * ZERO changes to Greenhouse logic - Workday-specific implementation
  */
 
-import { scanWorkdayApplication, clearScannerState, getDiscoveredFields } from './workdayScanner';
+import { scanWorkdayApplication, clearScannerState, getDiscoveredFields, WorkdayScanResult } from './workdayScanner';
 import { fillMappedAnswers } from './workdayFiller';
 import { QuestionMapper, MappedAnswer, ScannedQuestion } from '../mapping/questionMapper';
 
@@ -97,8 +97,16 @@ export async function handleWorkdayApplication(payload?: any): Promise<void> {
  * Helper to run a single scan-map-fill pass
  */
 async function processWorkdayPass(clickAddButtons: boolean): Promise<void> {
-    const scannedQuestions = await scanWorkdayApplication(clickAddButtons);
-    console.log(`${LOG_PREFIX} ✅ Scan complete: ${scannedQuestions.length} questions found\n`);
+    const result: WorkdayScanResult = await scanWorkdayApplication(clickAddButtons);
+    const { questions: scannedQuestions, pageType, navigationButtons } = result;
+
+    console.log(`${LOG_PREFIX} ✅ Scan complete: ${scannedQuestions.length} questions found`);
+    console.log(`${LOG_PREFIX} 📋 Page type detected: ${pageType.toUpperCase()}`);
+    console.log(`${LOG_PREFIX} 🔘 Navigation buttons found: ${navigationButtons.length}`);
+    navigationButtons.forEach(btn => {
+        console.log(`${LOG_PREFIX}    ${btn.isMultiPage ? '🔄' : '✅'} "${btn.text}" [aid: ${btn.automationId || 'none'}]`);
+    });
+    console.log();
 
     // ==================== DEDUPLICATION ====================
 

@@ -108,9 +108,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'PERFORM_SCAN') {
         console.log('[Content] 🔍 Performing scan in frame:', window.location.href);
         const scanner = new FormScanner();
-        scanner.scan().then(questions => {
-            console.log(`[Content] ✅ Found ${questions.length} questions in frame`);
-            sendResponse({ success: true, questions });
+        scanner.scan().then(result => {
+            console.log(`[Content] ✅ Found ${result.questions.length} questions in frame. Page type: ${result.pageType}`);
+            sendResponse({ success: true, ...result });
         }).catch(err => {
             console.error('[Content] ❌ Scan failed in frame:', err);
             sendResponse({ success: false, error: err.message });

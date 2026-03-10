@@ -287,8 +287,11 @@ def _repair_answer(question: str, options: Optional[List[str]], intent: str) -> 
                 "I am ready to dedicate myself fully to this role from day one.")
 
     # Generic fallback
-    return ("I am exceptionally motivated for this role and confident I can add immediate value through hard work and "
-            "adaptability. This position is my absolute priority, and I am ready to prove my worth to the team.")
+    if len(q) < 20: 
+        # For very short questions (e.g. "Number", "Type", "ID"), don't give a paragraph
+        return "" 
+    
+    return ("I am motivated for this role and ready to contribute to the team.")
 
 
 def _sanitize_profile(profile: dict) -> dict:
