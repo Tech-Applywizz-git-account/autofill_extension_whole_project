@@ -14,15 +14,17 @@
  */
 
 import { sleep, waitForElement } from './dropdownInteractions';
+import { safeMatch } from '../utils/stringUtils';
 
 const LOG_PREFIX = "[ProductionDropdown]";
 
 export async function selectDropdownKeyboardFirst(
     element: HTMLElement,
-    value: string,
+    value: string | string[],
     options?: string[]
 ): Promise<boolean> {
-    console.log(`${LOG_PREFIX} 🎯 Keyboard-first selection for: ${value}`);
+    const values = Array.isArray(value) ? value : [value];
+    console.log(`${LOG_PREFIX} 🎯 Keyboard-first selection for: ${values.join(', ')}`);
 
     try {
         // Step 1: Focus the dropdown
@@ -32,102 +34,76 @@ export async function selectDropdownKeyboardFirst(
             return false;
         }
 
-        input.focus();
-        await sleep(100); // Reduced from 300ms for speed
-        console.log(`${LOG_PREFIX} ✅ Focused input`);
+        for (const val of values) {
+            console.log(`${LOG_PREFIX} 🔄 Selecting sub-value: "${val}"`);
 
-        // Step 2: Open menu deliberately
-        const opened = await openDropdownWithKeyboard(input);
-        if (!opened) {
-            console.warn(`${LOG_PREFIX} ❌ Failed to open menu`);
-            return false;
-        }
-
-        // Step 3: Wait for OPTIONS, not just menu container
-        console.log(`${LOG_PREFIX} ⏳ Waiting for options to populate...`);
-        const optionsReady = await waitForOptions(2000);
-        if (!optionsReady) {
-            console.warn(`${LOG_PREFIX} ❌ Menu container appeared but no options found`);
-        }
-
-        // Step 3.5: Check for a dedicated SEARCH input inside the menu
-        const menuSearchInput = findMenuSearchInput();
-        if (menuSearchInput) {
-            console.log(`${LOG_PREFIX} 🔍 Switching focus to menu search input`);
-            input = menuSearchInput;
             input.focus();
             await sleep(50);
-        }
 
-        // Step 4: Type to filter options
-        await typeToFilter(input, value);
-
-        // Wait for specific options to appear (Wait-then-Instant)
-        console.log(`${LOG_PREFIX} ⏳ Waiting for matching option: "${value}"`);
-        const matchingIndex = await waitForFilteredOptions(value, 2000);
-
-        if (matchingIndex === -1) {
-            console.warn(`${LOG_PREFIX} ⚠️ Matching option didn't appear in list after filter`);
-        } else {
-            console.log(`${LOG_PREFIX} ✅ Match found at index: ${matchingIndex}`);
-        }
-
-        // Step 5: ArrowDown to navigate (Conditional)
-        console.log(`${LOG_PREFIX} 🔍 Checking if option is already focused...`);
-        const alreadyFocused = isAnyOptionFocused();
-
-        if (alreadyFocused) {
-            console.log(`${LOG_PREFIX} ✨ First option already focused/highlighted by filter - skipping ArrowDown`);
-        } else {
-            console.log(`${LOG_PREFIX} ⬇️ No focus detected - pressing ArrowDown once to focus list`);
-            dispatchKeyEvent(input, 'ArrowDown', 'ArrowDown');
-            await sleep(100);
-        }
-
-        // Step 6: Enter to commit
-        let committed = await commitSelection(input);
-
-        // Fallback: If Enter didn't close the menu, try Tab
-        if (!committed) {
-            console.warn(`${LOG_PREFIX} ⚠️ Enter failed or menu stayed open (multi-select?), trying Tab...`);
-            dispatchKeyEvent(input, 'Tab', 'Tab');
-            await sleep(100);
-            committed = !(await isMenuOpen());
-        }
-
-        // Fallback: If Keyboard failed, try clicking the option directly
-        if (!committed) {
-            console.warn(`${LOG_PREFIX} ⚠️ Keyboard commit failed, trying click fallback...`);
-            const clicked = await clickOption(value);
-            if (clicked) {
-                console.log(`${LOG_PREFIX} ✅ Click fallback successful`);
-                committed = true;
-            }
-        }
-
-        if (!committed) {
-            // One last check: maybe it selected but menu didn't close immediately?
-            await sleep(50);
-            if (verifySelection(element, value)) {
-                console.log(`${LOG_PREFIX} ✅ Verified selection despite menu not closing cleanly`);
-                return true;
+            // Step 2: Open menu deliberately
+            const opened = await openDropdownWithKeyboard(input);
+            if (!opened) {
+                console.warn(`${LOG_PREFIX} ❌ Failed to open menu for "${val}"`);
+                continue;
             }
 
-            console.warn(`${LOG_PREFIX} ❌ Failed to commit selection`);
-            return false;
+            // Step 3: Wait for OPTIONS
+            await waitForOptions(1500);
+
+            // Step 3.5: Search input inside menu
+            const menuSearchInput = findMenuSearchInput();
+            const activeInput = menuSearchInput || input;
+            if (menuSearchInput) {
+                menuSearchInput.focus();
+                await sleep(50);
+            }
+
+            // Step 4: Type to filter
+            await typeToFilter(activeInput, val);
+
+            // Step 4.5: Wait for matching option index
+            const matchingIndex = await waitForFilteredOptions(val, 2000);
+            if (matchingIndex === -1) {
+                console.warn(`${LOG_PREFIX} ⚠️ Match for "${val}" not found in filtered list`);
+            }
+
+            // Step 5: Navigate to match
+            const startOffset = isAnyOptionFocused() ? 0 : 1;
+            const targetIndex = matchingIndex === -1 ? 0 : matchingIndex;
+            const totalPresses = targetIndex + startOffset;
+
+            console.log(`${LOG_PREFIX} ⬇️ Pressing ArrowDown ${totalPresses} times for "${val}"`);
+            for (let i = 0; i < totalPresses; i++) {
+                dispatchKeyEvent(activeInput, 'ArrowDown', 'ArrowDown');
+                await sleep(50);
+            }
+
+            // Step 6: Enter to commit
+            const closed = await commitSelection(activeInput);
+            if (!closed) {
+                // For multi-select, menu often stays open. Check if selected instead of failing.
+                await sleep(50);
+                if (verifySelection(element, val)) {
+                    console.log(`${LOG_PREFIX} ✅ Verified selection for "${val}" (menu stayed open)`);
+                } else {
+                    console.warn(`${LOG_PREFIX} ⚠️ Not verified after Enter, trying click fallback for "${val}"`);
+                    await clickOption(val);
+                }
+            }
+
+            await sleep(100); // Wait between selections
         }
 
-        // Step 7: Strict verification
-        await sleep(50); // Wait for state update
-        const verified = verifySelection(element, value);
-
+        // Step 7: Final verification
+        await sleep(100);
+        const verified = values.some(v => verifySelection(element, v));
         if (verified) {
-            console.log(`${LOG_PREFIX} ✅ Selection verified: ${value}`);
+            console.log(`${LOG_PREFIX} ✅ Multi-select process finished`);
             return true;
-        } else {
-            console.warn(`${LOG_PREFIX} ❌ Verification failed for: ${value}`);
-            return false;
         }
+
+        console.warn(`${LOG_PREFIX} ❌ Final verification failed`);
+        return false;
 
     } catch (error) {
         console.error(`${LOG_PREFIX} ❌ Error:`, error);
@@ -321,10 +297,10 @@ function waitForFilteredOptions(expectedValue: string, timeout: number): Promise
             // Query all valid option elements
             const opts = Array.from(menu.querySelectorAll('[role="option"], .select__option, .dropdown-item, li'));
 
-            // Find index of first match
+            // Find index of first match using safeMatch
             return opts.findIndex(opt => {
-                const text = opt.textContent?.toLowerCase() || '';
-                return text.includes(target);
+                const text = opt.textContent || '';
+                return safeMatch(expectedValue, text);
             });
         };
 
@@ -467,18 +443,18 @@ function verifySelection(element: HTMLElement, expectedValue: string): boolean {
         // Check single value
         const singleValue = control.querySelector('.select__single-value');
         if (singleValue) {
-            const displayedText = singleValue.textContent?.trim().toLowerCase() || '';
+            const displayedText = singleValue.textContent || '';
             console.log(`${LOG_PREFIX} 🔍 Displayed single value: "${displayedText}"`);
-            if (displayedText.includes(expectedLower) || expectedLower.includes(displayedText)) return true;
+            if (safeMatch(expectedValue, displayedText)) return true;
         }
 
         // Check multi-value (tags)
         const multiValues = control.querySelectorAll('.select__multi-value__label');
         if (multiValues.length > 0) {
             for (const val of Array.from(multiValues)) {
-                const text = val.textContent?.trim().toLowerCase() || '';
+                const text = val.textContent || '';
                 console.log(`${LOG_PREFIX} 🔍 Checking multi-value tag: "${text}"`);
-                if (text.includes(expectedLower) || expectedLower.includes(text)) return true;
+                if (safeMatch(expectedValue, text)) return true;
             }
         }
     }
@@ -486,8 +462,8 @@ function verifySelection(element: HTMLElement, expectedValue: string): boolean {
     // Method 2: Check aria-selected option
     const selectedOptions = document.querySelectorAll('[role="option"][aria-selected="true"]');
     for (const option of Array.from(selectedOptions)) {
-        const optionText = option.textContent?.trim().toLowerCase() || '';
-        if (optionText.includes(expectedLower) || expectedLower.includes(optionText)) {
+        const optionText = option.textContent || '';
+        if (safeMatch(expectedValue, optionText)) {
             return true;
         }
     }
@@ -495,15 +471,15 @@ function verifySelection(element: HTMLElement, expectedValue: string): boolean {
     // Method 3: Check input value (if it holds the selection)
     const input = findDropdownInput(element);
     if (input && input.value && !input.readOnly) {
-        const inputValue = input.value.trim().toLowerCase();
-        if (inputValue === expectedLower || (inputValue.length > 3 && inputValue.includes(expectedLower))) {
+        const inputValue = input.value;
+        if (safeMatch(expectedValue, inputValue)) {
             return true;
         }
     }
 
     // Method 4: Check if any visible text in container matches
-    const containerText = element.textContent?.toLowerCase() || '';
-    if (containerText.includes(expectedLower)) {
+    const containerText = element.textContent || '';
+    if (safeMatch(expectedValue, containerText)) {
         return true;
     }
 
@@ -533,15 +509,13 @@ async function clickOption(text: string): Promise<boolean> {
         '.select2-results__option'
     ];
 
-    const target = text.toLowerCase();
-
     // Strategy A: Specific options
     for (const selector of selectors) {
         const options = document.querySelectorAll(selector);
         for (const option of Array.from(options)) {
-            const content = option.textContent?.trim().toLowerCase() || '';
-            if (content.includes(target)) { // Changed to includes for better matching
-                console.log(`${LOG_PREFIX} 🖱️ Clicking option: "${content}"`);
+            const content = option.textContent || '';
+            if (safeMatch(text, content)) {
+                console.log(`${LOG_PREFIX} 🖱️ Clicking option: "${content.trim()}"`);
                 (option as HTMLElement).click();
                 await sleep(50);
                 return true;
@@ -555,9 +529,9 @@ async function clickOption(text: string): Promise<boolean> {
         // Look for any clickable element with correct text
         const allElements = menu.querySelectorAll('div, li, span, a');
         for (const el of Array.from(allElements)) {
-            const content = el.textContent?.trim().toLowerCase() || '';
-            if (content === target) { // Exact match for generic elements
-                console.log(`${LOG_PREFIX} 🖱️ Clicking match in menu: "${content}"`);
+            const content = el.textContent || '';
+            if (safeMatch(text, content)) {
+                console.log(`${LOG_PREFIX} 🖱️ Clicking match in menu: "${content.trim()}"`);
                 (el as HTMLElement).click();
                 await sleep(50);
                 return true;

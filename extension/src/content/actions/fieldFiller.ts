@@ -36,6 +36,25 @@ export async function fillField(
         fileName: fileName
     });
 
+    if (!field.element && field.selector) {
+        console.log(`[Autofill] 🔍 Element reference missing, re-finding via selector: ${field.selector}`);
+        const found = document.querySelector(field.selector) as HTMLElement;
+        if (found) {
+            field.element = found;
+        } else {
+            console.warn(`[Autofill] ❌ Could not re-find element for: ${field.questionText}`);
+        }
+    }
+
+    if (!field.element) {
+        return {
+            success: false,
+            filled: false,
+            skipped: true,
+            reason: "Target element not found in DOM",
+        };
+    }
+
     if (!value || value === "") {
         console.log(`[Autofill] ⚠️ No value to fill for: ${field.questionText}`);
         return {
@@ -83,10 +102,10 @@ export async function fillField(
 
             case FieldType.DROPDOWN_CUSTOM:
                 console.log(`[Autofill] 🎯 Selecting from custom dropdown: ${field.questionText} → ${value}`);
-                // Use PRODUCTION keyboard-first dropdown strategy (static import to avoid CSP)
+                // Supports multi-select (array) or single string
                 const dropdownResult = await selectDropdownKeyboardFirst(
                     field.element,
-                    String(value),
+                    value,
                     field.options
                 );
                 if (dropdownResult) {
@@ -151,11 +170,21 @@ export async function fillField(
 
             case FieldType.FILE_UPLOAD:
                 console.log(`[Autofill] 📎 Triggering file upload: ${field.questionText}`);
+                
+                // DATA PRIORITY:
+                // 1. If 'value' is already base64, use it
+                // 2. If 'field.base64' is available, use it
+                // 3. Fallback to just opening the picker (last resort)
+                let uploadData = String(value);
+                if (!uploadData.startsWith('data:') && field.base64) {
+                    uploadData = field.base64;
+                }
+
                 // Upload file from base64 data if available, with fallback to file picker
                 success = await triggerFileUpload(
                     field.element as HTMLInputElement,
-                    String(value), // base64 data
-                    fileName || 'resume.pdf'  // use provided filename or default
+                    uploadData, 
+                    fileName || field.fileName || 'resume.pdf'
                 );
                 if (success) {
                     return {

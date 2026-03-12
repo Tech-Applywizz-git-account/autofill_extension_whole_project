@@ -274,24 +274,13 @@ def _repair_answer(question: str, options: Optional[List[str]], intent: str) -> 
     if intent == "personal.desiredSalary" or "salary" in q or "compensation" in q:
         return "I am looking for a competitive salary that reflects the responsibilities of the role and market standards. I am highly motivated and flexible, as my priority is securing this opportunity to contribute to your team."
 
-    # "Anything else" fallback
-    if intent == "personal.additionalInfo" or "anything else" in q or "additional" in q:
-        return ("I am incredibly excited about this opportunity and am 100% committed to making a significant impact. "
-                "I am a fast learner, extremely dependable, and will go above and beyond to ensure success in this role. "
-                "Securing this position is my top priority.")
-
     # Why fit fallback
     if intent == "experience.whyFit" or "strong fit" in q or "why should" in q:
         return ("I am a perfect fit because I bring a combination of technical excellence and an absolute drive to succeed. "
                 "I take full ownership of my work, communicate clearly, and am deeply committed to the company's goals. "
                 "I am ready to dedicate myself fully to this role from day one.")
 
-    # Generic fallback
-    if len(q) < 20: 
-        # For very short questions (e.g. "Number", "Type", "ID"), don't give a paragraph
-        return "" 
-    
-    return ("I am motivated for this role and ready to contribute to the team.")
+    return ""
 
 
 def _sanitize_profile(profile: dict) -> dict:

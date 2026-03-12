@@ -4,7 +4,7 @@ import { createRoot, Root } from "react-dom/client";
 import { DetectedField, QuestionSection, FieldType } from "../../types/fieldDetection";
 import { updateProfileField, loadProfile, saveProfile } from "../../core/storage/profileStorage";
 import { EMPTY_PROFILE } from "../../types/canonicalProfile";
-import { patternStorage } from "../../core/storage/patternStorage";
+import { patternStorage, LearnedPattern } from "../../core/storage/patternStorage";
 import { fillField } from "../actions/fieldFiller";
 import { FormScanner } from "../scanner/formScanner";
 import { CONFIG } from "../../config";
@@ -37,7 +37,7 @@ const STYLES = `
   align-items: center;
   justify-content: center;
   position: relative;
-  border: 4px solid #00d084;
+  border: 4px solid #0073e6;
   /* JobRight green */
   transition: transform 0.2s;
 }
@@ -146,18 +146,24 @@ const STYLES = `
 }
 
 .view-details-btn {
-  background: #f1f3f5;
-  color: #495057;
+  background: #0073e6;
+  color: white;
   border: none;
   padding: 8px;
   border-radius: 6px;
   font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.1s;
 }
 
 .view-details-btn:hover {
-  background: #e9ecef;
+  background: #005bb5;
+  transform: translateY(-1px);
+}
+
+.view-details-btn:active {
+  transform: translateY(0);
 }
 
 /* Details Panel State */
@@ -521,6 +527,45 @@ const STYLES = `
   padding: 4px 8px;
   border-radius: 4px;
   cursor: pointer;
+}
+
+.file-upload-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.file-input-hidden {
+  display: none;
+}
+
+.file-upload-btn {
+  background: #0073e6;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+
+.file-upload-btn:hover {
+  background: #005bb5;
+}
+
+.file-upload-btn.uploaded {
+  background: #28a745;
+}
+
+.upload-icon {
+  font-size: 16px;
 }
 
 /* Performance Tracker Styles */
@@ -888,7 +933,7 @@ interface PerformanceMetrics {
     fillProgress?: { current: number; total: number };
 }
 
-type ViewState = "ICON" | "MENU" | "DETAILS" | "SETTINGS";
+type ViewState = "ICON" | "MENU" | "DETAILS" | "SETTINGS" | "PATTERNS";
 
 // Helper functions for performance tracking
 const formatTime = (date: Date): string => {
@@ -2515,6 +2560,12 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                                     </div>
                                 </div>
 
+                                <div className="settings-item" onClick={() => setViewState("PATTERNS")}>
+                                    <div className="settings-item-title">🧠 Manage Learned Patterns</div>
+                                    <div className="settings-item-desc">View and delete patterns the extension has learned. Useful for correcting mistakes.</div>
+                                    <div className="settings-item-btn">Manage Patterns →</div>
+                                </div>
+
                                 {/* <div className={`settings-item ${isClearingCache ? 'active' : ''}`} onClick={async () => {
                                 if (isClearingCache) return;
                                 if (confirm("Are you sure you want to clear the AI cache? This will refresh all AI answers.")) {
@@ -2564,13 +2615,249 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                     </div>
                 )
             }
+
+            {viewState === "PATTERNS" && (
+                <div className="details-panel">
+                    <div className="autofill-header">
+                        <div className="drag-handle" style={{ marginRight: '8px' }}>⠿</div>
+                        <h3 style={{ margin: 0, fontSize: '14px', flex: 1 }}>🧠 Learned Patterns</h3>
+                        <div className="header-actions">
+                            <button
+                                onClick={() => setViewState("SETTINGS")}
+                                className="action-btn"
+                                title="Back to Settings"
+                            >
+                                ←
+                            </button>
+                            <button
+                                onClick={handleClose}
+                                className="action-btn"
+                                style={{ background: 'rgba(255, 59, 48, 0.2)', border: '1px solid rgba(255, 59, 48, 0.3)' }}
+                                title="Close"
+                            >
+                                ×
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="autofill-content">
+                        <div style={{ marginBottom: '12px', padding: '10px', background: '#f0f4ff', borderRadius: '8px', fontSize: '11px', color: '#3f51b5', border: '1px solid #d0d7f7' }}>
+                            💡 <strong>Tip:</strong> If you delete patterns here, click "Sync to Cloud" in Settings to update your database backup.
+                        </div>
+                        <LearnedPatternsList />
+                    </div>
+                </div>
+            )}
         </div >
+    );
+};
+
+const LearnedPatternsList: React.FC = () => {
+    const [patterns, setPatterns] = useState<LearnedPattern[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    const refreshPatterns = async () => {
+        const local = await patternStorage.getLocalPatterns();
+        setPatterns(local.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        refreshPatterns();
+    }, []);
+
+    if (loading) return <div style={{ textAlign: 'center', padding: '20px' }}><span className="spinner"></span></div>;
+
+    if (patterns.length === 0) {
+        return (
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#666' }}>
+                <div style={{ fontSize: '32px', marginBottom: '10px' }}>Empty</div>
+                <p>No patterns learned yet. They appear here when you manually correct and save a field.</p>
+            </div>
+        );
+    }
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingBottom: '20px' }}>
+            {patterns.map(p => (
+                <LearnedPatternItem key={p.id} pattern={p} onUpdate={refreshPatterns} />
+            ))}
+        </div>
+    );
+};
+
+const LearnedPatternItem: React.FC<{ pattern: LearnedPattern; onUpdate: () => void }> = ({ pattern, onUpdate }) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [editValue, setEditValue] = useState(pattern.answerMappings?.[0]?.canonicalValue || "");
+    const [isSyncing, setIsSyncing] = useState(false);
+
+    const handleSave = async () => {
+        try {
+            setIsSyncing(true);
+            const updatedMappings = [{
+                canonicalValue: editValue,
+                variants: [editValue]
+            }];
+
+            // 1. Update local storage
+            await patternStorage.updatePattern(pattern.id, {
+                answerMappings: updatedMappings
+            });
+
+            // 2. Sync to cloud if possible
+            const profile = await loadProfile();
+            if (profile?.personal.email) {
+                const refreshed = (await patternStorage.getLocalPatterns()).find(p => p.id === pattern.id);
+                if (refreshed) {
+                    await patternStorage.syncPatternToSupabase(refreshed);
+                }
+            }
+
+            setIsEditing(false);
+            onUpdate();
+        } catch (err) {
+            console.error("Failed to update pattern:", err);
+            alert("Failed to save changes.");
+        } finally {
+            setIsSyncing(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (confirm("Are you sure you want to delete this learned pattern?")) {
+            await patternStorage.deletePattern(pattern.id);
+            onUpdate();
+        }
+    };
+
+    return (
+        <div style={{
+            padding: '12px',
+            background: 'white',
+            border: '1px solid #eee',
+            borderRadius: '8px',
+            position: 'relative'
+        }}>
+            <div style={{ fontSize: '12px', fontWeight: '700', color: '#212529', marginBottom: '4px', paddingRight: '40px' }}>
+                {pattern.questionPattern}
+            </div>
+            <div style={{ fontSize: '10px', color: '#6c757d', marginBottom: '8px' }}>
+                Intent: <code style={{ color: '#00d084' }}>{pattern.intent}</code>
+            </div>
+
+            {isEditing ? (
+                <div style={{ marginBottom: '10px' }}>
+                    <input
+                        type="text"
+                        value={editValue}
+                        onChange={e => setEditValue(e.target.value)}
+                        style={{
+                            width: '100%',
+                            padding: '6px',
+                            fontSize: '12px',
+                            border: '1px solid #0073e6',
+                            borderRadius: '4px',
+                            marginBottom: '6px',
+                            boxSizing: 'border-box',
+                            outline: 'none'
+                        }}
+                        placeholder="Enter correct answer..."
+                        autoFocus
+                    />
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                        <button
+                            onClick={handleSave}
+                            disabled={isSyncing}
+                            style={{
+                                background: '#0073e6',
+                                color: 'white',
+                                border: 'none',
+                                padding: '4px 10px',
+                                borderRadius: '4px',
+                                fontSize: '10px',
+                                cursor: 'pointer',
+                                opacity: isSyncing ? 0.7 : 1
+                            }}
+                        >
+                            {isSyncing ? "Saving..." : "Save"}
+                        </button>
+                        <button
+                            onClick={() => setIsEditing(false)}
+                            style={{
+                                background: '#f1f3f5',
+                                color: '#495057',
+                                border: 'none',
+                                padding: '4px 10px',
+                                borderRadius: '4px',
+                                fontSize: '10px',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <div style={{
+                    fontSize: '11px',
+                    background: '#f8f9fa',
+                    padding: '8px',
+                    borderRadius: '4px',
+                    marginBottom: '10px',
+                    borderLeft: '3px solid #0073e6',
+                    color: '#495057'
+                }}>
+                    <strong>Answer:</strong> {pattern.answerMappings?.[0]?.canonicalValue || "No answer stored"}
+                </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '9px', color: '#999' }}>
+                    Added: {new Date(pattern.createdAt).toLocaleDateString()}
+                </span>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                    {!isEditing && (
+                        <button
+                            onClick={() => setIsEditing(true)}
+                            style={{
+                                background: 'white',
+                                color: '#0073e6',
+                                border: '1px solid #0073e6',
+                                padding: '2px 8px',
+                                borderRadius: '4px',
+                                fontSize: '10px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            Edit
+                        </button>
+                    )}
+                    <button
+                        onClick={handleDelete}
+                        style={{
+                            background: '#fff5f5',
+                            color: '#fa5252',
+                            border: '1px solid #ffe3e3',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            fontSize: '10px',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
     );
 };
 
 const FieldItem: React.FC<{ field: DetectedField; onUpdate: (val: string) => void }> = ({ field, onUpdate }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState(field.filledValue || "");
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Sync state when field prop changes (e.g. after background mapping completes)
     useEffect(() => {
@@ -2585,9 +2872,24 @@ const FieldItem: React.FC<{ field: DetectedField; onUpdate: (val: string) => voi
     const handleSave = async (e: React.MouseEvent) => {
         e.stopPropagation();
 
+        const isFile = field.fieldType === FieldType.FILE_UPLOAD;
+
         // 1. Update DOM element
         try {
-            const result = await fillField(field, editValue);
+            // For files, editValue will be the fileName (set during handleFileChange)
+            // But fillField needs the base64 content which is now in profile.
+            // However, we can just trigger another manual fill which will look at profile.
+            const profile = await loadProfile();
+            const qLower = field.questionText.toLowerCase();
+            const sLower = field.selector.toLowerCase();
+            const isResume = qLower.includes('resume') || qLower.includes('cv') || 
+                             sLower.includes('resume') || sLower.includes('cv') ||
+                             (qLower === 'attach' && !qLower.includes('cover')) ||
+                             (qLower === 'upload' && !qLower.includes('cover'));
+
+            const doc = isResume ? profile?.documents?.resume : profile?.documents?.coverLetter;
+            
+            const result = await fillField(field, isFile ? (doc?.base64 || field.base64) : editValue, isFile ? (doc?.fileName || field.fileName) : undefined);
             console.log(`Assistant manual fill result:`, result);
         } catch (err) {
             console.error("Failed to fill DOM element from assistant:", err);
@@ -2640,19 +2942,43 @@ const FieldItem: React.FC<{ field: DetectedField; onUpdate: (val: string) => voi
         // 3. Persist to Learned Patterns for future recognition (only if it's a known intent)
         if (!isUnknown) {
             try {
-                await patternStorage.addPattern({
+                const newPattern = {
                     questionPattern: field.questionText,
                     intent: field.canonicalKey!,
                     canonicalKey: field.canonicalKey!,
                     fieldType: field.fieldType,
                     confidence: 1.0,
-                    source: 'manual',
+                    source: 'manual' as const,
                     answerMappings: [{
                         canonicalValue: editValue,
                         variants: [editValue]
                     }]
-                });
+                };
+
+                await patternStorage.addPattern(newPattern);
                 console.log(`[Ext] Learned mapping for: ${field.questionText}`);
+
+                // 🔄 REAL-TIME SYNC TO CLOUD
+                const profile = await loadProfile();
+                if (profile?.personal.email) {
+                    console.log(`[Ext] ☁️ Attempting real-time sync for: ${field.canonicalKey}`);
+
+                    // We need to fetch the local patterns again to get the one with generated ID
+                    const localPatterns = await patternStorage.getLocalPatterns();
+                    const justAdded = localPatterns.find(p =>
+                        p.intent === newPattern.intent &&
+                        p.questionPattern === newPattern.questionPattern
+                    );
+
+                    if (justAdded) {
+                        try {
+                            await patternStorage.syncPatternToSupabase(justAdded);
+                            console.log("[Ext] ✅ Real-time pattern sync successful");
+                        } catch (syncErr) {
+                            console.warn("[Ext] Real-time pattern sync failed (offline or server error):", syncErr);
+                        }
+                    }
+                }
             } catch (err) {
                 console.warn("[Ext] Failed to learn pattern:", err);
             }
@@ -2667,6 +2993,78 @@ const FieldItem: React.FC<{ field: DetectedField; onUpdate: (val: string) => voi
     const handleEditClick = (e: React.MouseEvent) => {
         e.stopPropagation();
         setIsEditing(true);
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        try {
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const base64 = event.target?.result as string;
+                if (base64) {
+                    const fileName = file.name;
+                    console.log(`[OverlayPanel] File read success: ${fileName}`);
+
+                    // 1. Update Profile (Resume/Cover Letter based on context)
+                    const qLower = field.questionText.toLowerCase();
+                    const sLower = field.selector.toLowerCase();
+                    const isResume = qLower.includes('resume') || qLower.includes('cv') || 
+                                    sLower.includes('resume') || sLower.includes('cv') ||
+                                    (qLower === 'attach' && !qLower.includes('cover')) ||
+                                    (qLower === 'upload' && !qLower.includes('cover'));
+                    
+                    const docKey = isResume ? 'resume' : 'coverLetter';
+                    const profilePath = `documents.${docKey}`;
+                    
+                    const fileData = {
+                        fileName,
+                        base64: base64,
+                        uploadedAt: new Date().toISOString()
+                    };
+
+                    await updateProfileField(profilePath, fileData);
+                    console.log(`[OverlayPanel] Saved ${docKey} to profile: ${fileName}`);
+
+                    // 2. Clear resume text cache if it was resume
+                    if (isResume) {
+                        try {
+                            const rawText = base64.split(',')[1];
+                            const decoded = atob(rawText);
+                            // Very simple text extraction for preview purposes
+                            const cleanText = decoded.replace(/[^\x20-\x7E\n\r\t]/g, '');
+                            await updateProfileField('metadata.resumeRawText', cleanText);
+                        } catch (err) {
+                            console.warn("Failed to extract raw text preview:", err);
+                        }
+                    }
+
+                    // 3. Update local state
+                    setEditValue(fileName);
+                    field.base64 = base64; // Save to field object directly
+                    field.fileName = fileName;
+                    setIsUploading(false);
+                    
+                    // Trigger save automatically once file is uploaded?
+                    // Let's let the user click "Save & Store" to be consistent
+                }
+            };
+            reader.onerror = () => {
+                alert("Failed to read file.");
+                setIsUploading(false);
+            };
+            reader.readAsDataURL(file);
+        } catch (err) {
+            console.error("File upload error:", err);
+            alert("Upload failed.");
+            setIsUploading(false);
+        }
+    };
+
+    const triggerFilePicker = () => {
+        fileInputRef.current?.click();
     };
 
     return (
@@ -2724,7 +3122,30 @@ const FieldItem: React.FC<{ field: DetectedField; onUpdate: (val: string) => voi
 
             {isEditing && (
                 <div className="edit-field-ui" onClick={(e) => e.stopPropagation()}>
-                    {field.options && field.options.length > 0 ? (
+                    {field.fieldType === FieldType.FILE_UPLOAD ? (
+                        <div className="file-upload-container">
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                className="file-input-hidden"
+                                onChange={handleFileChange}
+                                accept=".pdf,.doc,.docx,.txt"
+                            />
+                            <button 
+                                className={`file-upload-btn ${editValue ? 'uploaded' : ''}`}
+                                onClick={triggerFilePicker}
+                                disabled={isUploading}
+                            >
+                                <span className="upload-icon">📁</span>
+                                {isUploading ? "Reading..." : (editValue ? `Change: ${truncate(editValue as string, 20)}` : "Upload Document")}
+                            </button>
+                            {editValue && (
+                                <div style={{ fontSize: '10px', color: '#666', marginTop: '2px' }}>
+                                    Selected: {editValue}
+                                </div>
+                            )}
+                        </div>
+                    ) : (field.options && field.options.length > 0 ? (
                         <select
                             value={editValue}
                             onChange={(e) => setEditValue(e.target.value)}
@@ -2743,9 +3164,11 @@ const FieldItem: React.FC<{ field: DetectedField; onUpdate: (val: string) => voi
                             autoFocus
                             placeholder={`Enter ${field.questionText}...`}
                         />
-                    )}
+                    ))}
                     <div className="edit-actions">
-                        <button className="save-btn" onClick={handleSave}>Save & Store</button>
+                        <button className="save-btn" onClick={handleSave} disabled={isUploading}>
+                            {field.fieldType === FieldType.FILE_UPLOAD ? "Save to Profile" : "Save & Store"}
+                        </button>
                         <button className="cancel-btn" onClick={() => setIsEditing(false)}>Cancel</button>
                     </div>
                 </div>

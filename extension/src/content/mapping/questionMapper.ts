@@ -3,6 +3,7 @@
  * Uses predefined patterns, canonical matching, learned patterns, fuzzy matching, and AI fallback
  */
 
+import { normalize } from '../utils/stringUtils';
 import { loadProfile } from '../../core/storage/profileStorage';
 import { askAI } from '../../core/ai/aiService';
 import { patternStorage } from '../../core/storage/patternStorage';
@@ -10,10 +11,11 @@ import { findQuestionIntent, getValueByIntent } from './questionPatternDatabase'
 import { resolveHardcoded } from './hardcodedAnswerEngine';
 import { getCachedResponse, setCachedResponse } from '../../core/storage/aiResponseCache';
 import { AnalyticsTracker } from '../../core/analytics/AnalyticsTracker';
+import { FieldType } from '../../types/fieldDetection';
 
 export interface ScannedQuestion {
     questionText: string;
-    fieldType: string;
+    fieldType: FieldType;
     options: string[] | undefined;
     required: boolean;
     selector: string;
@@ -24,11 +26,11 @@ export type MappedSource = 'canonical' | 'learned' | 'fuzzy' | 'AI' | 'injected_
 export interface MappedAnswer {
     selector: string;
     questionText: string;
-    answer: string;
+    answer: string | string[];
     source: MappedSource;
     confidence: number;
     required: boolean;
-    fieldType: string;
+    fieldType: FieldType;
     canonicalKey?: string;
     options?: string[];
     fileName?: string; // For file uploads - the original filename
@@ -72,18 +74,27 @@ export class QuestionMapper {
             'attach files',
             'drop files here',
             'upload file',
-            'type here...',
             'type here',
             'enter text here',
             'search...',
-            'select...',
-            'choose...',
-            'please select',
+            '--select--',
+            '-- select --',
+            'none',
+            'n/a',
+            'enter here',
         ];
 
         const validQuestions = questions.filter(q => {
             const normalized = q.questionText.toLowerCase().trim();
-            const isBlacklisted = QUESTION_BLACKLIST.some(b => normalized === b || normalized.startsWith(b));
+
+            // Only blacklist if it matches exactly OR if it's a very short string starting with the blacklist item
+            // This prevents "Please select up to 2 ethnicities" from being blocked by "please select"
+            const isBlacklisted = QUESTION_BLACKLIST.some(b => {
+                if (normalized === b) return true;
+                if (normalized.startsWith(b) && normalized.length < b.length + 5) return true;
+                return false;
+            });
+
             if (isBlacklisted) {
                 console.log(`🚫 [QuestionMapper] Blacklisted fake question: "${q.questionText}"`);
             }
@@ -135,13 +146,21 @@ export class QuestionMapper {
                 console.log(`  ⭐ [CUSTOM] "${q.questionText}" → "${customAnswer}"`);
 
                 // Validate against options if this is a dropdown/radio
-                let finalAnswer = customAnswer;
+                let finalAnswer: string | string[] = customAnswer;
                 if (q.options && q.options.length > 0) {
-                    const matched = (this as any).matchInOptions(customAnswer, q.options, 1.0);
+                    const matched = this.matchInOptions(customAnswer as any, q.options, 1.0);
                     if (matched) {
                         finalAnswer = matched.answer;
                         console.log(`     ✓ Validated against options: "${finalAnswer}"`);
                     }
+                }
+
+                // RESOLVE FILE URLS
+                let fileName: string | undefined = undefined;
+                if (q.fieldType === FieldType.FILE_UPLOAD) {
+                    const resolved = this.resolveFileAnswer(finalAnswer, q, profile);
+                    finalAnswer = resolved.answer;
+                    fileName = resolved.fileName;
                 }
 
                 mappedAnswers.push({
@@ -152,7 +171,8 @@ export class QuestionMapper {
                     confidence: 1.0,
                     required: q.required,
                     fieldType: q.fieldType,
-                    options: q.options || undefined
+                    options: q.options || undefined,
+                    fileName
                 });
             } else {
                 phaseNeg1Candidates.push(q);
@@ -181,18 +201,36 @@ export class QuestionMapper {
                 let validatedAnswer = hResult.answer;
 
                 // VALIDATION: If it's a dropdown/select, ensure the answer is actually in the options
-                if (q.options && q.options.length > 0 && q.fieldType !== 'file') {
+                if (q.options && q.options.length > 0 && q.fieldType !== FieldType.FILE_UPLOAD) {
                     const optionMatch = this.matchInOptions(hResult.answer, q.options, 1.0);
                     if (optionMatch) {
                         validatedAnswer = optionMatch.answer;
+                    } else if (q.fieldType === FieldType.CHECKBOX || q.fieldType === FieldType.RADIO_GROUP) {
+                        // For checkboxes/radios, allow "Yes/No" or "True/False" to pass through even if label doesn't match
+                        // FieldFiller or AI will handle the boolean intent
+                        const lowerVal = String(hResult.answer).toLowerCase();
+                        if (['yes', 'no', 'true', 'false'].includes(lowerVal)) {
+                             console.log(`  ✅ [CHECKBOX/RADIO] Accepting boolean intent "${hResult.answer}" for field "${q.questionText}"`);
+                             validatedAnswer = hResult.answer;
+                        } else {
+                            console.log(`  ⚠️ Phase -1 [HARDCODED]: "${q.questionText}" → "${hResult.answer}" not in options, falling through`);
+                            phase0Candidates.push(q);
+                            continue;
+                        }
                     } else {
                         // Hardcoded engine gave a value that doesn't exist in the dropdown
-                        // (e.g. salary "20000" but dropdown wants "$20k-$30k")
-                        // Fall through to Phase 0 -> Phase 1 -> Phase 2 (AI) so it can LEARN.
                         console.log(`  ⚠️ Phase -1 [HARDCODED]: "${q.questionText}" → "${hResult.answer}" not in options, falling through`);
                         phase0Candidates.push(q);
                         continue;
                     }
+                }
+
+                // RESOLVE FILE URLS
+                let fileName: string | undefined = hResult.answer && typeof hResult.answer === 'object' ? (hResult as any).fileName : undefined;
+                if (q.fieldType === FieldType.FILE_UPLOAD) {
+                    const resolved = this.resolveFileAnswer(validatedAnswer, q, profile);
+                    validatedAnswer = resolved.answer;
+                    fileName = resolved.fileName;
                 }
 
                 mappedAnswers.push({
@@ -204,7 +242,8 @@ export class QuestionMapper {
                     required: q.required,
                     fieldType: q.fieldType,
                     options: q.options || undefined,
-                    canonicalKey: hResult.intent
+                    canonicalKey: hResult.intent,
+                    fileName
                 });
                 console.log(`  ⚡ [HARDCODED] "${q.questionText}" → "${validatedAnswer}" (${hResult.intent})`);
             } else {
@@ -233,7 +272,7 @@ export class QuestionMapper {
 
                     // SPECIAL HANDLING FOR FILE OBJECTS
                     if (value && typeof value === 'object' && (value.base64 || value.url)) {
-                        fileName = value.fileName || 'resume.pdf';
+                        fileName = value.fileName; // Don't default here, let resolveFileAnswer handle it
                         const base64Data = value.base64 || '';
                         value = base64Data.startsWith('data:') ? base64Data : `data:application/pdf;base64,${base64Data}`;
                     } else if (typeof value === 'boolean') {
@@ -245,7 +284,7 @@ export class QuestionMapper {
 
                     // For dropdown/radio/checkbox fields, validate against available options
                     // Skip validation for file fields (they don't have standard options)
-                    if (q.fieldType !== 'file' && q.options && q.options.length > 0) {
+                    if (q.fieldType !== FieldType.FILE_UPLOAD && q.options && q.options.length > 0) {
                         const optionMatch = this.matchInOptions(value, q.options, 1.0);
                         if (optionMatch) {
                             value = optionMatch.answer; // Use the exact option text
@@ -258,17 +297,19 @@ export class QuestionMapper {
                     }
 
                     // Successfully matched using predefined pattern
+                    const resolvedFile = this.resolveFileAnswer(value, q, profile);
+                    
                     mappedAnswers.push({
                         selector: q.selector,
                         questionText: q.questionText,
-                        answer: value,
+                        answer: resolvedFile.answer,
                         source: 'canonical' as const,
                         confidence: 1.0,
                         required: q.required,
                         fieldType: q.fieldType,
                         options: q.options || undefined,
                         canonicalKey: intent,
-                        fileName: fileName // Pass the original filename
+                        fileName: resolvedFile.fileName || fileName // Pass the original filename
                     });
                     console.log(`  ⚡ "${q.questionText}" → ${intent} (predefined pattern: "${match.pattern}", value: "${fileName || value}")`);
                     continue; // Skip to next question
@@ -403,7 +444,7 @@ export class QuestionMapper {
     /**
      * Try canonical, learned, and fuzzy matching
      */
-    private async tryMapping(question: ScannedQuestion, profile: any): Promise<{ answer: string; source: 'canonical' | 'learned' | 'fuzzy'; confidence: number; fileName?: string } | null> {
+    private async tryMapping(question: ScannedQuestion, profile: any): Promise<{ answer: string | string[]; source: 'canonical' | 'learned' | 'fuzzy'; confidence: number; fileName?: string } | null> {
         // (Manual overrides (customAnswers) now handled in Phase -2 of processQuestions)
 
         // 1. Try canonical matching
@@ -443,7 +484,7 @@ export class QuestionMapper {
     /**
      * Try learned patterns from storage
      */
-    private async tryLearned(question: ScannedQuestion, profile: any): Promise<{ answer: string; source: 'learned'; confidence: number } | null> {
+    private async tryLearned(question: ScannedQuestion, profile: any): Promise<{ answer: string | string[]; source: 'learned'; confidence: number } | null> {
         const pattern = await patternStorage.findPattern(question.questionText, question.fieldType, question.options);
 
         if (!pattern || pattern.intent.toLowerCase() === 'unknown') {
@@ -462,7 +503,7 @@ export class QuestionMapper {
 
         // SAFETY CHECK: If this is a file input, ensure we don't return text answers (e.g. bio/summary)
         // Learned patterns often capture text values for "Attach" if there were text inputs named "Attach" elsewhere
-        if (question.fieldType === 'file') {
+        if (question.fieldType === FieldType.FILE_UPLOAD) {
             // Only proceed if the intent is clearly file-related (RESUME/COVER_LETTER)
             // OR if the answer we would generate is a data URI (unlikely for learned patterns currently)
             const intent = pattern.intent.toLowerCase();
@@ -482,11 +523,11 @@ export class QuestionMapper {
             // Try to find variant that matches current options
             for (const mapping of pattern.answerMappings) {
                 for (const variant of mapping.variants) {
-                    const match = question.options.find(opt =>
-                        opt.toLowerCase() === variant.toLowerCase() ||
-                        opt.toLowerCase().includes(variant.toLowerCase()) ||
-                        variant.toLowerCase().includes(opt.toLowerCase())
-                    );
+                    const match = question.options.find(opt => {
+                        const nOpt = normalize(opt);
+                        const nVariant = normalize(variant);
+                        return nOpt === nVariant || nOpt.includes(nVariant) || nVariant.includes(nOpt);
+                    });
 
                     if (match) {
                         console.log(`[QuestionMapper] 🎯 Matched stored variant "${variant}" → "${match}"`);
@@ -510,53 +551,71 @@ export class QuestionMapper {
                 // For personal fields (pattern-only), validate against options if they exist
                 if (question.options && question.options.length > 0) {
                     // Check if canonical value matches any option
-                    const match = question.options.find(opt =>
-                        opt.toLowerCase() === canonicalValue.toLowerCase() ||
-                        opt.toLowerCase().includes(canonicalValue.toLowerCase()) ||
-                        canonicalValue.toLowerCase().includes(opt.toLowerCase())
-                    );
-                    if (match) {
-                        console.log(`[QuestionMapper] 🔍 Canonical value "${canonicalValue}" matches option "${match}"`);
-                        return { answer: match, source: 'learned', confidence: pattern.confidence };
+                    const matched = this.matchInOptions(canonicalValue, question.options, 1.0);
+                    if (matched) {
+                        console.log(`[QuestionMapper] 🔍 Canonical value matches option: "${JSON.stringify(matched.answer)}"`);
+                        return { answer: matched.answer, source: 'learned', confidence: pattern.confidence };
                     }
+
                     // No match - let AI handle it
-                    console.log(`[QuestionMapper] ⚠️ Canonical value "${canonicalValue}" not in options, will use AI`);
+                    console.log(`[QuestionMapper] ⚠️ Canonical value not in options, will use AI`);
+                    return null;
                 } else {
                     // No options to validate against, return canonical value as-is
                     return { answer: canonicalValue, source: 'learned', confidence: pattern.confidence };
                 }
             }
-        }
 
-        // NEW: For text fields, try to use the stored answer from pattern
-        // even if profile doesn't have this value
-        if (!question.options && pattern.answerMappings && pattern.answerMappings.length > 0) {
-            const firstMapping = pattern.answerMappings[0];
+            // NEW: For text fields, try to use the stored answer from pattern
+            // even if profile doesn't have this value
+            if (!question.options && pattern.answerMappings && pattern.answerMappings.length > 0) {
+                const firstMapping = pattern.answerMappings[0];
 
-            // Try variants first
-            if (firstMapping.variants && firstMapping.variants.length > 0) {
-                const storedAnswer = firstMapping.variants[0];
-                console.log(`[QuestionMapper] 📝 Using stored text answer from pattern`);
-                return { answer: storedAnswer, source: 'learned', confidence: pattern.confidence };
+                // Try variants first
+                if (firstMapping.variants && firstMapping.variants.length > 0) {
+                    const storedAnswer = firstMapping.variants[0];
+                    console.log(`[QuestionMapper] 📝 Using stored text answer from pattern`);
+                    return { answer: storedAnswer, source: 'learned', confidence: pattern.confidence };
+                }
+
+                // Try canonical value from mapping
+                if (firstMapping.canonicalValue) {
+                    console.log(`[QuestionMapper] 📝 Using stored canonical answer from pattern`);
+                    return { answer: firstMapping.canonicalValue, source: 'learned', confidence: pattern.confidence };
+                }
             }
 
-            // Try canonical value from mapping
-            if (firstMapping.canonicalValue) {
-                console.log(`[QuestionMapper] 📝 Using stored canonical answer from pattern`);
-                return { answer: firstMapping.canonicalValue, source: 'learned', confidence: pattern.confidence };
-            }
+            // No match found and no profile value - pattern exists but can't use it
+            return null;
         }
 
-        // No match found and no profile value - pattern exists but can't use it
         return null;
     }
-
 
     /**
      * Find best answer variant for available options
      */
-    private findBestVariant(canonicalValue: string, answerMappings: any[], options?: string[]): string | null {
-        // Find the mapping for this canonical value
+    private findBestVariant(canonicalValue: string | string[], answerMappings: any[], options?: string[]): string | string[] | null {
+        // Handle Array Input
+        if (Array.isArray(canonicalValue)) {
+            const results = canonicalValue.map(v => this.findBestVariant(v, answerMappings, options));
+            const validResults = results.filter(r => r !== null) as (string | string[])[];
+
+            if (validResults.length === 0) return null;
+
+            // Flatten results if they are arrays themselves
+            const flatResults: string[] = [];
+            for (const res of validResults) {
+                if (Array.isArray(res)) {
+                    flatResults.push(...res);
+                } else {
+                    flatResults.push(res);
+                }
+            }
+            return flatResults.length > 0 ? flatResults : null;
+        }
+
+        // Find the mapping for this canonical value string
         const mapping = answerMappings.find(m => m.canonicalValue === canonicalValue);
         if (!mapping) return null; // No mapping exists
 
@@ -666,24 +725,26 @@ export class QuestionMapper {
         console.log(`[QuestionMapper] ✅ Pattern stored with variant: "${answer.answer}"`);
     }
 
-    private detectIntent(questionText: string, answer: string, profile: any): string | null {
+    private detectIntent(questionText: string, answer: string | string[], profile: any): string | null {
         const qLower = questionText.toLowerCase();
 
         // Check by matching answer to profile values
-        if (answer === profile.eeo?.gender) return 'eeo.gender';
-        if (answer === profile.eeo?.hispanic) return 'eeo.hispanic';
-        if (answer === profile.eeo?.veteran) return 'eeo.veteran';
-        if (answer === profile.eeo?.disability) return 'eeo.disability';
-        if (answer === profile.eeo?.race) return 'eeo.race';
-        if (answer === profile.personal?.firstName) return 'personal.firstName';
-        if (answer === profile.personal?.lastName) return 'personal.lastName';
-        if (answer === profile.personal?.email) return 'personal.email';
-        if (answer === profile.personal?.phone) return 'personal.phone';
-        if (answer === profile.personal?.city) return 'personal.city';
-        if (answer === profile.personal?.state) return 'personal.state';
-        if (answer === profile.personal?.country) return 'personal.country';
-        if (answer === profile.social?.linkedin) return 'social.linkedin';
-        if (answer === profile.social?.website) return 'social.website';
+        const matches = (val: any) => Array.isArray(answer) ? answer.includes(val) : answer === val;
+
+        if (matches(profile.eeo?.gender)) return 'eeo.gender';
+        if (matches(profile.eeo?.hispanic)) return 'eeo.hispanic';
+        if (matches(profile.eeo?.veteran)) return 'eeo.veteran';
+        if (matches(profile.eeo?.disability)) return 'eeo.disability';
+        if (matches(profile.eeo?.race)) return 'eeo.race';
+        if (matches(profile.personal?.firstName)) return 'personal.firstName';
+        if (matches(profile.personal?.lastName)) return 'personal.lastName';
+        if (matches(profile.personal?.email)) return 'personal.email';
+        if (matches(profile.personal?.phone)) return 'personal.phone';
+        if (matches(profile.personal?.city)) return 'personal.city';
+        if (matches(profile.personal?.state)) return 'personal.state';
+        if (matches(profile.personal?.country)) return 'personal.country';
+        if (matches(profile.social?.linkedin)) return 'social.linkedin';
+        if (matches(profile.social?.website)) return 'social.website';
 
         // Keyword-based fallback
         if (qLower.includes('gender') || qLower.includes('sex')) return 'eeo.gender';
@@ -728,7 +789,7 @@ export class QuestionMapper {
     /**
      * Canonical matching - exact profile field mapping
      */
-    private tryCanonical(question: ScannedQuestion, profile: any): { answer: string; source: 'canonical'; confidence: number; fileName?: string } | null {
+    private tryCanonical(question: ScannedQuestion, profile: any): { answer: string | string[]; source: 'canonical'; confidence: number; fileName?: string } | null {
         const qLower = question.questionText.toLowerCase();
 
         /**
@@ -736,7 +797,7 @@ export class QuestionMapper {
          * For dropdown/radio questions, we must ensure the canonical value matches an option
          * Otherwise, return null to let AI handle it
          */
-        const validateWithOptions = (canonicalValue: string, fileName?: string): { answer: string; source: 'canonical'; confidence: number; fileName?: string } | null => {
+        const validateWithOptions = (canonicalValue: string | string[], fileName?: string): { answer: string | string[]; source: 'canonical'; confidence: number; fileName?: string } | null => {
             // If no options, return as-is (text field)
             if (!question.options || question.options.length === 0) {
                 return { answer: canonicalValue, source: 'canonical', confidence: 1.0, fileName };
@@ -773,7 +834,7 @@ export class QuestionMapper {
         // Phone (distinguish between country code and number)
         if ((qLower.includes('phone') || qLower === 'phone' || qLower.includes('mobile') || qLower === 'mobile') && profile.personal?.phone) {
             // If the field is a dropdown or custom dropdown, it's likely a COUNTRY CODE
-            if (question.fieldType === 'select' || question.fieldType === 'dropdown_custom') {
+            if (question.fieldType === FieldType.SELECT_NATIVE || question.fieldType === FieldType.DROPDOWN_CUSTOM) {
                 console.log(`[QuestionMapper] 📞 Phone country code field detected. Profile value: "${profile.personal.country}"`);
                 // Use country to find the code in options
                 return validateWithOptions(profile.personal.country);
@@ -838,10 +899,10 @@ export class QuestionMapper {
 
         // Resume/CV
         // CRITICAL: Must explicitly exclude "cover letter" to prevent mis-mapping
-        if ((question.fieldType === 'file' && question.selector.includes('resume')) ||
+        if ((question.fieldType === FieldType.FILE_UPLOAD && question.selector.includes('resume')) ||
             (qLower.includes('resume') && !qLower.includes('cover')) ||
             qLower.includes('cv') ||
-            (question.fieldType === 'file' && qLower === 'attach' && question.selector.includes('resume'))) {
+            (question.fieldType === FieldType.FILE_UPLOAD && qLower === 'attach' && question.selector.includes('resume'))) {
 
             console.log(`[QuestionMapper] 🔍 Potential Resume match for "${question.questionText}"`);
             console.log(`[QuestionMapper] 🔍 Debug info: Selector="${question.selector}", qLower="${qLower}"`);
@@ -1041,7 +1102,7 @@ export class QuestionMapper {
     /**
      * Fuzzy matching - match profile values to available options
      */
-    private tryFuzzy(question: ScannedQuestion, profile: any): { answer: string; source: 'canonical' | 'fuzzy'; confidence: number } | null {
+    private tryFuzzy(question: ScannedQuestion, profile: any): { answer: string | string[]; source: 'canonical' | 'fuzzy'; confidence: number } | null {
         if (!question.options) return null;
 
         const qLower = question.questionText.toLowerCase();
@@ -1058,7 +1119,7 @@ export class QuestionMapper {
      * Fuzzy match a value to the closest option in the list
      * Used to validate AI responses against available options
      */
-    private fuzzyMatchOption(value: string, options: string[]): string | null {
+    private fuzzyMatchOption(value: string, options: string[]): string | string[] | null {
         const result = this.matchInOptions(value, options, 0.9);
         return result ? result.answer : null;
     }
@@ -1066,7 +1127,7 @@ export class QuestionMapper {
     /**
      * Convert boolean to Yes/No based on available options
      */
-    private booleanToYesNo(value: boolean, options?: string[]): string {
+    private booleanToYesNo(value: boolean, options?: string[]): string | string[] {
         if (!options || options.length === 0) {
             return value ? 'Yes' : 'No';
         }
@@ -1095,11 +1156,94 @@ export class QuestionMapper {
     }
 
     /**
+     * Resolve a filename or intent to its associated base64 data from the profile
+     */
+    private resolveFileAnswer(value: any, field: ScannedQuestion, profile: any): { answer: string | string[], fileName?: string } {
+        if (field.fieldType !== FieldType.FILE_UPLOAD) return { answer: value };
+
+        const valStr = String(value);
+        const resumeDoc = profile.documents?.resume;
+        const coverDoc = profile.documents?.coverLetter;
+
+        // 1. If it's already base64, try to find the matching document to get its filename
+        if (valStr.startsWith('data:')) {
+            if (resumeDoc?.base64 && valStr.includes(resumeDoc.base64.substring(0, 100))) {
+                return { answer: valStr, fileName: resumeDoc.fileName };
+            }
+            if (coverDoc?.base64 && valStr.includes(coverDoc.base64.substring(0, 100))) {
+                return { answer: valStr, fileName: coverDoc.fileName };
+            }
+            return { answer: valStr };
+        }
+
+        const qLower = field.questionText.toLowerCase();
+        const sLower = field.selector.toLowerCase();
+        
+        // Check if it's a resume field
+        const isResume = qLower.includes('resume') || qLower.includes('cv') || 
+                         sLower.includes('resume') || sLower.includes('cv') ||
+                         (qLower === 'attach' && !qLower.includes('cover')) ||
+                         (qLower === 'upload' && !qLower.includes('cover'));
+
+
+        // 1. Try to match by filename if the value looks like a filename (or is literally the filename)
+        if (valStr.includes('.') && valStr.length > 3) {
+            const cleanVal = valStr.trim().toLowerCase();
+            const resName = resumeDoc?.fileName?.trim().toLowerCase();
+            const covName = coverDoc?.fileName?.trim().toLowerCase();
+
+            if (resName && (cleanVal === resName || cleanVal.includes(resName))) {
+                return { 
+                    answer: resumeDoc!.base64.startsWith('data:') ? resumeDoc!.base64 : `data:application/pdf;base64,${resumeDoc!.base64}`,
+                    fileName: resumeDoc!.fileName 
+                };
+            }
+            if (covName && (cleanVal === covName || cleanVal.includes(covName))) {
+                return { 
+                    answer: coverDoc!.base64.startsWith('data:') ? coverDoc!.base64 : `data:application/pdf;base64,${coverDoc!.base64}`,
+                    fileName: coverDoc!.fileName 
+                };
+            }
+        }
+
+        // 2. Fallback to intent-based selection if it's a file field
+        if (isResume && resumeDoc?.base64) {
+            return { 
+                answer: resumeDoc.base64.startsWith('data:') ? resumeDoc.base64 : `data:application/pdf;base64,${resumeDoc.base64}`,
+                fileName: resumeDoc.fileName 
+            };
+        }
+        
+        if (!isResume && coverDoc?.base64) {
+            return { 
+                answer: coverDoc.base64.startsWith('data:') ? coverDoc.base64 : `data:application/pdf;base64,${coverDoc.base64}`,
+                fileName: coverDoc.fileName 
+            };
+        }
+
+        return { answer: valStr };
+    }
+
+    /**
      * Match stored value to best option
      */
-    private matchInOptions(value: string, options?: string[], confidence: number = 1.0): { answer: string; source: 'canonical'; confidence: number } | null {
+    private matchInOptions(value: string | string[], options?: string[], confidence: number = 1.0): { answer: string | string[], source: 'canonical', confidence: number } | null {
         if (!options || options.length === 0) {
             return { answer: value, source: 'canonical', confidence };
+        }
+
+        // Handle Array Input (Multi-select)
+        if (Array.isArray(value)) {
+            const results = value.map(v => this.matchInOptions(v, options, confidence));
+            const validResults = results.filter(r => r !== null) as { answer: string, source: 'canonical', confidence: number }[];
+
+            if (validResults.length === 0) return null;
+
+            return {
+                answer: validResults.map(r => r.answer),
+                source: 'canonical',
+                confidence: Math.min(...validResults.map(r => r.confidence))
+            };
         }
 
         const valueLower = value.toLowerCase().trim();
@@ -1635,7 +1779,7 @@ export class QuestionMapper {
                 console.log(`[QuestionMapper] 📋 "${a.questionText}" → ${actionType} = "${a.answer}"`);
 
                 // Add fileName for file uploads
-                if (a.fieldType === 'file' && profile) {
+                if (a.fieldType === FieldType.FILE_UPLOAD && profile) {
                     if (a.selector.includes('resume') && profile.documents?.resume?.fileName) {
                         action.fileName = profile.documents.resume.fileName;
                     } else if (a.selector.includes('cover') && profile.documents?.coverLetter?.fileName) {
@@ -1648,19 +1792,19 @@ export class QuestionMapper {
         };
     }
 
-    private mapFieldTypeToAction(fieldType: string): string {
-        const typeMap: Record<string, string> = {
-            'text': 'input_text',
-            'email': 'input_text',
-            'tel': 'input_text',
-            'number': 'input_text',
-            'textarea': 'input_text',
-            'select': 'dropdown_native',          // Native HTML <select> elements
-            'dropdown_custom': 'dropdown_custom',  // React-Select / Greenhouse dropdowns
-            'radio': 'radio',
-            'checkbox': 'checkbox',
-            'date': 'input_text',
-            'file': 'input_file'
+    private mapFieldTypeToAction(fieldType: FieldType): string {
+        const typeMap: Partial<Record<FieldType, string>> = {
+            [FieldType.TEXT]: 'input_text',
+            [FieldType.EMAIL]: 'input_text',
+            [FieldType.PHONE]: 'input_text',
+            [FieldType.NUMBER]: 'input_text',
+            [FieldType.TEXTAREA]: 'input_text',
+            [FieldType.SELECT_NATIVE]: 'dropdown_native',          // Native HTML <select> elements
+            [FieldType.DROPDOWN_CUSTOM]: 'dropdown_custom',  // React-Select / Greenhouse dropdowns
+            [FieldType.RADIO_GROUP]: 'radio',
+            [FieldType.CHECKBOX]: 'checkbox',
+            [FieldType.DATE]: 'input_text',
+            [FieldType.FILE_UPLOAD]: 'input_file'
         };
 
         return typeMap[fieldType] || 'input_text';

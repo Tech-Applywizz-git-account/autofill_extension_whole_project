@@ -3,6 +3,25 @@
 const LOG_PREFIX = "[QuestionDetection]";
 
 /**
+ * Detects if a text block looks like multiple labels concatenated together (e.g. "FirstNameLastNameEmail")
+ * Usually characterized by PascalCase/CamelCase with no spaces or very high capital density.
+ */
+function isMergedLabel(text: string): boolean {
+    const raw = text.replace(/\s/g, '');
+    if (raw.length < 15) return false;
+
+    // Check for high density of capital letters in the middle of a word (indicating concatenation)
+    const midCaps = (raw.match(/[a-z][A-Z]/g) || []).length;
+    if (midCaps >= 3) return true;
+
+    // Reject if it's very long and has very few spaces
+    const spaceDensity = (text.match(/\s/g) || []).length / text.length;
+    if (text.length > 40 && spaceDensity < 0.05) return true;
+
+    return false;
+}
+
+/**
  * Extracts the most descriptive question text for a given form element.
  * For checkboxes and radio buttons, it prioritizes the group question (e.g., in a fieldset legend).
  */
@@ -48,12 +67,31 @@ export function getQuestionText(element: HTMLElement): string {
 
     // 3. Contextual Fallbacks
     // 3.1 Check closest container with common field wrapper classes
-    const container = element.closest('[role="group"], .field, .form-field, .question, .form-group, fieldset');
-    if (container && container.textContent) {
-        const lines = container.textContent.trim().split('\n');
-        if (lines.length > 0 && lines[0].trim()) {
-            const text = cleanLabelText(lines[0]);
-            if (text && !isGenericLabel(text)) return text;
+    const container = element.closest('[role="group"], .field, .form-field, .question, .form-group, fieldset, [class*="Field"], [class*="Question"]') as HTMLElement;
+    if (container) {
+        // PRIORITIZE: Find a discrete label or heading inside this container first
+        const internalLabel = container.querySelector('label, h3, h4, h5, .label, .field-label, [class*="Label"], [class*="QuestionText"]');
+        if (internalLabel && internalLabel.textContent && !isGenericLabel(internalLabel.textContent)) {
+            const text = cleanLabelText(internalLabel.textContent);
+            if (text.length > 2) return text;
+        }
+
+        // FALLBACK: Use container text content but be VERY selective
+        if (container.textContent) {
+            const rawText = container.textContent.trim();
+            // If the text is massive without spaces (concatenated labels), skip it
+            if (/^[a-zA-Z]{30,}$/.test(rawText.replace(/\s/g, ''))) {
+                console.warn(`${LOG_PREFIX} Skipping concatenated block`);
+            } else {
+                const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                if (lines.length > 0) {
+                    const text = cleanLabelText(lines[0]);
+                    // Only accept if it's a reasonable length and doesn't look like a bunch of words merged together
+                    if (text && !isGenericLabel(text) && text.length < 120 && !isMergedLabel(text)) {
+                        return text;
+                    }
+                }
+            }
         }
     }
 
@@ -120,38 +158,36 @@ function findGroupQuestion(element: HTMLInputElement): string | null {
     // We go up level by level, and at each level we look for a sibling/child
     // element that comes BEFORE our element and contains substantial question text
     let current: HTMLElement | null = element.parentElement;
-    for (let depth = 0; depth < 6 && current; depth++) {
-        // Look at all children of `current` that come BEFORE our element/branch
+    for (let depth = 0; depth < 8 && current; depth++) {
+        // Look for common label elements at this level
+        const siblingLabels = current.querySelectorAll('label, h3, h4, h5, .label, .field-label, [class*="Label"], [class*="QuestionText"]');
+        for (const label of Array.from(siblingLabels)) {
+            if (label.contains(element)) continue;
+            const text = cleanLabelText(label.textContent || "");
+            if (text.length > 10 && !isGenericLabel(text) && !isMergedLabel(text)) {
+                return text;
+            }
+        }
+
         const children = Array.from(current.children);
         const elementIndex = children.findIndex(c => c.contains(element) || c === element);
 
-        // Check elements that appear BEFORE the inputs in the DOM
         for (let i = 0; i < (elementIndex === -1 ? children.length : elementIndex); i++) {
-            const child = children[i];
-            const childText = child.textContent || '';
+            const child = children[i] as HTMLElement;
+            // DANGER: If child is a giant container, textContent grabs everything
+            // Check if it's a "simple" text element or a complex container
+            if (child.children.length > 5 && child.textContent && child.textContent.length > 200) {
+                // Too many children and too much text - probably a container, not a label
+                continue;
+            }
 
-            // Skip elements that contain the actual radio/checkbox inputs
-            if (child.contains(element)) continue;
-
-            const text = cleanLabelText(childText);
-
-            // A valid group question must:
-            // 1. Have meaningful length (more than a short option label like "Yes", "1", "PST")
-            // 2. Not be a generic label
-            if (text.length > 10 && !isGenericLabel(text)) {
-                // Extra check: prefer text that ends with ? or * (question marks)
-                // or contains question-like words
-                const looksLikeQuestion = text.includes('?') || text.includes('scale') ||
-                    text.includes('proficiency') || text.includes('timezone') ||
-                    text.includes('live') || text.includes('require') ||
-                    text.includes('authorized') || text.includes('Confirm');
-
-                if (text.length > 15 || looksLikeQuestion) {
+            const text = cleanLabelText(child.textContent || "");
+            if (text.length > 10 && !isGenericLabel(text) && !isMergedLabel(text)) {
+                if (text.length > 15 || text.includes('?') || text.includes('*')) {
                     return text;
                 }
             }
         }
-
         current = current.parentElement;
     }
 
@@ -194,6 +230,7 @@ export function isGenericLabel(text: string): boolean {
     return [
         'attach', 'upload', 'choose file', 'browse', 'file', 'select file',
         'upload resume', 'upload cv', 'upload cover letter',
-        'paste', 'write', 'resume', 'cv', 'yes', 'no', 'n/a', 'select', 'select...'
-    ].some(t => lower === t || lower.startsWith(t + ' '));
+        'paste', 'write', 'resume', 'cv', 'yes', 'no', 'n/a', 'select', 'select...',
+        'choose', 'click here', 'expand', 'collapse', 'loading', 'success'
+    ].some(t => lower === t || lower.startsWith(t + ' ')) || lower.length < 2;
 }

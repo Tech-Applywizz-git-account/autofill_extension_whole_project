@@ -39,8 +39,8 @@ export interface LearnedPattern {
 }
 
 export interface AnswerMapping {
-    canonicalValue: string;
-    variants: string[];
+    canonicalValue: string | string[];
+    variants: (string | string[])[];
     contextOptions?: string[];
 }
 // ==========================================
@@ -202,11 +202,13 @@ export class PatternStorage {
             if (pattern.answerMappings && existing.answerMappings) {
                 pattern.answerMappings.forEach(newMapping => {
                     const existingMapping = existing.answerMappings!.find(
-                        m => m.canonicalValue === newMapping.canonicalValue
+                        m => JSON.stringify(m.canonicalValue) === JSON.stringify(newMapping.canonicalValue)
                     );
                     if (existingMapping) {
                         newMapping.variants.forEach(v => {
-                            if (!existingMapping.variants.includes(v)) {
+                            const vStr = JSON.stringify(v);
+                            const exists = existingMapping.variants.some(ev => JSON.stringify(ev) === vStr);
+                            if (!exists) {
                                 existingMapping.variants.push(v);
                             }
                         });
@@ -229,6 +231,34 @@ export class PatternStorage {
             patterns.push(newPattern);
             console.log(`[PatternStorage] 🎓 Learned new pattern: "${pattern.questionPattern}" → ${pattern.intent}`);
 
+            await this.saveLocalPatterns(patterns);
+        }
+    }
+
+    /**
+     * Explicitly update an existing pattern
+     */
+    async updatePattern(patternId: string, updates: Partial<LearnedPattern>): Promise<void> {
+        const patterns = await this.getLocalPatterns();
+        const index = patterns.findIndex(p => p.id === patternId);
+
+        if (index !== -1) {
+            patterns[index] = { ...patterns[index], ...updates, synced: false };
+            await this.saveLocalPatterns(patterns);
+            console.log(`[PatternStorage] 📝 Updated pattern: ${patternId}`);
+        }
+    }
+
+    /**
+     * Increment usage count
+     */
+    async incrementUsage(patternId: string): Promise<void> {
+        const patterns = await this.getLocalPatterns();
+        const pattern = patterns.find(p => p.id === patternId);
+
+        if (pattern) {
+            pattern.usageCount++;
+            pattern.lastUsed = new Date().toISOString();
             await this.saveLocalPatterns(patterns);
         }
     }
@@ -381,7 +411,7 @@ export class PatternStorage {
             if (matchScore < 0.7) continue;  // Not a good enough match
 
             // ✅ VALIDATION 4: Answer usability
-            let usableAnswer: string | null = null;
+            let usableAnswer: string | string[] | null = null;
 
             if (isDropdown && incomingOptions) {
                 // DROPDOWN: Check if ANY stored answer exists in incoming options
@@ -413,13 +443,13 @@ export class PatternStorage {
     /**
      * Find dropdown answer from stored patterns (progressive learning)
      */
-    private findDropdownAnswer(pattern: LearnedPattern, incomingOptions: string[]): string | null {
+    private findDropdownAnswer(pattern: LearnedPattern, incomingOptions: string[]): string | string[] | null {
         if (!pattern.answerMappings || pattern.answerMappings.length === 0) {
             return null;
         }
 
         // Collect all stored answers (variants from all mappings)
-        const storedAnswers: string[] = [];
+        const storedAnswers: (string | string[])[] = [];
 
         for (const mapping of pattern.answerMappings) {
             if (mapping.variants) {
@@ -430,14 +460,14 @@ export class PatternStorage {
             }
         }
 
-        // Find first match in incoming options
+        // Find match in incoming options
         return PatternMatcher.findBestDropdownMatch(storedAnswers, incomingOptions);
     }
 
     /**
      * Extract usable text answer with forbidden pattern filtering
      */
-    private extractUsableAnswer(pattern: LearnedPattern): string | null {
+    private extractUsableAnswer(pattern: LearnedPattern): string | string[] | null {
         if (!pattern.answerMappings || pattern.answerMappings.length === 0) {
             return null;
         }
@@ -464,7 +494,7 @@ export class PatternStorage {
     /**
      * Add new answer variant to existing pattern (for progressive dropdown learning)
      */
-    async addAnswerVariant(patternId: string, newAnswer: string): Promise<void> {
+    async addAnswerVariant(patternId: string, newAnswer: string | string[]): Promise<void> {
         const patterns = await this.getLocalPatterns();
         const pattern = patterns.find(p => p.id === patternId);
 
@@ -480,9 +510,12 @@ export class PatternStorage {
         }
 
         const normalized = PatternMatcher.normalizeOption(newAnswer);
-        const exists = mapping.variants.some(v =>
-            PatternMatcher.normalizeOption(v) === normalized
-        );
+        const exists = mapping.variants.some(v => {
+            if (Array.isArray(v) && Array.isArray(newAnswer)) {
+                return v.length === newAnswer.length && v.every((val, i) => val === newAnswer[i]);
+            }
+            return v === newAnswer;
+        });
 
         if (!exists) {
             mapping.variants.push(newAnswer);
@@ -494,17 +527,24 @@ export class PatternStorage {
     }
 
     /**
-     * Increment usage count
+     * Delete a specific pattern
      */
-    async incrementUsage(patternId: string): Promise<void> {
+    async deletePattern(patternId: string): Promise<void> {
         const patterns = await this.getLocalPatterns();
-        const pattern = patterns.find(p => p.id === patternId);
+        const updated = patterns.filter(p => p.id !== patternId);
 
-        if (pattern) {
-            pattern.usageCount++;
-            pattern.lastUsed = new Date().toISOString();
-            await this.saveLocalPatterns(patterns);
+        if (updated.length !== patterns.length) {
+            await this.saveLocalPatterns(updated);
+            console.log(`[PatternStorage] 🗑️ Deleted pattern: ${patternId}`);
         }
+    }
+
+    /**
+     * Delete all local patterns
+     */
+    async deleteAllLocalPatterns(): Promise<void> {
+        await this.saveLocalPatterns([]);
+        console.log('[PatternStorage] ☢️ All local patterns wiped');
     }
 
     /**
@@ -631,7 +671,7 @@ export class PatternStorage {
     /**
      * Sync a single pattern to Supabase via AI Service
      */
-    private async syncPatternToSupabase(pattern: LearnedPattern): Promise<void> {
+    async syncPatternToSupabase(pattern: LearnedPattern): Promise<void> {
         try {
             const profile = await loadProfile();
             if (!profile?.personal.email) {

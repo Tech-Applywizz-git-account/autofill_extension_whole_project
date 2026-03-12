@@ -10,29 +10,56 @@
  * 6. Progressive dropdown learning
  */
 
+import { safeMatch } from '../../content/utils/stringUtils';
+
 export class PatternMatcher {
     // ========================================
     // CANONICAL INTENT WHITELIST
     // ========================================
     private static readonly ALLOWED_INTENTS = new Set([
-        'personal.firstName',
-        'personal.lastName',
-        'personal.email',
-        'personal.phone',
-        'personal.linkedin',
-        'personal.city',
-        'personal.state',
-        'personal.country',
-        'personal.desiredSalary',
-        'personal.additionalInfo',
-        'experience.whyFit',
-        'experience.summary',
-        'workAuthorization.authorizedUS',
-        'workAuthorization.needsSponsorship',
-        'eeo.gender',
-        'eeo.race',
-        'eeo.veteran',
-        'eeo.disability',
+        // 1) Universal
+        "eeo.gender", "eeo.race", "eeo.hispanic", "eeo.veteran", "eeo.disability", "eeo.lgbtq", "eeo.transgender", "eeo.preferNotToAnswer",
+        "workAuthorization.authorizedUS", "workAuthorization.authorizedCountry", "workAuthorization.needsSponsorship",
+        "workAuthorization.needsSponsorshipNow", "workAuthorization.needsSponsorshipFuture", "workAuthorization.citizenshipStatus",
+        "workAuthorization.visaType", "workAuthorization.workPermitType", "workAuthorization.workPermitValidUntil",
+        "workAuthorization.driverLicense", "workAuthorization.securityClearance", "workAuthorization.securityClearanceLevel",
+        "workAuthorization.exportControlEligible",
+        "application.workArrangement", "application.workType", "application.shiftAvailability", "application.weekendAvailability",
+        "application.nightShiftAvailability", "application.overtimeWillingness", "application.willingToRelocate",
+        "application.willingToTravel", "application.travelPercentage",
+        "application.startDateAvailability", "application.noticePeriod",
+        "application.agreeToTerms", "application.privacyPolicyConsent", "application.dataProcessingConsent",
+        "application.backgroundCheckConsent", "application.drugTestConsent", "application.rightToWorkConfirmation",
+        "application.equalOpportunityAcknowledgement",
+        "application.howDidYouHear", "application.wasReferred", "application.previouslyApplied",
+        "application.previouslyInterviewed", "application.previouslyEmployed", "application.hasRelatives",
+        "location.country", "location.state", "location.city", "location.postalCode",
+        "application.allowSmsMessages", "application.allowEmailUpdates", "application.marketingConsent",
+        "application.talentCommunityOptIn",
+        "experience.yearsTotal", "experience.managementExperience", "experience.peopleManagement",
+        "education.level", "education.degreeType", "education.graduationStatus",
+
+        // 2) Pattern-only
+        "personal.firstName", "personal.middleName", "personal.lastName", "personal.fullName",
+        "personal.preferredName", "personal.email", "personal.phone", "personal.linkedin",
+        "personal.github", "personal.portfolio", "personal.website",
+        "personal.addressLine1", "personal.addressLine2", "personal.city", "personal.state",
+        "personal.postalCode", "personal.country",
+        "documents.resume", "documents.coverLetter", "documents.transcript", "documents.workAuthorizationDocument",
+        "education.school", "education.major", "education.gpa", "education.startDate", "education.endDate",
+        "experience.company", "experience.title", "experience.startDate", "experience.endDate", "experience.currentlyWorking",
+
+        // 3) Screening
+        "screening.whyCompany", "screening.whyRole", "screening.whyYou", "screening.whyChange", "screening.whyNow",
+        "screening.aboutYourself", "screening.professionalSummary", "screening.careerGoals",
+        "screening.strengths", "screening.weaknesses", "screening.biggestAchievement",
+        "screening.leadershipExample", "screening.teamworkExample", "screening.conflictExample", "screening.problemSolved",
+        "screening.projectHighlights", "screening.recentProject", "screening.projectChallenge",
+        "screening.additionalInfo", "screening.coverLetterLike",
+        "preferences.desiredSalary",
+
+        // Fallback
+        "unknown",
     ]);
 
     // ========================================
@@ -165,10 +192,13 @@ export class PatternMatcher {
     /**
      * Check if answer is usable (not forbidden)
      */
-    static isAnswerUsable(answer: string): boolean {
-        if (!answer || answer.trim() === '') return false;
+    static isAnswerUsable(answer: string | string[]): boolean {
+        if (!answer) return false;
 
-        const normalized = answer.toLowerCase().trim();
+        const text = Array.isArray(answer) ? answer.join(', ') : answer;
+        if (!text || text.trim() === '') return false;
+
+        const normalized = text.toLowerCase().trim();
 
         for (const pattern of this.FORBIDDEN_ANSWERS) {
             if (pattern.test(normalized)) {
@@ -182,8 +212,10 @@ export class PatternMatcher {
     /**
      * Normalize dropdown option for comparison
      */
-    static normalizeOption(option: string): string {
-        return option
+    static normalizeOption(option: string | string[]): string {
+        if (!option) return '';
+        const text = Array.isArray(option) ? option.join(', ') : option;
+        return text
             .toLowerCase()
             .trim()
             .replace(/[.,;:'"]/g, '')
@@ -195,20 +227,26 @@ export class PatternMatcher {
      * Check if stored answer exists in incoming dropdown options
      * Returns the exact option string if found
      */
-    static findMatchingOption(storedAnswer: string, incomingOptions: string[]): string | null {
-        const normalizedAnswer = this.normalizeOption(storedAnswer);
+    static findMatchingOption(storedAnswer: string | string[], incomingOptions: string[]): string | string[] | null {
+        if (Array.isArray(storedAnswer)) {
+            // For multi-select, we want to find all options that match any of the stored answers
+            const matches: string[] = [];
+            for (const val of storedAnswer) {
+                const match = this.findMatchingOption(val, incomingOptions);
+                if (match) {
+                    if (Array.isArray(match)) {
+                        matches.push(...match);
+                    } else {
+                        matches.push(match);
+                    }
+                }
+            }
+            return matches.length > 0 ? matches : null;
+        }
 
         for (const option of incomingOptions) {
-            const normalizedOption = this.normalizeOption(option);
-
-            // Exact match after normalization
-            if (normalizedAnswer === normalizedOption) {
-                return option;  // Return exact option string
-            }
-
-            // Partial match (if one contains the other)
-            if (normalizedAnswer.includes(normalizedOption) || normalizedOption.includes(normalizedAnswer)) {
-                return option;
+            if (safeMatch(storedAnswer, option)) {
+                return option;  // Return exact or safe word-boundary match
             }
         }
 
@@ -219,11 +257,11 @@ export class PatternMatcher {
      * Find best matching answer from stored answer array for dropdown
      * Returns exact option string from incoming options
      */
-    static findBestDropdownMatch(storedAnswers: string[], incomingOptions: string[]): string | null {
+    static findBestDropdownMatch(storedAnswers: (string | string[])[], incomingOptions: string[]): string | string[] | null {
         for (const storedAnswer of storedAnswers) {
             const match = this.findMatchingOption(storedAnswer, incomingOptions);
             if (match) {
-                return match;  // Return first matching option
+                return match;  // Return first matching option group
             }
         }
 

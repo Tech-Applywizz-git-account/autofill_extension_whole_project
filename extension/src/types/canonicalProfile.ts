@@ -177,11 +177,5 @@ export const EMPTY_PROFILE: CanonicalProfile = {
         apwId: "",
     },
     apiFields: {},
-    customAnswers: {
-        "screening.whyRole": "I have a strong track record of success in similar roles and am highly motivated to contribute to your team. My experience aligns perfectly with the requirements of this position, and I am eager to apply my skills to help the company achieve its goals.",
-        "screening.whyCompany": "I have long admired your company's reputation for innovation and excellence. Your values and mission resonate with my own professional goals, and I am excited about the possibility of contributing to such a forward-thinking organization.",
-        "screening.professionalSummary": "Results-oriented professional with a strong foundation in [Industry/Field]. Proven ability to deliver high-quality results, adapt to new challenges, and collaborate effectively in team environments.",
-        "screening.strengths": "My key strengths include analytical problem-solving, strong communication, and a dedicated work ethic. I am a fast learner and consistently meet or exceed performance targets.",
-        "screening.additionalInfo": "I am a proactive and dependable professional who is 100% committed to this opportunity. I am ready to start immediately and dedicate my full energy to ensuring the team's success.",
-    },
+
 };

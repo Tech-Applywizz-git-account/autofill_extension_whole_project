@@ -12,12 +12,13 @@
 
 import { extractDropdownOptions } from './dropdownScanner';
 import { getQuestionText } from '../utils/questionDetection';
+import { FieldType } from '../../types/fieldDetection';
 
 const LOG_PREFIX = "[FormScanner]";
 
 export interface ScannedQuestion {
     questionText: string;
-    fieldType: string;
+    fieldType: FieldType;
     options?: string[];
     required: boolean;
     selector: string;
@@ -64,7 +65,7 @@ export class FormScanner {
                     if (seenQuestions.has(questionKey)) {
                         // For identical type duplicates, we still apply "Keep First" for files
                         // but for others we usually want the latest/most visible one.
-                        if (question.fieldType === 'file') {
+                        if (question.fieldType === FieldType.FILE_UPLOAD) {
                             console.log(`${LOG_PREFIX} 📎 Ignoring duplicate file input: "${question.questionText}"`);
                         } else {
                             console.log(`${LOG_PREFIX} ⚠️ Found identical duplicate: "${question.questionText}" (${question.fieldType}) - Replacing with newest`);
@@ -465,7 +466,7 @@ export class FormScanner {
 
             // Extract options for dropdown fields
             let options: string[] | undefined = undefined;
-            if (fieldType === 'dropdown_custom' || fieldType === 'select') {
+            if (fieldType === FieldType.DROPDOWN_CUSTOM || fieldType === FieldType.SELECT_NATIVE) {
                 console.log(`${LOG_PREFIX} 📋 Extracting options for: "${questionText}"`);
                 options = await extractDropdownOptions(field);
                 if (options.length === 0) {
@@ -474,14 +475,14 @@ export class FormScanner {
             }
 
             // Extract options for radio button groups
-            if (fieldType === 'radio') {
+            if (fieldType === FieldType.RADIO_GROUP) {
                 console.log(`${LOG_PREFIX} 📋 Extracting radio options for: "${questionText}"`);
                 options = this.extractRadioOptions(field as HTMLInputElement);
                 console.log(`${LOG_PREFIX} 📋 Found ${options.length} radio options: [${options.join(', ')}]`);
             }
 
             // Extract options for checkbox groups
-            if (fieldType === 'checkbox') {
+            if (fieldType === FieldType.CHECKBOX) {
                 console.log(`${LOG_PREFIX} 📋 Extracting checkbox options for: "${questionText}"`);
                 options = this.extractCheckboxGroupOptions(field as HTMLInputElement);
                 console.log(`${LOG_PREFIX} 📋 Found ${options.length} checkbox options: [${options.join(', ')}]`);
@@ -493,7 +494,7 @@ export class FormScanner {
                 options,
                 required,
                 selector,
-                isNavigation: fieldType === 'navigation_button'
+                isNavigation: fieldType === FieldType.NAVIGATION_BUTTON
             };
 
         } catch (error) {
@@ -505,7 +506,7 @@ export class FormScanner {
     /**
      * Detect the type of form field
      */
-    private detectFieldType(element: HTMLElement): string {
+    private detectFieldType(element: HTMLElement): FieldType {
         // Custom dropdown detection MUST come first (before HTMLInputElement check)
         // Because Greenhouse dropdowns are <input type="text" role="combobox">
         if (element.getAttribute('role') === 'combobox' ||
@@ -513,22 +514,22 @@ export class FormScanner {
             element.closest('[role="combobox"]') ||
             element.querySelector('[role="combobox"]') ||
             element.querySelector('input[role="combobox"]')) {
-            return 'dropdown_custom';
+            return FieldType.DROPDOWN_CUSTOM;
         }
 
         // Native select
         if (element instanceof HTMLSelectElement) {
-            return 'select';
+            return FieldType.SELECT_NATIVE;
         }
 
         // Check for select in children
         if (element.querySelector('select')) {
-            return 'select';
+            return FieldType.SELECT_NATIVE;
         }
 
         // Textarea
         if (element instanceof HTMLTextAreaElement) {
-            return 'textarea';
+            return FieldType.TEXTAREA;
         }
 
         // Input fields (checked AFTER dropdown detection)
@@ -537,21 +538,21 @@ export class FormScanner {
 
             switch (type) {
                 case 'email':
-                    return 'email';
+                    return FieldType.EMAIL;
                 case 'tel':
-                    return 'tel';
+                    return FieldType.PHONE;
                 case 'number':
-                    return 'number';
+                    return FieldType.NUMBER;
                 case 'date':
-                    return 'date';
+                    return FieldType.DATE;
                 case 'file':
-                    return 'file';
+                    return FieldType.FILE_UPLOAD;
                 case 'radio':
-                    return 'radio';
+                    return FieldType.RADIO_GROUP;
                 case 'checkbox':
-                    return 'checkbox';
+                    return FieldType.CHECKBOX;
                 default:
-                    return 'text';
+                    return FieldType.TEXT;
             }
         }
 
@@ -564,7 +565,7 @@ export class FormScanner {
             'pageFooterSubmitButton'
         ];
         if (aid && WORKDAY_NAV_AIDS.some(a => aid === a.toLowerCase() || aid.includes(a.toLowerCase()))) {
-            return 'navigation_button';
+            return FieldType.NAVIGATION_BUTTON;
         }
 
         // Text-based button keyword detection (fallback for non-Workday platforms)
@@ -582,11 +583,11 @@ export class FormScanner {
             'confirm application', 'finish application'
         ];
         if (navKeywords.some(kw => text === kw || text.includes(kw))) {
-            return 'navigation_button';
+            return FieldType.NAVIGATION_BUTTON;
         }
 
         // Default to text
-        return 'text';
+        return FieldType.TEXT;
     }
 
     /**

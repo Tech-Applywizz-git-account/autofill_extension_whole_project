@@ -530,6 +530,16 @@ export async function triggerFileUpload(
     try {
         console.log(`[Autofill] 📎 Triggering file upload for:`, element);
 
+        if (!element) {
+            console.warn(`[Autofill] ⚠️ triggerFileUpload called with null element, searching globally`);
+            const globalFallback = document.querySelector('input[type="file"]') as HTMLInputElement;
+            if (globalFallback) {
+                console.log(`[Autofill] ✅ Found global fallback file input`);
+                return await executeFileUpload(globalFallback, base64Data, fileName);
+            }
+            return false;
+        }
+
         // If the element is NOT an input[type="file"], it might be a button uploader
         let fileInput: HTMLInputElement | null = null;
         if (element instanceof HTMLInputElement && element.type === 'file') {
@@ -537,7 +547,7 @@ export async function triggerFileUpload(
         } else {
             // It's a button or custom trigger (e.g., ASK Consulting)
             console.log(`[Autofill] 🖱️ Element is custom uploader, searching for internal/nearby file input`);
-            fileInput = element.querySelector('input[type="file"]') ||
+            fileInput = element.querySelector?.('input[type="file"]') ||
                 element.parentElement?.querySelector('input[type="file"]') ||
                 document.querySelector('input[type="file"]'); // Global fallback for one-off forms
 
@@ -600,7 +610,23 @@ export async function triggerFileUpload(
             }
         }
 
-        // STANDARD FILE UPLOAD PROCESS
+        return await executeFileUpload(fileInput, base64Data, fileName);
+
+    } catch (error) {
+        console.error("Failed to trigger file upload:", error);
+        return false;
+    }
+}
+
+/**
+ * Core logic to actually set bytes on a file input
+ */
+async function executeFileUpload(
+    fileInput: HTMLInputElement,
+    base64Data?: string,
+    fileName?: string
+): Promise<boolean> {
+    try {
         // If we have base64 data, convert it to a File object
         if (base64Data && base64Data.startsWith('data:')) {
             console.log(`[Autofill] 📎 Uploading file from base64 data: ${fileName || 'resume.pdf'}`);
@@ -649,8 +675,8 @@ export async function triggerFileUpload(
             fileInput.click();
             return true;
         }
-    } catch (error) {
-        console.error("Failed to trigger file upload:", error);
+    } catch (err) {
+        console.error("[Autofill] Error in executeFileUpload:", err);
         return false;
     }
 }

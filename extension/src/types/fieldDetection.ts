@@ -52,6 +52,8 @@ export interface DetectedField {
     skipReason?: string;
     filledValue?: any;
     fileName?: string;
+    base64?: string;
+
     source?: 'AI' | 'canonical' | 'fuzzy' | 'learned' | 'hardcoded' | 'hardcoded_override' | 'injected_skills';
 }
 

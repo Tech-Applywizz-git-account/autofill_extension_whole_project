@@ -319,6 +319,7 @@ async function fillMatchedField(match: Detected, rf: ResolvedField): Promise<boo
             filled: false,
             failed: false,
             filledValue: String(rf.value),
+            fileName: rf.fileName,
             skipped: false
         };
 
