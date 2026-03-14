@@ -26,11 +26,61 @@ def save_user_profile(email: str, profile_data: dict, ai_cache: Optional[dict] =
             "updated_at": datetime.now().isoformat()
         }
         
-        # Add AI cache to profile_data if provided
-        if ai_cache is not None:
-            clean_data['ai_cache'] = ai_cache
+        # Note: ai_cache is no longer embedded in user_profiles.
+        # It is strictly handled via the ai_response_cache table below.
 
         supabase.table('user_profiles').upsert(db_data, on_conflict="email").execute()
+
+        # Update ai_response_cache if provided
+        if ai_cache:
+            print(f"🔄 Syncing AI Cache for {email} ({len(ai_cache)} items)...")
+            # 1. Fetch existing items to preserve ID and created_at for Upsert
+            existing_cache = {}
+            try:
+                res = supabase.table('ai_response_cache').eq('user_email', email).select('id, question_text, created_at').execute()
+                if res.data:
+                    for r in res.data:
+                        # Map by question text to find updates
+                        existing_cache[r.get('question_text', '')] = r
+            except Exception as e:
+                print(f"Error fetching existing AI Cache for upsert: {e}")
+
+            ai_inserts = []
+            ai_updates = []
+            for cache_key, cache_val in ai_cache.items():
+                parts = cache_key.split('|')
+                q_text = parts[0] if len(parts) > 0 else cache_key
+                f_type = parts[1] if len(parts) > 1 else 'text'
+                o_hash = parts[2] if len(parts) > 2 else ''
+                
+                row_data = {
+                    "user_email": email,
+                    "question_text": q_text,
+                    "field_type": f_type,
+                    "confidence": cache_val.get('confidence', 1.0),
+                    "intent": cache_val.get('intent'),
+                    "answer": cache_val.get('answer'),
+                    "options_hash": o_hash
+                }
+
+                # If this question already exists, attach the primary key to trigger an UPDATE instead of INSERT
+                if q_text in existing_cache:
+                    row_data['id'] = existing_cache[q_text]['id']
+                    row_data['created_at'] = existing_cache[q_text]['created_at']
+                    ai_updates.append(row_data)
+                else:
+                    ai_inserts.append(row_data)
+            
+            # Upsert and Insert separately to prevent PostgREST dictionary key mismatch errors
+            if ai_inserts:
+                print(f"  [AI Cache] 📥 Inserting {len(ai_inserts)} NEW items")
+                supabase.table('ai_response_cache').insert(ai_inserts).execute()
+            if ai_updates:
+                print(f"  [AI Cache] 🆙 Updating {len(ai_updates)} EXISTING items")
+                supabase.table('ai_response_cache').upsert(ai_updates).execute()
+            
+            print(f"✅ AI Cache sync complete for {email}")
+
         return True
     except Exception as e:
         print(f"❌ Exception saving user profile to Supabase: {e}")
@@ -88,18 +138,39 @@ def get_master_restore(email: str) -> dict:
     """
     try:
         # 1. Get Profile
-        profile_data = get_user_profile(email)
-        
-        if profile_data is None:
+        profile_row = None
+        profile_res = supabase.table('user_profiles').select("*").eq('email', email).execute()
+        if profile_res.data:
+            profile_row = profile_res.data[0]
+            
+        if not profile_row:
             return {
                 "success": False,
                 "error": "User profile not found. Please register as a new user."
             }
 
-        # 2. Extract AI Cache from profile_data if present
+        # Handle nesting in DB
+        profile_data = profile_row.get('profile_data', {})
+        if isinstance(profile_data, dict) and 'profile_data' in profile_data:
+            profile_data = profile_data['profile_data']
+            
+        print(f"🔄 Restoring data for {email}")
+
+        # 2. Extract AI Cache from Database
         ai_cache = {}
-        if isinstance(profile_data, dict) and 'ai_cache' in profile_data:
-            ai_cache = profile_data.pop('ai_cache') # Remove from profile for clean return
+        try:
+            cache_result = supabase.table('ai_response_cache').eq('user_email', email).execute()
+            if cache_result.data:
+                for row in cache_result.data:
+                    key = f"{row.get('question_text', '')}|{row.get('field_type', 'text')}|{row.get('options_hash', '')}"
+                    ai_cache[key] = {
+                        "answer": row.get('answer', ''),
+                        "confidence": row.get('confidence', 1.0),
+                        "intent": row.get('intent'),
+                        "timestamp": int(datetime.fromisoformat(row.get('created_at', datetime.now().isoformat())).timestamp() * 1000)
+                    }
+        except Exception as e:
+            print(f"Error fetching AI Cache: {e}")
 
         # 3. Get User-specific Patterns
         from pattern_service import get_user_patterns

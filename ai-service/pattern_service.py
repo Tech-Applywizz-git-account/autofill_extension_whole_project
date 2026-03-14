@@ -170,9 +170,9 @@ def save_pattern(pattern: Pattern, user_email: Optional[str] = None) -> bool:
             
         print(f"✅ Pattern {pattern_id} saved successfully.")
 
-        # 🟢 GLOBAL PROMOTION: If intent is shareable, promote to global_patterns
-        if is_shareable_intent(pattern_dict['intent']):
-            promote_to_global(pattern_dict)
+        # 🟢 GLOBAL PROMOTION: Disabled as per user request to stop storing in global_patterns
+        # if is_shareable_intent(pattern_dict['intent']):
+        #     promote_to_global(pattern_dict)
 
         return True
     except Exception as e:

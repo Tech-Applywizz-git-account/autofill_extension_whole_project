@@ -82,25 +82,30 @@ function matchOption(value: any, options?: string[]): string | null {
 
     const v = String(value).toLowerCase().trim();
 
-    // Truth-Awareness: Detect if we are dealing with a clear YES/NO intent
-    const isNoIntent = v === 'no' || v === 'false' || value === false;
-    const isYesIntent = v === 'yes' || v === 'true' || value === true;
+    // Truth-Awareness: Detect if we are dealing with a clear YES/NO intent (supports sentences)
+    const isNoIntent = v === 'no' || v === 'false' || value === false ||
+        v.startsWith('no,') || v.includes("don't have") || v.includes("do not have") ||
+        (v.includes("no") && v.includes("disability") && (v.includes("don't") || v.includes("not")));
+
+    const isYesIntent = v === 'yes' || v === 'true' || value === true || v.startsWith('yes,');
 
     // 1. Exact match
     const exact = options.find(o => o.toLowerCase().trim() === v);
     if (exact) return exact;
 
-    // 2. Truth-Filtered matching
+    // 2. Truth-Filtered matching: Ensure No-intents don't match Yes-options
     const filteredOptions = options.filter(o => {
         const ol = o.toLowerCase().trim();
-        // Neutral options are always safe to check
-        if (ol.includes('prefer not to') || ol.includes('decline') || ol === 'n/a' || ol === 'none') return true;
+        // Neutral options are always safe
+        if (ol.includes('prefer not') || ol.includes('decline') || ol === 'n/a' || ol === 'none') return true;
 
         if (isNoIntent) {
-            if (ol === 'yes' || ol === 'true' || ol.startsWith('yes,') || ol === 'i do' || ol === 'y' || ol === 'affirm') return false;
+            // Exclude anything that looks like a "Yes"
+            if (ol.startsWith('yes') || ol.includes('i do') || ol === 'y' || ol === 'true' || ol === 'affirm') return false;
         }
         if (isYesIntent) {
-            if (ol === 'no' || ol === 'false' || ol.startsWith('no,') || ol.includes('none') || ol === 'n' || ol === 'negative') return false;
+            // Exclude anything that looks like a "No"
+            if (ol.startsWith('no') || ol.includes("don't") || ol.includes("not") || ol === 'false' || ol === 'n') return false;
         }
         return true;
     });
@@ -226,6 +231,13 @@ export const HARDCODED_RULES: HardcodedRule[] = [
         patterns: ['password', 'create password', 'set password', 'new password'],
         intent: 'account.password',
         resolver: () => 'Created@123'
+    },
+    {
+        patterns: ['i consent to', 'consent to reddit collecting', 'demographic data surveys', 'privacy policy', 'terms of service', 'i agree', 'consent given', 'acknowledge receipt'],
+        intent: 'consent.agreedToAutofill',
+        resolver: (p, opts) => {
+            return matchOption('Yes', opts) || matchOption('I Agree', opts) || 'true';
+        }
     },
 
     // =========================================================================
@@ -355,14 +367,6 @@ export const HARDCODED_RULES: HardcodedRule[] = [
     // =========================================================================
     {
         patterns: [
-            'do you identify as transgender',
-            'do you identify as transgender?',
-        ],
-        intent: 'eeo.transgender',
-        resolver: (_p, opts) => yesNo(false, opts)
-    },
-    {
-        patterns: [
             'do you require any reasonable accommodations to participate in the application process',
             'do you require reasonable accommodations',
             'do you need any accommodations',
@@ -457,74 +461,82 @@ export const HARDCODED_RULES: HardcodedRule[] = [
         }
     },
     {
-        patterns: [
-            'disability status', 'do you have a disability', 'disability or handicap',
-            'disability or chronic condition', 'physical or mental disability',
-            'voluntary self-identification of disability'
-        ],
-        excludes: ['accommodation'],
+        patterns: ['disability', 'handicap', 'health condition', 'physical or mental impairment', 'please check one of the boxes below'],
+        excludes: ['veteran', 'gender', 'race', 'hispanic', 'latino', 'orientation'],
         intent: 'eeo.disability',
         resolver: (p, opts) => {
-            const val = p.eeo?.disability;
-            if (val) return matchOption(val, opts) || val;
-            return matchOption('no disability', opts) ||
-                matchOption('no, i do not have a disability', opts) ||
-                matchOption('no', opts) || 'No';
-        }
-    },
-
-    // =========================================================================
-    // EEO — Identity questions
-    // =========================================================================
-    {
-        patterns: [
-            'are you a veteran', 'are you a current or former veteran',
-            'are you an active member of the united states armed forces',
-            'veteran status', 'protected veteran', 'military status',
-            'served in military', 'military service'
-        ],
-        intent: 'eeo.veteran',
-        resolver: (p, opts) => {
-            const val = p.eeo?.veteran;
-            if (val) return matchOption(val, opts) || val;
-            return matchOption('not a veteran', opts) ||
-                matchOption('i am not a protected veteran', opts) ||
-                matchOption('no', opts) || 'No';
-        }
-    },
-    {
-        patterns: [
-            'are you hispanic', 'are you hispanic/latino', 'are you hispanic or latino',
-            'hispanic or latino', 'hispanic/latino', 'hispanic', 'latino', 'identify with',
-            'closely identify with', 'ethnicities'
-        ],
-        intent: 'eeo.hispanic',
-        resolver: (p, opts) => {
-            const val = p.eeo?.hispanic || p.customAnswers?.['Are you Hispanic/Latino?'];
+            // Priority: profile data
+            const val = p.eeo?.disability || p.eeo?.disabilityStatus || p.customAnswers?.['Do you have a disability?'];
             if (val) return matchOption(val, opts) || val;
             return matchOption('no', opts) || 'No';
         }
     },
     {
-        patterns: ['gender', 'gender identity', 'how would you describe your gender identity',
-            'how do you identify your gender', 'what is your gender'],
-        excludes: ['race', 'ethnicity', 'sexual orientation', 'lgbtq'],
-        intent: 'eeo.gender',
+        patterns: ['veteran', 'military', 'armed forces', 'please check one of the boxes below', 'veteran status', 'protected veteran'],
+        excludes: ['disability', 'gender', 'race', 'hispanic', 'latino', 'orientation'],
+        intent: 'eeo.veteran',
         resolver: (p, opts) => {
-            const val = p.eeo?.gender;
+            const val = p.eeo?.veteran || p.eeo?.veteranStatus || p.customAnswers?.['Are you a veteran?'];
+            if (val) return matchOption(val, opts) || val;
+            return matchOption('no', opts) || 'No';
+        }
+    },
+    {
+        patterns: [
+            'do you identify as transgender',
+            'do you identify as transgender?',
+            'person of transgender experience',
+        ],
+        intent: 'eeo.transgender',
+        resolver: (p, opts) => {
+            const val = p.eeo?.transgender || p.customAnswers?.['transgender'];
             if (val) return matchOption(val, opts) || val;
             return matchOption('prefer not to say', opts) || 'Prefer not to say';
+        }
+    },
+    {
+        patterns: ['gender', 'gender identity', 'how would you describe your gender identity',
+            'how do you identify your gender', 'what is your gender'],
+        excludes: ['race', 'ethnicity', 'sexual orientation', 'lgbtq', 'transgender'],
+        intent: 'eeo.gender',
+        resolver: (p, opts) => {
+            const val = p.eeo?.gender || p.customAnswers?.['gender'];
+            if (val) return matchOption(val, opts) || val;
+            return matchOption('prefer not to say', opts) || 'Prefer not to say';
+        }
+    },
+    {
+        patterns: ['sexual orientation', 'how would you describe your sexual orientation', 'lgbtq'],
+        excludes: ['lgbtq community', 'do you consider yourself', 'gender', 'race', 'ethnicity'],
+        intent: 'eeo.sexualOrientation',
+        resolver: (p, opts) => {
+            const val = p.eeo?.sexualOrientation || p.customAnswers?.['sexual orientation'];
+            if (val) return matchOption(val, opts) || val;
+            return matchOption('prefer not to say', opts) || 'Prefer not to say';
+        }
+    },
+    {
+        patterns: [
+            'are you hispanic', 'are you hispanic/latino', 'are you hispanic or latino',
+            'hispanic or latino', 'hispanic/latino', 'hispanic', 'latino'
+        ],
+        excludes: ['gender', 'sexual orientation', 'veteran', 'disability', 'race'],
+        intent: 'eeo.hispanic',
+        resolver: (p, opts) => {
+            const val = p.eeo?.hispanic || p.eeo?.hispanicLatino || p.customAnswers?.['Are you Hispanic/Latino?'];
+            if (val) return matchOption(val, opts) || val;
+            return matchOption('no', opts) || 'No';
         }
     },
     // Race/Ethnicity (Consolidated patterns)
     {
         patterns: ['race', 'racial background', 'ethnic background', 'racial/ethnic background',
-            'racial or ethnic', 'how would you describe your racial', 'ethnicities', 'identify with',
-            'closely identify', 'most closely identify with', 'please select up to', 'identify as'],
-        excludes: ['hispanic', 'latino'],
+            'racial or ethnic', 'how would you describe your racial', 'ethnicities',
+            'most closely identify with', 'please select up to', 'identify as', 'ethnicity'],
+        excludes: ['hispanic', 'latino', 'gender', 'orientation', 'disability', 'veteran'],
         intent: 'eeo.race',
         resolver: (p, opts) => {
-            const val = p.eeo?.race;
+            const val = p.eeo?.race || p.customAnswers?.['race'] || p.customAnswers?.['ethnicity'];
             // Support multi-select if the dropdown allows it
             if (Array.isArray(val)) {
                 return val.map(v => matchOption(v, opts) || v);
@@ -533,20 +545,38 @@ export const HARDCODED_RULES: HardcodedRule[] = [
             return matchOption('prefer not to say', opts) || 'Prefer not to say';
         }
     },
-    // Hispanic (Consolidated patterns)
+    {
+        patterns: [
+            'located in colorado', 'united kingdom', 'switzerland',
+            'country in the european economic area', 'located in the uk',
+        ],
+        intent: 'location.countryConstraint',
+        resolver: (p, opts) => {
+            // Usually these are Yes/No questions asking if you are in these restricted areas
+            // Or "Are you located in X?" -> If I live in Pennsylvania, answer No.
+            const country = (p.personal?.country || '').toLowerCase();
+            const state = (p.personal?.state || '').toLowerCase();
+
+            const inRestricted = state.includes('colorado') ||
+                country.includes('united kingdom') || country === 'uk' ||
+                country.includes('switzerland') ||
+                ['austria', 'belgium', 'bulgaria', 'croatia', 'cyprus', 'czech', 'denmark', 'estonia', 'finland', 'france', 'germany', 'greece', 'hungary', 'iceland', 'ireland', 'italy', 'latvia', 'liechtenstein', 'lithuania', 'luxembourg', 'malta', 'netherlands', 'norway', 'poland', 'portugal', 'romania', 'slovakia', 'slovenia', 'spain', 'sweden'].some(c => country.includes(c));
+
+            return yesNo(inRestricted, opts);
+        }
+    },
     {
         patterns: ['onsite', 'working onsite', 'meet this requirement', 'in-person'],
         intent: 'onsite.ableToMeet',
         resolver: (p, opts) => yesNo(true, opts)
     },
     {
-        patterns: ['sexual orientation', 'how would you describe your sexual orientation', 'lgbtq'],
-        excludes: ['lgbtq community', 'do you consider yourself'],
-        intent: 'eeo.sexualOrientation',
+        patterns: ['pronouns', 'what are your pronouns', 'preferred pronouns', 'what pronouns'],
+        intent: 'personal.pronouns',
         resolver: (p, opts) => {
-            const val = p.eeo?.sexualOrientation;
+            const val = p.personal?.pronouns;
             if (val) return matchOption(val, opts) || val;
-            return matchOption('prefer not to say', opts) || 'Prefer not to say';
+            return matchOption('prefer not to say', opts) || null;
         }
     },
 
@@ -603,7 +633,9 @@ export const HARDCODED_RULES: HardcodedRule[] = [
         ],
         intent: 'preferences.desiredSalary',
         resolver: (p, opts) => {
-            const val = p.preferences?.desiredSalary || p.customAnswers?.['desired salary'];
+            const val = p.preferences?.desiredSalary || p.application?.desiredSalary || 
+                        p.preferences?.salary || p.application?.salaryExpectations || 
+                        p.customAnswers?.['desired salary'] || p.customAnswers?.['salary expectations'];
             if (!val) return null;
 
             const numericVal = parseInt(String(val).replace(/\D/g, ''), 10);
@@ -2420,6 +2452,9 @@ export function resolveHardcoded(
         'none',
         'n/a',
         'enter here',
+        'autofill from resume',
+        'upload your resume here to autofill',
+        'key application fields',
     ];
 
     const normalizedRaw = questionText.toLowerCase().trim()
@@ -2439,14 +2474,15 @@ export function resolveHardcoded(
     }
 
     const normalized = normalizedRaw;
+    console.log(`[HardcodedEngine] 🚀 new logic: Searching in "autofill_canonical_profile" like: "${normalized}"`);
 
     // PHASE 1: CATCH-ALL (Profile-First Discovery)
     if (profile.customAnswers && typeof profile.customAnswers === 'object') {
         for (const [key, value] of Object.entries(profile.customAnswers)) {
             if (key.toLowerCase().trim().replace(/[*?!]/g, '') === normalized) {
-                console.log(`[HardcodedEngine] 🎯 Catch-All match in customAnswers: "${key}"`);
                 const matchedOption = matchOption(value, options);
                 if (matchedOption) {
+                    console.log(`[HardcodedEngine] ✅ Found in "local storage": "${matchedOption}" (intent: ${'customAnswers.' + key})`);
                     return {
                         answer: matchedOption,
                         intent: 'customAnswers.' + key,
@@ -2460,12 +2496,52 @@ export function resolveHardcoded(
     if (profile.apiFields && typeof profile.apiFields === 'object') {
         for (const [key, value] of Object.entries(profile.apiFields)) {
             if (key.toLowerCase().trim().replace(/[*?!]/g, '') === normalized) {
-                console.log(`[HardcodedEngine] 🎯 Catch-All match in apiFields: "${key}"`);
                 const matchedOption = matchOption(value, options);
                 if (matchedOption) {
+                    console.log(`[HardcodedEngine] ✅ Found in "local storage": "${matchedOption}" (intent: ${'apiFields.' + key})`);
                     return {
                         answer: matchedOption,
                         intent: 'apiFields.' + key,
+                        confidence: 1.0
+                    };
+                }
+            }
+        }
+    }
+
+    // PHASE 1.5: CANONICAL OBJECT SEARCH (Deep Scan)
+    // Here we check if the question refers to standard profile keys
+    const canonicalSections: Record<string, any> = {
+        'eeo': profile.eeo,
+        'personal': profile.personal,
+        'workAuthorization': profile.workAuthorization,
+        'application': profile.application,
+        'preferences': profile.preferences
+    };
+
+    for (const [sectionName, sectionData] of Object.entries(canonicalSections)) {
+        if (!sectionData || typeof sectionData !== 'object') continue;
+
+        for (const [key, value] of Object.entries(sectionData)) {
+            // Normalize key for search: authorizedUS -> authorized u s -> authorized
+            const normalizedKey = key.replace(/([A-Z])/g, ' $1').toLowerCase().trim();
+            const segments = normalizedKey.split(' ');
+
+            // STRICTER MATCHING: Only match if the whole key is present as a standalone concept
+            // or if the key is very long and starts/ends with it.
+            const keyMatch = normalized === normalizedKey || 
+                            (normalized.length < 50 && normalized.includes(normalizedKey) && segments.every(s => s.length > 2));
+
+            if (keyMatch) {
+                // For EEO, be more careful: "gender" shouldn't match "transgender"
+                if (sectionName === 'eeo' && normalized.includes('transgender') && key === 'gender') continue;
+
+                const matchedOption = matchOption(value, options);
+                if (matchedOption !== null) {
+                    console.log(`[HardcodedEngine] ✅ Found in "local storage": "${matchedOption}" (intent: ${sectionName}.${key})`);
+                    return {
+                        answer: matchedOption,
+                        intent: `${sectionName}.${key}`,
                         confidence: 1.0
                     };
                 }
@@ -2486,7 +2562,7 @@ export function resolveHardcoded(
         const answer = rule.resolver(profile, options);
         if (answer === null) continue;
 
-        console.log(`[HardcodedEngine] ⚡ Static hit: "${questionText}" → intent:${rule.intent} answer:"${answer}"`);
+        console.log(`[HardcodedEngine] ✅ Found in "generic mapping": "${answer}" (intent: ${rule.intent})`);
         return {
             answer,
             intent: rule.intent,
@@ -2499,14 +2575,14 @@ export function resolveHardcoded(
         for (const pattern of learnedPatterns) {
             const patternQ = (pattern.questionPattern || '').toLowerCase().trim().replace(/[*?!]/g, '');
 
-            if (normalized === patternQ || (normalized.length > 10 && normalized.includes(patternQ))) {
-                console.log(`[HardcodedEngine] 🎓 Dynamic hit: "${questionText}" matched learned pattern "${patternQ}"`);
-
+            // TIGHTER MATCHING: If normalized is long, it must be an exact match OR a very significant part
+            if (normalized === patternQ || (normalized.length < 100 && normalized.includes(patternQ) && patternQ.length > 10)) {
                 if (pattern.answerMappings && pattern.answerMappings.length > 0) {
                     const firstMapping = pattern.answerMappings[0];
                     const val = firstMapping.variants?.[0] || firstMapping.canonicalValue;
                     const matchedOption = matchOption(val, options);
                     if (matchedOption) {
+                        console.log(`[HardcodedEngine] ✅ Found! "${questionText}: ${matchedOption}" (intent: ${pattern.intent})`);
                         return {
                             answer: matchedOption,
                             intent: pattern.intent,
@@ -2518,6 +2594,7 @@ export function resolveHardcoded(
         }
     }
 
+    console.log(`[HardcodedEngine] ❌ Not found: "due to no matching static rules or profile data for ${normalized}"`);
     return null;
 }
 

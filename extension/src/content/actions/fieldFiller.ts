@@ -154,8 +154,18 @@ export async function fillField(
                     );
                 } else {
                     // Standalone checkbox - value is boolean
-                    const checkboxValue = value === true || value === "true" || value === "yes" || value === "Yes";
-                    console.log(`[Autofill] ☑️ Setting standalone checkbox: ${field.questionText} → ${checkboxValue}`);
+                    let checkboxValue = value === true || value === "true" || value === "yes" || value === "Yes" || value === "on";
+                    
+                    // If the value matches the single option's label, it also means "checked"
+                    if (!checkboxValue && field.options && field.options.length === 1 && typeof value === 'string') {
+                        const valLower = value.toLowerCase().trim();
+                        const optLower = field.options[0].toLowerCase().trim();
+                        if (valLower === optLower || valLower.includes(optLower) || optLower.includes(valLower)) {
+                            checkboxValue = true;
+                        }
+                    }
+
+                    console.log(`[Autofill] ☑️ Setting standalone checkbox: ${field.questionText} → ${checkboxValue} (Raw value: "${value}")`);
                     success = await setCheckbox(
                         field.element as HTMLInputElement,
                         checkboxValue

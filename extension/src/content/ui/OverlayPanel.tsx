@@ -933,7 +933,7 @@ interface PerformanceMetrics {
     fillProgress?: { current: number; total: number };
 }
 
-type ViewState = "ICON" | "MENU" | "DETAILS" | "SETTINGS" | "PATTERNS";
+type ViewState = "ICON" | "MENU" | "DETAILS" | "SETTINGS" | "PATTERNS" | "CACHE";
 
 // Helper functions for performance tracking
 const formatTime = (date: Date): string => {
@@ -1003,7 +1003,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
     const [manualSuccess, setManualSuccess] = useState<number>(0);
     const [manualFail, setManualFail] = useState<number>(0);
     const [totalAttempted, setTotalAttempted] = useState<number>(0);
-    const [feedbackTimer, setFeedbackTimer] = useState<number>(60);
+    const [feedbackTimer, setFeedbackTimer] = useState<number>(600);
     const [isFeedbackVisible, setIsFeedbackVisible] = useState(false);
     const [showFeedbackIntimation, setShowFeedbackIntimation] = useState(false);
     const [feedbackSubmittedMessage, setFeedbackSubmittedMessage] = useState<string | null>(null);
@@ -1027,7 +1027,49 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
         // 1. Submit Analytics
         const analyticsSuccess = await tracker.submit();
 
-        // 2. Batch Sync Patterns
+        // 2. Batch-cache ALL resolved answers from this session to AI cache
+        // Next run: Phase 0 (AI Cache) answers everything instantly — no hardcoded/canonical/AI needed
+        try {
+            const { setCachedResponse } = await import('../../core/storage/aiResponseCache');
+            const sessionAnswers: any[] = (window as any).__AWL_MAPPED__?.answers || [];
+            let cachedCount = 0;
+
+            for (const answer of sessionAnswers) {
+                // Only cache if we have a real answer (skip skipped/failed fields)
+                if (answer.answer && answer.questionText && answer.fieldType) {
+                    await setCachedResponse(
+                        answer.questionText,
+                        answer.fieldType,
+                        answer.options,
+                        {
+                            answer: String(answer.answer),
+                            confidence: answer.confidence || 1.0,
+                            intent: answer.canonicalKey
+                        }
+                    );
+                    cachedCount++;
+                }
+            }
+            if (cachedCount > 0) {
+                console.log(`[Ext] 💾 Batch-cached ${cachedCount}/${sessionAnswers.length} answers → next run Phase 0 (cache) handles all`);
+            }
+        } catch (e) {
+            console.warn('[Ext] Batch cache failed:', e);
+        }
+
+        // 2.5 Sync Profile (and AI Cache) to cloud
+        try {
+            const { loadProfile, saveProfile } = await import("../../core/storage/profileStorage");
+            const profile = await loadProfile();
+            if (profile) {
+                console.log("[Ext] ☁️ Syncing profile and AI Cache to cloud...");
+                await saveProfile(profile);
+            }
+        } catch (e) {
+            console.warn("[Ext] Profile/Cache cloud sync failed:", e);
+        }
+
+        // 3. Batch Sync Patterns
         try {
             await patternStorage.syncUnsyncedPatterns();
             // Optional: setNotification or just let the "Thanks" message handle it
@@ -1160,7 +1202,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                 setAIStatus(`Resolving ${current}/${total}: ${truncate(question, 30)}...`);
             } else if (status === 'complete') {
                 setAIStatus(`${current}/${total} resolved`);
-                setAILog(prev => [...prev, { question, answer, cached }]);
+                setAILog(prev => [{ question, answer, cached }, ...prev]);
 
                 setPerformanceMetrics(prev => ({
                     ...prev,
@@ -1607,7 +1649,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                         // Show feedback UI and start 40s timer
                         setIsFeedbackVisible(true);
                         setShowFeedbackIntimation(true); // Show the popup
-                        setFeedbackTimer(60);
+                        setFeedbackTimer(600);
 
                         // Find questions that failed or were required but not filled
                         const missed = currentFields.filter(f => f.failed || (f.isRequired && !f.filled && !f.filledValue))
@@ -2289,7 +2331,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                                                     {aiLog.map((log, idx) => (
                                                         <div key={idx} style={{ fontSize: '10px', color: '#666' }}>
                                                             <span style={{ color: '#888', marginRight: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                                {log.cached ? '💾' : <img src={chrome.runtime.getURL('assets/icon256.png')} alt="AI" style={{ width: '12px', height: '12px' }} />} {truncate(log.question, 15)}:
+                                                                {log.cached ? '💾' : '🤖'} {truncate(log.question, 15)}:
                                                             </span>
                                                             <span style={{ color: '#00d084', fontWeight: 'bold' }}>{truncate(log.answer, 20)}</span>
                                                         </div>
@@ -2360,7 +2402,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                                         className={`missed ${selectedSection === "missed" ? "active" : ""}`}
                                         onClick={() => setSelectedSection("missed")}
                                     >
-                                        Missed ({stats.missedTotal})
+                                        Unfilled ({stats.missedTotal})
                                     </button>
                                     {Object.keys(fieldsBySection).map((section) => (
                                         <button
@@ -2377,7 +2419,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                                 {/* Fields List */}
                                 <div className="fields-list">
                                     {(selectedSection === "missed"
-                                        ? fields.filter(f => f.failed || (f.isRequired && !f.filled && !f.filledValue))
+                                        ? fields.filter(f => f.failed || (!f.filled && !f.filledValue))
                                         : filteredFields).map((field, index) => (
                                             <FieldItem
                                                 key={field.selector || index}
@@ -2566,6 +2608,12 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                                     <div className="settings-item-btn">Manage Patterns →</div>
                                 </div>
 
+                                <div className="settings-item" onClick={() => setViewState("CACHE")}>
+                                    <div className="settings-item-title">💾 Manage AI Cache</div>
+                                    <div className="settings-item-desc">View and manage the AI response cache. Recently updated questions appear at the top.</div>
+                                    <div className="settings-item-btn">Manage Cache →</div>
+                                </div>
+
                                 {/* <div className={`settings-item ${isClearingCache ? 'active' : ''}`} onClick={async () => {
                                 if (isClearingCache) return;
                                 if (confirm("Are you sure you want to clear the AI cache? This will refresh all AI answers.")) {
@@ -2610,7 +2658,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                         </div>
 
                         <div className="panel-footer" style={{ textAlign: 'center', fontSize: '10px', color: '#999', marginTop: '20px', paddingBottom: '10px' }}>
-                            Job Application Autofill v1.3.0
+                            Job Application Autofill v1.3.6
                         </div>
                     </div>
                 )
@@ -2648,7 +2696,107 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                     </div>
                 </div>
             )}
+            {viewState === "CACHE" && (
+                <div className="details-panel">
+                    <div className="autofill-header">
+                        <div className="drag-handle" style={{ marginRight: '8px' }}>⠿</div>
+                        <h3 style={{ margin: 0, fontSize: '14px', flex: 1 }}>💾 AI Response Cache</h3>
+                        <div className="header-actions">
+                            <button
+                                onClick={() => setViewState("SETTINGS")}
+                                className="action-btn"
+                                title="Back to Settings"
+                            >
+                                ←
+                            </button>
+                            <button
+                                onClick={handleClose}
+                                className="action-btn"
+                                style={{ background: 'rgba(255, 59, 48, 0.2)', border: '1px solid rgba(255, 59, 48, 0.3)' }}
+                                title="Close"
+                            >
+                                ×
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="autofill-content">
+                        <div style={{ marginBottom: '12px', padding: '10px', background: '#f8fdfb', borderRadius: '8px', fontSize: '11px', color: '#00b371', border: '1px solid #e0f2f1' }}>
+                            💡 <strong>Tip:</strong> This cache stores answers to specific questions. Recently updated ones are at the top.
+                        </div>
+                        <AIResponseCacheList />
+                    </div>
+                </div>
+            )}
         </div >
+    );
+};
+
+const AIResponseCacheList: React.FC = () => {
+    const [cacheEntries, setCacheEntries] = useState<{ key: string; data: any }[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    const refreshCache = async () => {
+        const rawCache = await getAllCached();
+        const entries = Object.entries(rawCache)
+            .map(([key, data]) => ({ key, data }))
+            .sort((a, b) => b.data.timestamp - a.data.timestamp); // Sort by timestamp DESC (newest at top)
+        setCacheEntries(entries);
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        refreshCache();
+    }, []);
+
+    const deleteEntry = async (key: string) => {
+        if (!confirm("Are you sure you want to delete this cached answer?")) return;
+        try {
+            const currentCache = await getAllCached();
+            delete currentCache[key];
+            const { replaceCache } = await import('../../core/storage/aiResponseCache');
+            await replaceCache(currentCache);
+            refreshCache();
+        } catch (err) {
+            console.error("Failed to delete cache entry:", err);
+        }
+    };
+
+    if (loading) return <div style={{ textAlign: 'center', padding: '20px' }}><span className="spinner"></span></div>;
+
+    if (cacheEntries.length === 0) {
+        return (
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#666' }}>
+                <div style={{ fontSize: '32px', marginBottom: '10px' }}>Empty</div>
+                <p>No AI responses cached yet. They appear here when you submit a successful application.</p>
+            </div>
+        );
+    }
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingBottom: '20px' }}>
+            {cacheEntries.map(entry => (
+                <div key={entry.key} style={{ padding: '12px', background: 'white', borderRadius: '10px', border: '1px solid #eee', position: 'relative' }}>
+                    <div style={{ fontSize: '12px', fontWeight: '700', color: '#333', marginBottom: '4px', paddingRight: '24px' }}>
+                        {entry.key.split('|')[0]}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#666', background: '#f9f9f9', padding: '6px', borderRadius: '4px', borderLeft: '3px solid #00d084' }}>
+                        {String(entry.data.answer)}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', fontSize: '10px', color: '#999' }}>
+                        <span>{(entry.data.confidence * 100).toFixed(0)}% Confidence</span>
+                        <span>{new Date(entry.data.timestamp).toLocaleDateString()}</span>
+                    </div>
+                    <button
+                        onClick={() => deleteEntry(entry.key)}
+                        style={{ position: 'absolute', top: '8px', right: '8px', background: 'none', border: 'none', color: '#ff3b30', cursor: 'pointer', fontSize: '16px', padding: '0' }}
+                        title="Delete entry"
+                    >
+                        ×
+                    </button>
+                </div>
+            ))}
+        </div>
     );
 };
 
@@ -2882,13 +3030,13 @@ const FieldItem: React.FC<{ field: DetectedField; onUpdate: (val: string) => voi
             const profile = await loadProfile();
             const qLower = field.questionText.toLowerCase();
             const sLower = field.selector.toLowerCase();
-            const isResume = qLower.includes('resume') || qLower.includes('cv') || 
-                             sLower.includes('resume') || sLower.includes('cv') ||
-                             (qLower === 'attach' && !qLower.includes('cover')) ||
-                             (qLower === 'upload' && !qLower.includes('cover'));
+            const isResume = qLower.includes('resume') || qLower.includes('cv') ||
+                sLower.includes('resume') || sLower.includes('cv') ||
+                (qLower === 'attach' && !qLower.includes('cover')) ||
+                (qLower === 'upload' && !qLower.includes('cover'));
 
             const doc = isResume ? profile?.documents?.resume : profile?.documents?.coverLetter;
-            
+
             const result = await fillField(field, isFile ? (doc?.base64 || field.base64) : editValue, isFile ? (doc?.fileName || field.fileName) : undefined);
             console.log(`Assistant manual fill result:`, result);
         } catch (err) {
@@ -3011,14 +3159,14 @@ const FieldItem: React.FC<{ field: DetectedField; onUpdate: (val: string) => voi
                     // 1. Update Profile (Resume/Cover Letter based on context)
                     const qLower = field.questionText.toLowerCase();
                     const sLower = field.selector.toLowerCase();
-                    const isResume = qLower.includes('resume') || qLower.includes('cv') || 
-                                    sLower.includes('resume') || sLower.includes('cv') ||
-                                    (qLower === 'attach' && !qLower.includes('cover')) ||
-                                    (qLower === 'upload' && !qLower.includes('cover'));
-                    
+                    const isResume = qLower.includes('resume') || qLower.includes('cv') ||
+                        sLower.includes('resume') || sLower.includes('cv') ||
+                        (qLower === 'attach' && !qLower.includes('cover')) ||
+                        (qLower === 'upload' && !qLower.includes('cover'));
+
                     const docKey = isResume ? 'resume' : 'coverLetter';
                     const profilePath = `documents.${docKey}`;
-                    
+
                     const fileData = {
                         fileName,
                         base64: base64,
@@ -3046,7 +3194,7 @@ const FieldItem: React.FC<{ field: DetectedField; onUpdate: (val: string) => voi
                     field.base64 = base64; // Save to field object directly
                     field.fileName = fileName;
                     setIsUploading(false);
-                    
+
                     // Trigger save automatically once file is uploaded?
                     // Let's let the user click "Save & Store" to be consistent
                 }
@@ -3088,7 +3236,8 @@ const FieldItem: React.FC<{ field: DetectedField; onUpdate: (val: string) => voi
                             field.source === 'learned' ? "🧠 Learned: " :
                                 field.source === 'fuzzy' ? "🔍 Fuzzy: " :
                                     field.source === 'injected_skills' ? "🎨 Skill: " :
-                                        "⚡ AI: "}
+                                        field.source === 'cache' ? "💾 Cache: " :
+                                            "🤖 AI: "}
                         {field.filledValue === true || field.filledValue === "true" ? "Yes" :
                             field.filledValue === false || field.filledValue === "false" ? "No" :
                                 truncate(String(field.filledValue || ""), 30)}
@@ -3131,7 +3280,7 @@ const FieldItem: React.FC<{ field: DetectedField; onUpdate: (val: string) => voi
                                 onChange={handleFileChange}
                                 accept=".pdf,.doc,.docx,.txt"
                             />
-                            <button 
+                            <button
                                 className={`file-upload-btn ${editValue ? 'uploaded' : ''}`}
                                 onClick={triggerFilePicker}
                                 disabled={isUploading}
@@ -3190,7 +3339,7 @@ function calculateStats(fields: DetectedField[]) {
     const requiredFilled = fields.filter((f) => f.isRequired && f.filled).length;
     const optionalTotal = fields.filter((f) => !f.isRequired).length;
     const optionalFilled = fields.filter((f) => !f.isRequired && f.filled).length;
-    const missedTotal = fields.filter(f => f.failed || (f.isRequired && !f.filled && !f.filledValue)).length;
+    const missedTotal = fields.filter(f => f.failed || (!f.filled && !f.filledValue)).length;
 
     return {
         requiredTotal,

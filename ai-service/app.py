@@ -409,7 +409,7 @@ def get_user_patterns_endpoint(email: str):
 def save_user_data(profile: UserProfile):
     """Persist user profile"""
     try:
-        if save_user_profile(profile.email, profile.model_dump()):
+        if save_user_profile(profile.email, profile.profile_data, profile.ai_cache):
             return {"success": True, "message": "Profile saved"}
         raise HTTPException(status_code=500, detail="Failed to save profile")
     except Exception as e:

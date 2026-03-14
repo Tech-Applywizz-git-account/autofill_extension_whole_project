@@ -159,12 +159,24 @@ function findGroupQuestion(element: HTMLInputElement): string | null {
     // element that comes BEFORE our element and contains substantial question text
     let current: HTMLElement | null = element.parentElement;
     for (let depth = 0; depth < 8 && current; depth++) {
-        // Look for common label elements at this level
-        const siblingLabels = current.querySelectorAll('label, h3, h4, h5, .label, .field-label, [class*="Label"], [class*="QuestionText"]');
+        // Look for common label elements at this level (using :scope to only match direct children, preventing grabbing a completely unrelated label deep in the DOM)
+        const siblingLabels = current.querySelectorAll(':scope > label, :scope > h3, :scope > h4, :scope > h5, :scope > .label, :scope > .field-label, :scope > [class*="Label"], :scope > [class*="QuestionText"]');
         for (const label of Array.from(siblingLabels)) {
             if (label.contains(element)) continue;
+
+            // NEW: Skip labels that are clearly tied to a specific radio/checkbox option
+            // 1. Label contains an input (wrapping pattern)
+            if (label.querySelector('input[type="radio"], input[type="checkbox"]')) continue;
+            // 2. Label has a 'for' attribute pointing to a radio/checkbox
+            const forId = label.getAttribute('for');
+            if (forId) {
+                const target = document.getElementById(forId) as HTMLInputElement;
+                if (target && (target.type === 'radio' || target.type === 'checkbox')) continue;
+            }
+
             const text = cleanLabelText(label.textContent || "");
-            if (text.length > 10 && !isGenericLabel(text) && !isMergedLabel(text)) {
+            if (text.length >= 4 && !isGenericLabel(text) && !isMergedLabel(text)) {
+                // If it's a label, we already checked for inputs.
                 return text;
             }
         }
@@ -181,9 +193,12 @@ function findGroupQuestion(element: HTMLInputElement): string | null {
                 continue;
             }
 
+            // NEW: Skip any element that contains radio/checkbox inputs (avoids sibling option containers)
+            if (child.querySelector('input[type="radio"], input[type="checkbox"]')) continue;
+
             const text = cleanLabelText(child.textContent || "");
-            if (text.length > 10 && !isGenericLabel(text) && !isMergedLabel(text)) {
-                if (text.length > 15 || text.includes('?') || text.includes('*')) {
+            if (text.length >= 4 && !isGenericLabel(text) && !isMergedLabel(text)) {
+                if (text.length > 15 || text.includes('?') || text.includes('*') || text.length >= 4) {
                     return text;
                 }
             }
@@ -231,6 +246,9 @@ export function isGenericLabel(text: string): boolean {
         'attach', 'upload', 'choose file', 'browse', 'file', 'select file',
         'upload resume', 'upload cv', 'upload cover letter',
         'paste', 'write', 'resume', 'cv', 'yes', 'no', 'n/a', 'select', 'select...',
-        'choose', 'click here', 'expand', 'collapse', 'loading', 'success'
-    ].some(t => lower === t || lower.startsWith(t + ' ')) || lower.length < 2;
+        'choose', 'click here', 'expand', 'collapse', 'loading', 'success',
+        // Common radio/checkbox options that are not questions
+        'male', 'female', 'decline to self-identify', 'prefer not to say', 'other',
+        'unknown'
+    ].some(t => lower === t || lower.startsWith(t + ' ') || (lower.includes('(') && lower.split('(')[0].trim() === t)) || lower.length < 2;
 }

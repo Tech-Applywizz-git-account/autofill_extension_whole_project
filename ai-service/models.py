@@ -51,6 +51,7 @@ class UserProfile(BaseModel):
     """User profile data"""
     email: str
     profile_data: dict
+    ai_cache: Optional[dict] = {}
     resume_base64: str | None = None
     cover_letter_base64: str | None = None
 

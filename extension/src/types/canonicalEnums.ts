@@ -13,6 +13,7 @@ export enum Gender {
 
 export enum Race {
     ASIAN = "Asian",
+    SOUTH_ASIAN = "South Asian",
     BLACK = "Black or African American",
     HISPANIC = "Hispanic or Latino",
     WHITE = "White",

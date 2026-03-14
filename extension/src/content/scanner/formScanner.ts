@@ -279,41 +279,56 @@ export class FormScanner {
         // Find checkboxes and group them by their PARENT CONTAINER
         // This is more reliable than grouping by question text
         // Multi-select checkbox groups share the same parent fieldset/div
-        const checkboxContainerGroups = new Map<HTMLElement, HTMLInputElement[]>();
+        const checkboxGroups = new Map<HTMLElement | string, HTMLInputElement[]>();
         const checkboxes = doc.querySelectorAll('input[type="checkbox"]');
 
         checkboxes.forEach(checkbox => {
             const input = checkbox as HTMLInputElement;
             if (!this.isVisible(input)) return;
 
-            // Find the parent container that groups this checkbox
-            // Try fieldset first (most semantic), then divs with common field classes
-            // Added Ashby-specific selectors: [data-testid*="question"], [class*="_question"] etc.
+            // 1. Group by Name
+            if (input.name) {
+                const sameNameCheckboxes = doc.querySelectorAll(`input[type="checkbox"][name="${CSS.escape(input.name)}"]`);
+                if (sameNameCheckboxes.length > 1) {
+                    const groupKey = `name_${input.name}`;
+                    if (!checkboxGroups.has(groupKey)) checkboxGroups.set(groupKey, []);
+                    checkboxGroups.get(groupKey)!.push(input);
+                    return;
+                }
+            }
+
+            // 2. Group by Semantic Container
             let container: HTMLElement | null = input.closest('fieldset');
             if (!container) {
                 container = input.closest(
                     '[role="group"], .field, .form-field, .question, .form-group, ' +
                     '[class*="Question"], [class*="Field"], [data-testid*="question"], ' +
-                    '[class*="_question"], [class*="application-question"], [class*="checkbox-group"]'
+                    '[class*="_question"], [class*="application-question"], [class*="checkbox-group"], ' +
+                    '[class*="surveys-section"], [class*="form-row"]'
                 );
-            }
-            if (!container) {
-                // Ashby fallback: group by grandparent (checkbox is inside label which is inside a group div)
-                container = input.parentElement?.parentElement || input.parentElement;
             }
 
             if (container) {
-                if (!checkboxContainerGroups.has(container)) {
-                    checkboxContainerGroups.set(container, []);
-                }
-                checkboxContainerGroups.get(container)!.push(input);
+                if (!checkboxGroups.has(container)) checkboxGroups.set(container, []);
+                checkboxGroups.get(container)!.push(input);
+                return;
+            }
+
+            // 3. Fallback: Group by Question Text
+            const qText = this.getQuestionText(input);
+            if (qText) {
+                const groupKey = `qtext_${qText}`;
+                if (!checkboxGroups.has(groupKey)) checkboxGroups.set(groupKey, []);
+                checkboxGroups.get(groupKey)!.push(input);
+            } else {
+                checkboxGroups.set(`iso_${Math.random()}`, [input]);
             }
         });
 
         // Add one representative checkbox from each group
-        checkboxContainerGroups.forEach((checkboxes, container) => {
-            if (checkboxes.length > 0) {
-                fields.push(checkboxes[0]); // Add first checkbox as representative
+        checkboxGroups.forEach((groupCheckboxes) => {
+            if (groupCheckboxes.length > 0) {
+                fields.push(groupCheckboxes[0]); 
             }
         });
 
@@ -780,15 +795,24 @@ export class FormScanner {
      * Extract all options from a radio button group
      */
     private extractRadioOptions(radioInput: HTMLInputElement): string[] {
-        const name = radioInput.name;
-        if (!name) return [];
-
-        // Find all radios with the same name
-        const radios = document.querySelectorAll(`input[type="radio"][name="${name}"]`);
         const options: string[] = [];
+        let allRadios: HTMLInputElement[] = [];
 
-        radios.forEach(radio => {
-            const label = this.getRadioLabel(radio as HTMLInputElement);
+        if (radioInput.name) {
+            allRadios = Array.from(document.querySelectorAll<HTMLInputElement>(`input[type="radio"][name="${CSS.escape(radioInput.name)}"]`));
+        } else {
+            const targetQText = this.getQuestionText(radioInput);
+            if (targetQText) {
+                allRadios = Array.from(document.querySelectorAll<HTMLInputElement>('input[type="radio"]'))
+                    .filter(r => this.isVisible(r) && this.getQuestionText(r) === targetQText);
+            }
+        }
+
+        if (allRadios.length === 0) allRadios = [radioInput];
+
+        allRadios.forEach(radio => {
+            if (!this.isVisible(radio)) return;
+            const label = this.getRadioLabel(radio);
             if (label) {
                 options.push(label);
             }
@@ -858,38 +882,57 @@ export class FormScanner {
     private extractCheckboxGroupOptions(checkboxInput: HTMLInputElement): string[] {
         const options: string[] = [];
 
-        // Find the parent container for this checkbox
+        // 1. Try Name grouping first
+        if (checkboxInput.name) {
+            const sameNameCheckboxes = Array.from(document.querySelectorAll<HTMLInputElement>(`input[type="checkbox"][name="${CSS.escape(checkboxInput.name)}"]`));
+            if (sameNameCheckboxes.length > 1) {
+                sameNameCheckboxes.forEach(cb => {
+                    if (!this.isVisible(cb)) return;
+                    const label = this.getCheckboxLabel(cb);
+                    if (label) options.push(label);
+                });
+                return options;
+            }
+        }
+
+        // 2. Try Semantic Container
         let container: HTMLElement | null = checkboxInput.closest('fieldset');
         if (!container) {
-            container = checkboxInput.closest('.field, .form-field, .question, .form-group, [role="group"]');
-        }
-        if (!container) {
-            container = checkboxInput.parentElement;
-        }
-
-        if (!container) {
-            console.warn(`${LOG_PREFIX} ⚠️ Could not find container for checkbox`);
-            return [];
+            container = checkboxInput.closest(
+                '[role="group"], .field, .form-field, .question, .form-group, ' +
+                '[class*="Question"], [class*="Field"], [data-testid*="question"], ' +
+                '[class*="_question"], [class*="application-question"], [class*="checkbox-group"], ' +
+                '[class*="surveys-section"], [class*="form-row"]'
+            );
         }
 
-        console.log(`${LOG_PREFIX} 📋 Finding all checkboxes in container...`);
+        if (container) {
+            const allCheckboxes = Array.from(container.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'));
+            allCheckboxes.forEach(checkbox => {
+                if (!this.isVisible(checkbox)) return;
+                const label = this.getCheckboxLabel(checkbox);
+                if (label) options.push(label);
+            });
+            return options;
+        }
 
-        // Find all checkboxes within this container
-        const allCheckboxes = container.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+        // 3. Fallback: Group by Question Text
+        const targetQText = this.getQuestionText(checkboxInput);
+        if (targetQText) {
+            const allCheckboxes = Array.from(document.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'));
+            allCheckboxes.forEach(checkbox => {
+                if (!this.isVisible(checkbox)) return;
+                if (this.getQuestionText(checkbox) === targetQText) {
+                    const label = this.getCheckboxLabel(checkbox);
+                    if (label) options.push(label);
+                }
+            });
+            if (options.length > 0) return options;
+        }
 
-        console.log(`${LOG_PREFIX} 📋 Found ${allCheckboxes.length} checkbox(es) in container`);
-
-        allCheckboxes.forEach(checkbox => {
-            if (!this.isVisible(checkbox)) return;
-
-            // Get the specific label for THIS checkbox (not the group question)
-            const label = this.getCheckboxLabel(checkbox);
-            if (label) {
-                options.push(label);
-                console.log(`${LOG_PREFIX} 📋 Checkbox option: "${label}"`);
-            }
-        });
-
+        // 4. Absolute fallback: Just return the label for this single checkbox
+        const label = this.getCheckboxLabel(checkboxInput);
+        if (label) options.push(label);
         return options;
     }
 

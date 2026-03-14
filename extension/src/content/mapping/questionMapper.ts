@@ -21,7 +21,7 @@ export interface ScannedQuestion {
     selector: string;
 }
 
-export type MappedSource = 'canonical' | 'learned' | 'fuzzy' | 'AI' | 'injected_skills' | 'hardcoded_override' | 'hardcoded';
+export type MappedSource = 'canonical' | 'learned' | 'fuzzy' | 'AI' | 'cache' | 'injected_skills' | 'hardcoded_override' | 'hardcoded';
 
 export interface MappedAnswer {
     selector: string;
@@ -210,8 +210,8 @@ export class QuestionMapper {
                         // FieldFiller or AI will handle the boolean intent
                         const lowerVal = String(hResult.answer).toLowerCase();
                         if (['yes', 'no', 'true', 'false'].includes(lowerVal)) {
-                             console.log(`  ✅ [CHECKBOX/RADIO] Accepting boolean intent "${hResult.answer}" for field "${q.questionText}"`);
-                             validatedAnswer = hResult.answer;
+                            console.log(`  ✅ [CHECKBOX/RADIO] Accepting boolean intent "${hResult.answer}" for field "${q.questionText}"`);
+                            validatedAnswer = hResult.answer;
                         } else {
                             console.log(`  ⚠️ Phase -1 [HARDCODED]: "${q.questionText}" → "${hResult.answer}" not in options, falling through`);
                             phase0Candidates.push(q);
@@ -298,7 +298,7 @@ export class QuestionMapper {
 
                     // Successfully matched using predefined pattern
                     const resolvedFile = this.resolveFileAnswer(value, q, profile);
-                    
+
                     mappedAnswers.push({
                         selector: q.selector,
                         questionText: q.questionText,
@@ -695,6 +695,13 @@ export class QuestionMapper {
         // INFINITE LEARNING MODE:
         // Store the AI's answer as a variant for this intent
         // Build up a knowledge base of answers for each intent over time
+
+        // 🛡️ Safety Guard: Prevent poisoning the cache with absurdly long sentences for personal fields
+        const variantStr = Array.isArray(answer.answer) ? answer.answer.join(', ') : answer.answer;
+        if (intent.startsWith('personal.') && intent !== 'personal.summary' && variantStr.length > 60) {
+            console.warn(`[QuestionMapper] 🛡️ Blocked cache poisoning: Variant for ${intent} is too long (${variantStr.length} chars). "${variantStr.substring(0, 30)}..."`);
+            return;
+        }
 
         // Try to get canonical value from profile (optional - used as base if available)
         const canonicalValue = getValueByIntent(profile, intent);
@@ -1178,12 +1185,12 @@ export class QuestionMapper {
 
         const qLower = field.questionText.toLowerCase();
         const sLower = field.selector.toLowerCase();
-        
+
         // Check if it's a resume field
-        const isResume = qLower.includes('resume') || qLower.includes('cv') || 
-                         sLower.includes('resume') || sLower.includes('cv') ||
-                         (qLower === 'attach' && !qLower.includes('cover')) ||
-                         (qLower === 'upload' && !qLower.includes('cover'));
+        const isResume = qLower.includes('resume') || qLower.includes('cv') ||
+            sLower.includes('resume') || sLower.includes('cv') ||
+            (qLower === 'attach' && !qLower.includes('cover')) ||
+            (qLower === 'upload' && !qLower.includes('cover'));
 
 
         // 1. Try to match by filename if the value looks like a filename (or is literally the filename)
@@ -1193,31 +1200,31 @@ export class QuestionMapper {
             const covName = coverDoc?.fileName?.trim().toLowerCase();
 
             if (resName && (cleanVal === resName || cleanVal.includes(resName))) {
-                return { 
+                return {
                     answer: resumeDoc!.base64.startsWith('data:') ? resumeDoc!.base64 : `data:application/pdf;base64,${resumeDoc!.base64}`,
-                    fileName: resumeDoc!.fileName 
+                    fileName: resumeDoc!.fileName
                 };
             }
             if (covName && (cleanVal === covName || cleanVal.includes(covName))) {
-                return { 
+                return {
                     answer: coverDoc!.base64.startsWith('data:') ? coverDoc!.base64 : `data:application/pdf;base64,${coverDoc!.base64}`,
-                    fileName: coverDoc!.fileName 
+                    fileName: coverDoc!.fileName
                 };
             }
         }
 
         // 2. Fallback to intent-based selection if it's a file field
         if (isResume && resumeDoc?.base64) {
-            return { 
+            return {
                 answer: resumeDoc.base64.startsWith('data:') ? resumeDoc.base64 : `data:application/pdf;base64,${resumeDoc.base64}`,
-                fileName: resumeDoc.fileName 
+                fileName: resumeDoc.fileName
             };
         }
-        
+
         if (!isResume && coverDoc?.base64) {
-            return { 
+            return {
                 answer: coverDoc.base64.startsWith('data:') ? coverDoc.base64 : `data:application/pdf;base64,${coverDoc.base64}`,
-                fileName: coverDoc.fileName 
+                fileName: coverDoc.fileName
             };
         }
 
@@ -1247,6 +1254,20 @@ export class QuestionMapper {
         }
 
         const valueLower = value.toLowerCase().trim();
+
+        // 0. State Abbreviation Mapping (e.g. "AZ" -> "Arizona")
+        const usStates: Record<string, string> = {
+            'al': 'alabama', 'ak': 'alaska', 'az': 'arizona', 'ar': 'arkansas', 'ca': 'california',
+            'co': 'colorado', 'ct': 'connecticut', 'de': 'delaware', 'fl': 'florida', 'ga': 'georgia',
+            'hi': 'hawaii', 'id': 'idaho', 'il': 'illinois', 'in': 'indiana', 'ia': 'iowa',
+            'ks': 'kansas', 'ky': 'kentucky', 'la': 'louisiana', 'me': 'maine', 'md': 'maryland',
+            'ma': 'massachusetts', 'mi': 'michigan', 'mn': 'minnesota', 'ms': 'mississippi', 'mo': 'missouri',
+            'mt': 'montana', 'ne': 'nebraska', 'nv': 'nevada', 'nh': 'new hampshire', 'nj': 'new jersey',
+            'nm': 'new mexico', 'ny': 'new york', 'nc': 'north carolina', 'nd': 'north dakota', 'oh': 'ohio',
+            'ok': 'oklahoma', 'or': 'oregon', 'pa': 'pennsylvania', 'ri': 'rhode island', 'sc': 'south carolina',
+            'sd': 'south dakota', 'tn': 'tennessee', 'tx': 'texas', 'ut': 'utah', 'vt': 'vermont',
+            'va': 'virginia', 'wa': 'washington', 'wv': 'west virginia', 'wi': 'wisconsin', 'wy': 'wyoming'
+        };
 
         // 1. Exact match
         const exactMatch = options.find(opt => opt.toLowerCase().trim() === valueLower);
@@ -1322,6 +1343,29 @@ export class QuestionMapper {
             if (countryMatch) {
                 console.log(`[QuestionMapper] 🌍 Country abbreviation "${value}" → "${countryMatch}"`);
                 return { answer: countryMatch, source: 'canonical', confidence };
+            }
+        }
+
+        // 5. Component Matching (for "City, ST, Country" strings)
+        if (valueLower.includes(',')) {
+            const components = valueLower.split(',').map(c => c.trim()).filter(c => c.length > 0);
+            for (const component of components) {
+                // Try component as-is
+                const componentMatch = options.find(opt => opt.toLowerCase().trim() === component);
+                if (componentMatch) {
+                    console.log(`[QuestionMapper] 📍 Location component matched: "${component}" → "${componentMatch}"`);
+                    return { answer: componentMatch, source: 'canonical', confidence };
+                }
+
+                // Try state abbreviation expansion
+                if (usStates[component]) {
+                    const expandedState = usStates[component];
+                    const stateMatch = options.find(opt => opt.toLowerCase().includes(expandedState));
+                    if (stateMatch) {
+                        console.log(`[QuestionMapper] 📍 State expanded match: "${component}" (${expandedState}) → "${stateMatch}"`);
+                        return { answer: stateMatch, source: 'canonical', confidence };
+                    }
+                }
             }
         }
 
@@ -1540,7 +1584,7 @@ export class QuestionMapper {
                         selector: q.selector,
                         questionText: q.questionText,
                         answer: cached.answer,
-                        source: 'AI' as const,
+                        source: 'cache' as const,
                         confidence: cached.confidence,
                         required: q.required,
                         fieldType: q.fieldType,
@@ -1562,7 +1606,7 @@ export class QuestionMapper {
                 }));
 
                 console.log(`   📤 [${index + 1}/${questions.length}] Cache MISS - Asking AI: "${q.questionText}"`);
-                if (q.options && q.options.length > 0 && q.options.length <= 20) {
+                if (q.options && q.options.length > 0 && q.options.length <= 100) {
                     console.log(`      Options provided: [${q.options.slice(0, 3).join(', ')}${q.options.length > 3 ? '...' : ''}]`);
                 }
 
@@ -1573,7 +1617,7 @@ export class QuestionMapper {
                         const response = await askAI({
                             question: q.questionText,
                             fieldType: q.fieldType,
-                            options: (q.options && q.options.length <= 20) ? q.options : [],
+                            options: (q.options && q.options.length <= 100) ? q.options : [],
                             userProfile: profile
                         });
 

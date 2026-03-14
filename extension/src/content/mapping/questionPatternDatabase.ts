@@ -38,7 +38,7 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
         intent: 'personal.firstName',
         fieldTypes: ['text'],
         priority: 100,
-        excludePatterns: ['last', 'middle', 'preferred', 'emergency', 'reference']
+        excludePatterns: ['last', 'middle', 'preferred', 'emergency', 'reference', 'sms', 'text message']
     },
     {
         patterns: ['full name', 'fullname', 'name full', 'name✱', 'name *', 'your name', 'complete name'],
@@ -497,11 +497,11 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
     // ========================================================================
 
     {
-        patterns: ['gender', 'sex', 'gender identity', 'gender preference'],
+        patterns: ['gender', 'sex', 'gender identity', 'gender preference', 'voluntary self-identification of gender'],
         intent: 'eeo.gender',
         fieldTypes: ['dropdown', 'radio'],
         priority: 85,
-        excludePatterns: ['race', 'ethnicity']
+        excludePatterns: ['race', 'ethnicity', 'disability', 'veteran']
     },
     {
         patterns: ['race', 'ethnicity', 'racial', 'ethnic background', 'ethnic group'],
@@ -537,11 +537,13 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
             'have a disability',
             'do you have a disability',
             'physical disability',
-            'mental disability'
+            'mental disability',
+            'voluntary self-identification of disability'
         ],
         intent: 'eeo.disability',
         fieldTypes: ['dropdown', 'radio'],
-        priority: 85
+        priority: 85,
+        excludePatterns: ['race', 'ethnicity', 'gender', 'veteran']
     },
     {
         patterns: ['lgbtq', 'sexual orientation', 'orientation', 'lgbt'],
@@ -740,11 +742,13 @@ export const QUESTION_PATTERNS: QuestionPattern[] = [
             'relocate',
             'move to',
             'open to relocation',
-            'relocation preference'
+            'relocation preference',
+            'willingness to relocate'
         ],
         intent: 'preferences.willingToRelocate',
         fieldTypes: ['radio', 'dropdown'],
-        priority: 73
+        priority: 73,
+        excludePatterns: ['current location', 'where are you located']
     },
     {
         patterns: [

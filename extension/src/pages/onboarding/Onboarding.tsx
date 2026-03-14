@@ -915,6 +915,7 @@ const StepEqualEmployment: React.FC<{
                     <select value={profile.eeo.race} onChange={(e) => updateProfile({ eeo: { ...profile.eeo, race: e.target.value as Race } })}>
                         <option value={Race.DECLINE}>Decline to state</option>
                         <option value={Race.ASIAN}>Asian</option>
+                        <option value={Race.SOUTH_ASIAN}>South Asian</option>
                         <option value={Race.BLACK}>Black or African American</option>
                         <option value={Race.HISPANIC}>Hispanic or Latino</option>
                         <option value={Race.WHITE}>White</option>

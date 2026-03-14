@@ -48,7 +48,8 @@ export function safeMatch(target: string, option: string): boolean {
 
     // If one is negative and the other isn't, they don't match (for EEO/YesNo questions)
     // We only apply this if the strings are relatively short or contains standard EEO keywords
-    const isEEOType = (t.includes('veteran') || t.includes('disability') || t.includes('gender') || t.includes('hispanic'));
+    const isEEOType = (t.includes('veteran') || t.includes('disability') || t.includes('gender') || t.includes('hispanic') || t.includes('race') || t.includes('ethnic') ||
+                       o.includes('veteran') || o.includes('disability') || o.includes('gender') || o.includes('hispanic') || o.includes('race') || o.includes('ethnic'));
     if (isEEOType && targetHasNegation !== optionHasNegation) {
         return false;
     }
@@ -60,8 +61,11 @@ export function safeMatch(target: string, option: string): boolean {
         const regex = new RegExp(`\\b${escapedTarget}\\b`, 'i');
         if (regex.test(o)) {
             // Small word protection: "no" should not match "not a veteran" unless strictly matching "no"
-            if (t.length <= 2 && o.length > 5 && !o.startsWith(t + ',')) {
-                return t === o;
+            if (t.length <= 2 && o.length > 5) {
+                // In EEO context, "No" should match "No I do not have a disability"
+                if (isEEOType) return true;
+                // Otherwise require exact match or a comma separator (semantic)
+                return t === o || o.includes(t + ' ') || o.includes(' ' + t);
             }
             return true;
         }

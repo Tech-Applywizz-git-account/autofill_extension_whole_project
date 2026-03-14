@@ -54,7 +54,7 @@ export interface DetectedField {
     fileName?: string;
     base64?: string;
 
-    source?: 'AI' | 'canonical' | 'fuzzy' | 'learned' | 'hardcoded' | 'hardcoded_override' | 'injected_skills';
+    source?: 'AI' | 'cache' | 'canonical' | 'fuzzy' | 'learned' | 'hardcoded' | 'hardcoded_override' | 'injected_skills';
 }
 
 export interface FieldDetectionResult {

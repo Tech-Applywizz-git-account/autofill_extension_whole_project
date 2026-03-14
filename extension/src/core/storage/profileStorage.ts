@@ -1,5 +1,6 @@
 import { CanonicalProfile, EMPTY_PROFILE } from "../../types/canonicalProfile";
 import { CONFIG } from "../../config";
+import { getAllCached } from "./aiResponseCache";
 
 const STORAGE_KEY = "autofill_canonical_profile";
 const VERSION_KEY = "autofill_profile_version";
@@ -37,6 +38,8 @@ async function syncToSupabase(profile: CanonicalProfile): Promise<void> {
 
         console.log("[ProfileStorage] 🔄 Syncing profile to AI Service...");
 
+        const aiCache = await getAllCached();
+
         const response = await proxyFetch(`${AI_SERVICE_URL}/api/user-data/save`, {
             method: "POST",
             headers: {
@@ -44,7 +47,8 @@ async function syncToSupabase(profile: CanonicalProfile): Promise<void> {
             },
             body: {
                 email: profile.personal.email,
-                profile_data: profile
+                profile_data: profile,
+                ai_cache: aiCache
             },
         });
 
@@ -220,11 +224,17 @@ export async function restoreMasterData(email: string): Promise<{
         const result = await proxyFetch(`${AI_SERVICE_URL}/api/user-data/restore/${encodeURIComponent(email)}`);
 
         if (result && result.profileData) {
-            const profile = result.profileData as CanonicalProfile;
-            const patterns = result.patterns || [];
+            let profile = result.profileData as any;
+            const patterns = (result.patterns || []) as any[];
             const aiCache = result.aiCache || {};
 
             console.log(`[ProfileStorage] 📥 Master data received: ${patterns.length} patterns, ${Object.keys(aiCache).length} cache entries`);
+
+            // ROBUST UNWRAPPING: Handle double-wrapping from any previous bugs
+            if (profile.profile_data && (profile.email === email || profile.profile_data.personal?.email === email)) {
+                console.log("[ProfileStorage] 🛠️ Unwrapping nested profile data");
+                profile = profile.profile_data;
+            }
 
             // 1. Save Profile
             await chrome.storage.local.set({
@@ -232,16 +242,32 @@ export async function restoreMasterData(email: string): Promise<{
                 [VERSION_KEY]: CURRENT_VERSION,
             });
 
-            // 2. Save Patterns
+            // 2. Map and Save Patterns
+            // Convert snake_case from DB to camelCase for local storage
+            const mappedPatterns = patterns.map(p => ({
+                id: p.id,
+                questionPattern: p.question_pattern || p.questionPattern,
+                intent: p.intent,
+                canonicalKey: p.canonical_key || p.canonicalKey || "",
+                answerMappings: p.answer_mappings || p.answerMappings || [],
+                fieldType: p.field_type || p.fieldType || "text",
+                confidence: p.confidence || 1.0,
+                usageCount: p.usage_count || p.usageCount || 0,
+                lastUsed: p.last_used || p.lastUsed || new Date().toISOString(),
+                createdAt: p.created_at || p.createdAt || new Date().toISOString(),
+                source: p.source || 'AI',
+                synced: true
+            }));
+
             const { patternStorage } = await import("./patternStorage");
-            await patternStorage.replaceLocalPatterns(patterns);
+            await patternStorage.replaceLocalPatterns(mappedPatterns);
 
             // 3. Save AI Cache
             const { replaceCache } = await import("./aiResponseCache");
             await replaceCache(aiCache);
 
-            console.log("[ProfileStorage] ✅ Master restore complete");
-            return { profile, patterns, aiCache };
+            console.log("[ProfileStorage] ✅ Master restore complete for:", email);
+            return { profile: profile as CanonicalProfile, patterns: mappedPatterns, aiCache };
         }
         return null;
     } catch (error) {
