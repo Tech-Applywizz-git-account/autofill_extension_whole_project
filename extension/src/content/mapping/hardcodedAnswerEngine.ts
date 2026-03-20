@@ -356,10 +356,94 @@ export const HARDCODED_RULES: HardcodedRule[] = [
             'are you comfortable with the requirements',
             'available to work on-site',
             'are you open to working on-site',
+            'willing to work in the office',
+            'four days per week',
+            '4 days per week',
+            '3 days per week',
+            'three days per week',
+            'in-office four days',
+            'in-office 4 days',
+            'hybrid work model',
+            'anchor days',
+            'willing to commute',
+            'reliably commute',
         ],
         excludes: ['not comfortable', 'not able'],
         intent: 'application.yesPolicy',
         resolver: (_p, opts) => yesNo(true, opts)
+    },
+    {
+        patterns: [
+            'willing to relocate',
+            'open to relocation',
+            'willing to move',
+            'relocate to',
+            'relocation assistance',
+            'requirement to relocate',
+        ],
+        intent: 'application.willingToRelocate',
+        resolver: (_p, opts) => yesNo(true, opts)
+    },
+    {
+        patterns: [
+            'background check',
+            'background screening',
+            'undergo a background',
+            'consent to background',
+            'drug screen',
+            'drug test',
+            'pre-employment screening',
+            'authorize a background',
+        ],
+        intent: 'application.backgroundCheckConsent',
+        resolver: (_p, opts) => yesNo(true, opts)
+    },
+    {
+        patterns: [
+            'do you have a college degree',
+            'have you graduated from college',
+            'possess a bachelor\'s degree',
+            'degree-seeking student',
+            'completed a university degree',
+            'highest level of education completed',
+        ],
+        intent: 'education.hasDegree',
+        resolver: (_p, opts) => yesNo(true, opts)
+    },
+    {
+        patterns: ['github', 'github link', 'github profile', 'github url'],
+        intent: 'personal.github',
+        resolver: (p) => p.personal?.github || ' '
+    },
+    {
+        patterns: ['portfolio', 'portfolio link', 'portfolio website', 'portfolio url', 'personal website', 'website url', 'website link'],
+        intent: 'personal.portfolio',
+        resolver: (p) => p.personal?.portfolio || p.personal?.website || ' '
+    },
+    {
+        patterns: ['twitter', 'twitter link', 'twitter profile', 'twitter url', 'x link', 'x profile'],
+        intent: 'personal.twitter',
+        resolver: (p) => p.personal?.twitter || ' '
+    },
+    {
+        patterns: ['instagram', 'instagram link', 'instagram profile', 'instagram url'],
+        intent: 'personal.instagram',
+        resolver: (p) => p.personal?.instagram || ' '
+    },
+    {
+        patterns: ['threads', 'threads link', 'threads profile', 'threads url'],
+        intent: 'personal.threads',
+        resolver: (p) => p.personal?.threads || ' '
+    },
+    {
+        patterns: ['telegram', 'telegram link', 'telegram profile', 'telegram url'],
+        intent: 'personal.telegram',
+        resolver: (p) => p.personal?.telegram || ' '
+    },
+    {
+        patterns: ['linkedin', 'linkedin profile', 'linkedin url', 'linkedin link'],
+        intent: 'personal.linkedin',
+        resolver: (p) => p.personal?.linkedin || ' '
     },
 
     // =========================================================================
@@ -430,7 +514,7 @@ export const HARDCODED_RULES: HardcodedRule[] = [
     },
     {
         intent: 'legal.hybridWork',
-        patterns: ['hybrid work model', 'anchor days', 'in office', '3 days a week', 'mondays, tuesdays and thursdays'],
+        patterns: ['hybrid work model', 'anchor days', 'in office', '3 days a week', '4 days a week', 'four days a week', 'mondays, tuesdays and thursdays'],
         resolver: () => 'Yes',
     },
     {

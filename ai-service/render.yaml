@@ -10,8 +10,8 @@ services:
       gunicorn app:app
       --worker-class uvicorn.workers.UvicornWorker
       --bind 0.0.0.0:$PORT
-      --workers 2
-      --threads 4
+      --workers 4
+      --threads 10
       --timeout 180
       --graceful-timeout 30
       --keep-alive 5

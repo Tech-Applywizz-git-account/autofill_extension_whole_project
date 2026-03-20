@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Job Application Autofill",
-    "version": "1.3.6",
+    "version": "1.3.7",
     "description": "Autofill job applications with deterministic canonical mapping hard - updated",
     "permissions": [
         "storage",
@@ -10,7 +10,8 @@
         "webNavigation"
     ],
     "host_permissions": [
-        "https://autofill-extension-backend.onrender.com/*"
+        "https://autofill-extension-backend.onrender.com/*",
+        "http://localhost:8001/*"
     ],
     "background": {
         "service_worker": "background.js"

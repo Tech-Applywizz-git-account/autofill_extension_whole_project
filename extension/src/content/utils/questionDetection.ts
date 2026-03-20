@@ -26,8 +26,48 @@ function isMergedLabel(text: string): boolean {
  * For checkboxes and radio buttons, it prioritizes the group question (e.g., in a fieldset legend).
  */
 export function getQuestionText(element: HTMLElement): string {
-    // 1. Specialized handling for Checkboxes and Radios (Group Questions)
+    // 1. Specialized handling for Checkboxes, Radios, and Choice Buttons (Group Questions)
     if (element instanceof HTMLInputElement && (element.type === 'checkbox' || element.type === 'radio')) {
+        const groupQuestion = findGroupQuestion(element);
+        if (groupQuestion) return groupQuestion;
+    }
+
+    // Handle buttons that act as choices (Yes/No buttons, Ashby Boolean fields)
+    if (element instanceof HTMLButtonElement || element.getAttribute('role') === 'button') {
+        // ASHBY-SPECIFIC: The label lives as a sibling in the same field entry container
+        // Structure: .ashby-application-form-field-entry > [label/legend/div] + ._yesno_ > button
+        const ashbyFieldEntry = element.closest(
+            '.ashby-application-form-field-entry, [class*="fieldEntry"], [class*="field-entry"]'
+        );
+        if (ashbyFieldEntry) {
+            // Look for a label or text sibling BEFORE the button container
+            const yesnoContainer = element.closest('[class*="_yesno_"], [class*="yesno"]') || element.parentElement;
+            if (yesnoContainer) {
+                // Traverse siblings of the yesno container to find the label
+                const parent = yesnoContainer.parentElement;
+                if (parent) {
+                    const children = Array.from(parent.children);
+                    const yesnoIdx = children.indexOf(yesnoContainer as Element);
+                    for (let i = 0; i < yesnoIdx; i++) {
+                        const sibling = children[i] as HTMLElement;
+                        const text = cleanLabelText(sibling.textContent || '');
+                        if (text.length >= 4 && !isGenericLabel(text)) {
+                            console.log(`${LOG_PREFIX} [Ashby] Found label for Yes/No button: "${text}"`);
+                            return text;
+                        }
+                    }
+                }
+            }
+            // Fallback: search entire field entry for first text element with meaningful content
+            const allChildren = Array.from(ashbyFieldEntry.children);
+            for (const child of allChildren) {
+                if (child.contains(element)) continue;
+                const text = cleanLabelText((child as HTMLElement).textContent || '');
+                if (text.length >= 4 && !isGenericLabel(text)) {
+                    return text;
+                }
+            }
+        }
         const groupQuestion = findGroupQuestion(element);
         if (groupQuestion) return groupQuestion;
     }
@@ -126,7 +166,7 @@ export function getQuestionText(element: HTMLElement): string {
  * Finds the "group question" for a checkbox or radio button.
  * Usually found in a <legend> of a <fieldset> or a leading div in a group container.
  */
-function findGroupQuestion(element: HTMLInputElement): string | null {
+function findGroupQuestion(element: HTMLElement): string | null {
     // Strategy 1: Check for ARIA-labelledby or labelledby on any ancestor
     // This catches Workday and well-structured forms first
     let el: HTMLElement | null = element;

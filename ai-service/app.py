@@ -56,7 +56,7 @@ async def verify_api_key(api_key: str = Security(api_key_header)):
     if not config.API_KEY:
         logger.warning("⚠️ API Authentication is DISABLED (no APP_API_KEY set in .env)")
         return
-        
+    
     if api_key != config.API_KEY:
         logger.error(f"❌ Unauthorized access attempt: {'Empty Header' if not api_key else 'Invalid Key'}")
         raise HTTPException(

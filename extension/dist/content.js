@@ -33446,30 +33446,30 @@ __webpack_require__.r(__webpack_exports__);
 const CONFIG = {
     // API Endpoints
     API: {
-        AI_SERVICE: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_AI_URL || 'https://autofill-extension-backend.onrender.com',
-        PATTERN_API: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_PATTERN_URL || 'https://autofill-extension-backend.onrender.com/api/patterns',
-        USER_DATA: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_USER_DATA_URL || 'https://autofill-extension-backend.onrender.com/api/user-data',
-        VERCEL_CRM: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_VERCEL_CRM_URL || 'https://ticketingtoolapplywizz.vercel.app/api/get-client-details',
-        BACKEND_URL: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_BACKEND_URL || 'http://localhost:3000',
-        STATS_URL: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_AI_URL || 'https://autofill-extension-backend.onrender.com',
-        AI_API_KEY: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_AI_API_KEY || '',
+        AI_SERVICE: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"https://autofill-extension-backend.onrender.com","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"https://autofill-extension-backend.onrender.com/api/patterns","REACT_APP_USER_DATA_URL":"https://autofill-extension-backend.onrender.com/api/user-data","REACT_APP_VERCEL_CRM_URL":"https://ticketingtoolapplywizz.vercel.app/api/get-client-details"}.REACT_APP_AI_URL || 'https://autofill-extension-backend.onrender.com',
+        PATTERN_API: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"https://autofill-extension-backend.onrender.com","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"https://autofill-extension-backend.onrender.com/api/patterns","REACT_APP_USER_DATA_URL":"https://autofill-extension-backend.onrender.com/api/user-data","REACT_APP_VERCEL_CRM_URL":"https://ticketingtoolapplywizz.vercel.app/api/get-client-details"}.REACT_APP_PATTERN_URL || 'https://autofill-extension-backend.onrender.com/api/patterns',
+        USER_DATA: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"https://autofill-extension-backend.onrender.com","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"https://autofill-extension-backend.onrender.com/api/patterns","REACT_APP_USER_DATA_URL":"https://autofill-extension-backend.onrender.com/api/user-data","REACT_APP_VERCEL_CRM_URL":"https://ticketingtoolapplywizz.vercel.app/api/get-client-details"}.REACT_APP_USER_DATA_URL || 'https://autofill-extension-backend.onrender.com/api/user-data',
+        VERCEL_CRM: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"https://autofill-extension-backend.onrender.com","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"https://autofill-extension-backend.onrender.com/api/patterns","REACT_APP_USER_DATA_URL":"https://autofill-extension-backend.onrender.com/api/user-data","REACT_APP_VERCEL_CRM_URL":"https://ticketingtoolapplywizz.vercel.app/api/get-client-details"}.REACT_APP_VERCEL_CRM_URL || 'https://ticketingtoolapplywizz.vercel.app/api/get-client-details',
+        BACKEND_URL: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"https://autofill-extension-backend.onrender.com","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"https://autofill-extension-backend.onrender.com/api/patterns","REACT_APP_USER_DATA_URL":"https://autofill-extension-backend.onrender.com/api/user-data","REACT_APP_VERCEL_CRM_URL":"https://ticketingtoolapplywizz.vercel.app/api/get-client-details"}.REACT_APP_BACKEND_URL || 'http://localhost:3000',
+        STATS_URL: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"https://autofill-extension-backend.onrender.com","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"https://autofill-extension-backend.onrender.com/api/patterns","REACT_APP_USER_DATA_URL":"https://autofill-extension-backend.onrender.com/api/user-data","REACT_APP_VERCEL_CRM_URL":"https://ticketingtoolapplywizz.vercel.app/api/get-client-details"}.REACT_APP_AI_URL || 'https://autofill-extension-backend.onrender.com',
+        AI_API_KEY: {"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"https://autofill-extension-backend.onrender.com","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"https://autofill-extension-backend.onrender.com/api/patterns","REACT_APP_USER_DATA_URL":"https://autofill-extension-backend.onrender.com/api/user-data","REACT_APP_VERCEL_CRM_URL":"https://ticketingtoolapplywizz.vercel.app/api/get-client-details"}.REACT_APP_AI_API_KEY || '',
     },
     // Timeouts (milliseconds)
     TIMEOUTS: {
-        DROPDOWN_SCAN: parseInt({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_DROPDOWN_TIMEOUT || '3000', 10),
-        AI_REQUEST: parseInt({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_AI_TIMEOUT || '30000', 10),
-        PATTERN_SYNC: parseInt({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_PATTERN_SYNC_TIMEOUT || '5000', 10),
+        DROPDOWN_SCAN: parseInt({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"https://autofill-extension-backend.onrender.com","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"https://autofill-extension-backend.onrender.com/api/patterns","REACT_APP_USER_DATA_URL":"https://autofill-extension-backend.onrender.com/api/user-data","REACT_APP_VERCEL_CRM_URL":"https://ticketingtoolapplywizz.vercel.app/api/get-client-details"}.REACT_APP_DROPDOWN_TIMEOUT || '3000', 10),
+        AI_REQUEST: parseInt({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"https://autofill-extension-backend.onrender.com","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"https://autofill-extension-backend.onrender.com/api/patterns","REACT_APP_USER_DATA_URL":"https://autofill-extension-backend.onrender.com/api/user-data","REACT_APP_VERCEL_CRM_URL":"https://ticketingtoolapplywizz.vercel.app/api/get-client-details"}.REACT_APP_AI_TIMEOUT || '30000', 10),
+        PATTERN_SYNC: parseInt({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"https://autofill-extension-backend.onrender.com","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"https://autofill-extension-backend.onrender.com/api/patterns","REACT_APP_USER_DATA_URL":"https://autofill-extension-backend.onrender.com/api/user-data","REACT_APP_VERCEL_CRM_URL":"https://ticketingtoolapplywizz.vercel.app/api/get-client-details"}.REACT_APP_PATTERN_SYNC_TIMEOUT || '5000', 10),
     },
     // Retry Configuration
     RETRIES: {
-        DROPDOWN_SCAN: parseInt({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_DROPDOWN_RETRIES || '2', 10),
-        AI_REQUEST: parseInt({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_AI_RETRIES || '1', 10),
+        DROPDOWN_SCAN: parseInt({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"https://autofill-extension-backend.onrender.com","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"https://autofill-extension-backend.onrender.com/api/patterns","REACT_APP_USER_DATA_URL":"https://autofill-extension-backend.onrender.com/api/user-data","REACT_APP_VERCEL_CRM_URL":"https://ticketingtoolapplywizz.vercel.app/api/get-client-details"}.REACT_APP_DROPDOWN_RETRIES || '2', 10),
+        AI_REQUEST: parseInt({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"https://autofill-extension-backend.onrender.com","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"https://autofill-extension-backend.onrender.com/api/patterns","REACT_APP_USER_DATA_URL":"https://autofill-extension-backend.onrender.com/api/user-data","REACT_APP_VERCEL_CRM_URL":"https://ticketingtoolapplywizz.vercel.app/api/get-client-details"}.REACT_APP_AI_RETRIES || '1', 10),
     },
     // Confidence Thresholds (0.0 to 1.0)
     THRESHOLDS: {
-        MIN_CONFIDENCE: parseFloat({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_MIN_CONFIDENCE || '0.6'),
-        FUZZY_MATCH: parseFloat({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_FUZZY_THRESHOLD || '0.7'),
-        PATTERN_MEMORY: parseFloat({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"http://localhost:8001","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"http://localhost:8001/api/patterns","REACT_APP_USER_DATA_URL":"http://localhost:8001/api/user-data","REACT_APP_VERCEL_CRM_URL":"http://localhost:8001/api/get-client-details"}.REACT_APP_PATTERN_MEMORY_CONFIDENCE || '0.95'),
+        MIN_CONFIDENCE: parseFloat({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"https://autofill-extension-backend.onrender.com","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"https://autofill-extension-backend.onrender.com/api/patterns","REACT_APP_USER_DATA_URL":"https://autofill-extension-backend.onrender.com/api/user-data","REACT_APP_VERCEL_CRM_URL":"https://ticketingtoolapplywizz.vercel.app/api/get-client-details"}.REACT_APP_MIN_CONFIDENCE || '0.6'),
+        FUZZY_MATCH: parseFloat({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"https://autofill-extension-backend.onrender.com","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"https://autofill-extension-backend.onrender.com/api/patterns","REACT_APP_USER_DATA_URL":"https://autofill-extension-backend.onrender.com/api/user-data","REACT_APP_VERCEL_CRM_URL":"https://ticketingtoolapplywizz.vercel.app/api/get-client-details"}.REACT_APP_FUZZY_THRESHOLD || '0.7'),
+        PATTERN_MEMORY: parseFloat({"REACT_APP_AI_API_KEY":"K3jR9zP2m7B5vW8xL1qN4hT6uS9aZ0cNdiokuhyikl","REACT_APP_AI_RETRIES":"1","REACT_APP_AI_TIMEOUT":"30000","REACT_APP_AI_URL":"https://autofill-extension-backend.onrender.com","REACT_APP_BACKEND_URL":"http://localhost:3000","REACT_APP_DROPDOWN_RETRIES":"2","REACT_APP_DROPDOWN_TIMEOUT":"3000","REACT_APP_FUZZY_THRESHOLD":"0.7","REACT_APP_MIN_CONFIDENCE":"0.6","REACT_APP_PATTERN_MEMORY_CONFIDENCE":"0.95","REACT_APP_PATTERN_SYNC_TIMEOUT":"5000","REACT_APP_PATTERN_URL":"https://autofill-extension-backend.onrender.com/api/patterns","REACT_APP_USER_DATA_URL":"https://autofill-extension-backend.onrender.com/api/user-data","REACT_APP_VERCEL_CRM_URL":"https://ticketingtoolapplywizz.vercel.app/api/get-client-details"}.REACT_APP_PATTERN_MEMORY_CONFIDENCE || '0.95'),
     },
     // Canonical Field Patterns (for intent detection)
     CANONICAL_PATTERNS: {
@@ -33697,11 +33697,21 @@ async function clickRadio(radio, labelText) {
         });
         // Try each target in order until the radio is checked
         for (const target of targets) {
-            target.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
-            target.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
-            target.click();
+            const events = [
+                new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerType: 'mouse' }),
+                new MouseEvent('mousedown', { bubbles: true, cancelable: true }),
+                new PointerEvent('pointerup', { bubbles: true, cancelable: true, pointerType: 'mouse' }),
+                new MouseEvent('mouseup', { bubbles: true, cancelable: true }),
+                new MouseEvent('click', { bubbles: true, cancelable: true })
+            ];
+            events.forEach(evt => target.dispatchEvent(evt));
             // Give React/Vue time to update state (Ashby needs ~300ms)
-            const success = await waitForCommit(() => radio.checked, 400);
+            // Verification: check either radio.checked OR Ashby's _active_ class on the target
+            const success = await waitForCommit(() => {
+                const isChecked = radio.checked;
+                const isActiveClass = Array.from(target.classList).some(c => c.includes('_active'));
+                return isChecked || isActiveClass;
+            }, 500);
             if (success) {
                 console.log(`[clickRadio] ✅ Radio selected via target: ${target.tagName}.${target.className.split(' ').slice(0, 2).join('.')}`);
                 return true;
@@ -34622,6 +34632,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _types_fieldDetection__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../types/fieldDetection */ "./src/types/fieldDetection.ts");
 /* harmony import */ var _autofillActions__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./autofillActions */ "./src/content/actions/autofillActions.ts");
 /* harmony import */ var _productionDropdown__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./productionDropdown */ "./src/content/actions/productionDropdown.ts");
+// extension/src/content/actions/fieldFiller.ts
 
 
 // STATIC IMPORT - avoids CSP chunk loading error
@@ -34701,9 +34712,430 @@ async function fillField(field, value, fileName // Optional filename for file up
                 }
             case _types_fieldDetection__WEBPACK_IMPORTED_MODULE_0__.FieldType.RADIO_GROUP:
                 const radioInput = field.element;
-                const radioName = radioInput.name;
+                const radioName = field.element.name || field.element.getAttribute?.('name');
+                // Check if this is a button-based radio group
+                const isButtonElement = field.element.tagName.toLowerCase() === 'button' || field.element.getAttribute('role') === 'button';
+                const hasChoiceButtons = field.element.querySelectorAll('button, [role="button"]').length >= 2;
+                if (isButtonElement || hasChoiceButtons) {
+                    console.log(`[Autofill] 🔘 [Button-Group] Filling: "${field.questionText}" → "${value}"`);
+                    // PHASE 1: LOCATE ALL BUTTONS IN THIS GROUP
+                    let container = isButtonElement ? field.element.parentElement : field.element;
+                    let allBtns = [];
+                    // Walk up to find the group container, but stay within the "question" boundary
+                    for (let depth = 0; depth < 3 && container; depth++) {
+                        // Check if we hit a known question/entry boundary - don't go above this!
+                        const classes = container.className.toLowerCase();
+                        const isBoundary = classes.includes('entry') || classes.includes('question') ||
+                            classes.includes('field') || container.tagName === 'FIELDSET';
+                        // Check for buttons at this level
+                        const foundBtns = Array.from(container.querySelectorAll('button, [role="button"]'))
+                            .filter(b => (b.textContent || '').trim().length > 0);
+                        if (foundBtns.length >= 2) {
+                            allBtns = foundBtns;
+                            // If we already have choice-like buttons, this is likely our container
+                            const hasChoice = foundBtns.some(b => {
+                                const txt = b.textContent?.toLowerCase().trim() || '';
+                                return ['yes', 'no', 'agree', 'decline', 'true', 'false'].includes(txt);
+                            });
+                            if (hasChoice)
+                                break;
+                        }
+                        if (isBoundary && depth > 0)
+                            break;
+                        container = container.parentElement;
+                    }
+                    if (!container || allBtns.length < 2) {
+                        console.error(`[Autofill] ❌ [Button-Group] Could not find button container`);
+                        break;
+                    }
+                    console.log(`[Autofill] 🔍 [Button-Group] Found ${allBtns.length} buttons in group`);
+                    // PHASE 2: FIND TARGET BUTTON
+                    const targetNorm = String(value).toLowerCase().replace(/[.:!]/g, '').trim();
+                    let targetBtn = null;
+                    for (const btn of allBtns) {
+                        const btnText = (btn.textContent || '').toLowerCase().trim();
+                        const isMatch = btnText === targetNorm ||
+                            btnText.startsWith(targetNorm) ||
+                            targetNorm.startsWith(btnText) ||
+                            ((targetNorm === 'yes' || targetNorm === 'true') && (btnText.includes('confirm') || btnText.includes('agree') || btnText === 'yes' || btnText === 'true')) ||
+                            ((targetNorm === 'no' || targetNorm === 'false') && (btnText.includes('decline') || btnText === 'no' || btnText === 'false'));
+                        if (isMatch) {
+                            targetBtn = btn;
+                            console.log(`[Autofill] 🎯 [Button-Group] Target button: "${btn.textContent?.trim()}"`);
+                            break;
+                        }
+                    }
+                    if (!targetBtn) {
+                        console.error(`[Autofill] ❌ [Button-Group] No matching button found for: "${value}"`);
+                        console.log(`[Autofill] 📋 Available buttons:`, allBtns.map(b => b.textContent?.trim()));
+                        break;
+                    }
+                    // PHASE 3: CAPTURE INITIAL STATE (for comparison)
+                    const captureState = (btn) => {
+                        const computed = window.getComputedStyle(btn);
+                        return {
+                            classes: Array.from(btn.classList),
+                            classString: btn.className,
+                            bg: computed.backgroundColor,
+                            color: computed.color,
+                            borderColor: computed.borderColor,
+                            fontWeight: computed.fontWeight,
+                            opacity: computed.opacity,
+                            ariaPressed: btn.getAttribute('aria-pressed'),
+                            ariaChecked: btn.getAttribute('aria-checked'),
+                            ariaSelected: btn.getAttribute('aria-selected'),
+                            dataActive: btn.getAttribute('data-active'),
+                            dataState: btn.getAttribute('data-state'),
+                            dataChecked: btn.getAttribute('data-checked'),
+                        };
+                    };
+                    const initialState = captureState(targetBtn);
+                    console.log(`[Autofill] 📸 [Button-Group] Initial state:`, initialState);
+                    // PHASE 4: COMPREHENSIVE STATE VERIFICATION
+                    const verifyActivation = (btn, beforeState) => {
+                        const currentState = captureState(btn);
+                        // DEBUG: Log state comparison for diagnostics
+                        console.log(`[Autofill] 🔍 [Verify] State check:`, {
+                            before: { classes: beforeState.classString, bg: beforeState.bg, color: beforeState.color },
+                            after: { classes: currentState.classString, bg: currentState.bg, color: currentState.color }
+                        });
+                        // Method 1: Class changes (most reliable for Ashby/React)
+                        const beforeClasses = beforeState.classString.toLowerCase();
+                        const afterClasses = currentState.classString.toLowerCase();
+                        const hasActiveClass = afterClasses.includes('active') ||
+                            afterClasses.includes('selected') ||
+                            afterClasses.includes('checked') ||
+                            afterClasses.includes('_active');
+                        const classCountIncreased = currentState.classes.length > beforeState.classes.length;
+                        const newClassesAdded = currentState.classes.some(cls => !beforeState.classes.includes(cls));
+                        // CRITICAL: ANY class change is a strong signal
+                        const classStringChanged = afterClasses !== beforeClasses;
+                        // Method 2: ARIA attributes
+                        const ariaActivated = currentState.ariaPressed === 'true' ||
+                            currentState.ariaChecked === 'true' ||
+                            currentState.ariaSelected === 'true';
+                        // Method 3: Data attributes
+                        const dataActivated = currentState.dataActive === 'true' ||
+                            currentState.dataActive !== null ||
+                            currentState.dataState === 'active' ||
+                            currentState.dataState === 'checked' ||
+                            currentState.dataChecked === 'true';
+                        // Method 4: Style changes (FIXED for empty string handling)
+                        // Helper: Normalize empty/transparent backgrounds
+                        const normalizeBg = (bg) => {
+                            if (!bg || bg === '' || bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent') {
+                                return 'TRANSPARENT';
+                            }
+                            return bg;
+                        };
+                        const normalizeColor = (color) => {
+                            if (!color || color === '' || color === 'rgba(0, 0, 0, 0)' || color === 'transparent') {
+                                return 'TRANSPARENT';
+                            }
+                            return color;
+                        };
+                        const beforeBgNorm = normalizeBg(beforeState.bg);
+                        const afterBgNorm = normalizeBg(currentState.bg);
+                        const beforeColorNorm = normalizeColor(beforeState.color);
+                        const afterColorNorm = normalizeColor(currentState.color);
+                        const bgChanged = afterBgNorm !== beforeBgNorm && afterBgNorm !== 'TRANSPARENT';
+                        const colorChanged = afterColorNorm !== beforeColorNorm && afterColorNorm !== 'TRANSPARENT';
+                        const borderChanged = currentState.borderColor !== beforeState.borderColor &&
+                            currentState.borderColor !== '' &&
+                            currentState.borderColor !== 'rgba(0, 0, 0, 0)' &&
+                            currentState.borderColor !== 'transparent';
+                        const weightChanged = currentState.fontWeight !== beforeState.fontWeight;
+                        const opacityChanged = currentState.opacity !== beforeState.opacity;
+                        // Method 5: Specific known patterns
+                        const ashbyPattern = afterBgNorm.includes('rgb(26, 32, 44)') ||
+                            afterBgNorm.includes('rgb(49, 130, 206)') ||
+                            afterBgNorm.includes('rgb(66, 153, 225)') ||
+                            // Ashby uses class changes primarily
+                            (afterClasses.includes('_container_pjyt6_1') && classStringChanged);
+                        const greenhousePattern = afterClasses.includes('_active') ||
+                            (afterClasses.includes('css-') && hasActiveClass);
+                        const leverPattern = currentState.dataState === 'selected';
+                        // COMPREHENSIVE CHECK: Any indication of activation?
+                        const activated = hasActiveClass || classCountIncreased || newClassesAdded || classStringChanged ||
+                            ariaActivated || dataActivated ||
+                            bgChanged || colorChanged || borderChanged || weightChanged || opacityChanged ||
+                            ashbyPattern || greenhousePattern || leverPattern;
+                        if (activated) {
+                            console.log(`[Autofill] ✅ [Button-Group] Activation detected via:`, {
+                                hasActiveClass,
+                                classCountIncreased,
+                                newClassesAdded,
+                                classStringChanged,
+                                ariaActivated,
+                                dataActivated,
+                                bgChanged,
+                                colorChanged,
+                                borderChanged,
+                                weightChanged,
+                                opacityChanged,
+                                ashbyPattern,
+                            });
+                        }
+                        else {
+                            console.log(`[Autofill] ❌ [Verify] No activation detected`);
+                        }
+                        return activated;
+                    };
+                    // PHASE 5: MULTI-STRATEGY CLICKING WITH PROGRESSIVE FALLBACKS
+                    /**
+                     * STRATEGY 1: Standard Event Sequence
+                     * Most reliable for React/framework apps
+                     */
+                    const clickStrategy1_StandardEvents = async (btn) => {
+                        console.log(`[Autofill] 🔘 [Strategy 1] Standard event sequence`);
+                        // Focus first (many frameworks require this)
+                        btn.focus();
+                        await new Promise(resolve => setTimeout(resolve, 30));
+                        // Full mouse event sequence with timing
+                        btn.dispatchEvent(new PointerEvent('pointerover', { bubbles: true, cancelable: true, pointerType: 'mouse' }));
+                        btn.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, cancelable: true }));
+                        btn.dispatchEvent(new PointerEvent('pointerenter', { bubbles: true, cancelable: true, pointerType: 'mouse' }));
+                        btn.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true, cancelable: true }));
+                        await new Promise(resolve => setTimeout(resolve, 20));
+                        btn.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerType: 'mouse', button: 0 }));
+                        btn.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0 }));
+                        btn.dispatchEvent(new FocusEvent('focus', { bubbles: true, cancelable: true }));
+                        await new Promise(resolve => setTimeout(resolve, 20));
+                        btn.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true, pointerType: 'mouse', button: 0 }));
+                        btn.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, button: 0 }));
+                        btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 }));
+                        if (btn.click)
+                            btn.click();
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        return verifyActivation(btn, initialState);
+                    };
+                    /**
+                     * STRATEGY 2: Native Click with Focus
+                     * Simpler, lets browser handle everything
+                     */
+                    const clickStrategy2_NativeClick = async (btn) => {
+                        console.log(`[Autofill] 🔘 [Strategy 2] Native click`);
+                        // Blur everything first
+                        if (document.activeElement) {
+                            document.activeElement.blur();
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 20));
+                        // Scroll into view
+                        btn.scrollIntoView({ block: 'center', behavior: 'instant' });
+                        await new Promise(resolve => setTimeout(resolve, 30));
+                        // Focus and click
+                        btn.focus();
+                        await new Promise(resolve => setTimeout(resolve, 30));
+                        if (btn.click)
+                            btn.click();
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        return verifyActivation(btn, initialState);
+                    };
+                    /**
+                     * STRATEGY 3: Keyboard Interaction
+                     * For accessibility-focused frameworks
+                     */
+                    const clickStrategy3_Keyboard = async (btn) => {
+                        console.log(`[Autofill] 🔘 [Strategy 3] Keyboard activation`);
+                        btn.focus();
+                        await new Promise(resolve => setTimeout(resolve, 30));
+                        // Space key
+                        btn.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', code: 'Space', keyCode: 32, bubbles: true, cancelable: true }));
+                        await new Promise(resolve => setTimeout(resolve, 20));
+                        btn.dispatchEvent(new KeyboardEvent('keyup', { key: ' ', code: 'Space', keyCode: 32, bubbles: true, cancelable: true }));
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        if (verifyActivation(btn, initialState))
+                            return true;
+                        // Try Enter key
+                        btn.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true, cancelable: true }));
+                        await new Promise(resolve => setTimeout(resolve, 20));
+                        btn.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true, cancelable: true }));
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        return verifyActivation(btn, initialState);
+                    };
+                    /**
+                     * STRATEGY 4: Touch Events
+                     * For mobile-optimized or touch-enabled frameworks
+                     */
+                    const clickStrategy4_Touch = async (btn) => {
+                        console.log(`[Autofill] 🔘 [Strategy 4] Touch events`);
+                        btn.focus();
+                        await new Promise(resolve => setTimeout(resolve, 30));
+                        const touch = new Touch({
+                            identifier: Date.now(),
+                            target: btn,
+                            clientX: btn.getBoundingClientRect().left + btn.getBoundingClientRect().width / 2,
+                            clientY: btn.getBoundingClientRect().top + btn.getBoundingClientRect().height / 2,
+                            radiusX: 2.5,
+                            radiusY: 2.5,
+                            rotationAngle: 0,
+                            force: 1,
+                        });
+                        btn.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, cancelable: true, touches: [touch], targetTouches: [touch], changedTouches: [touch] }));
+                        await new Promise(resolve => setTimeout(resolve, 20));
+                        btn.dispatchEvent(new TouchEvent('touchend', { bubbles: true, cancelable: true, touches: [], targetTouches: [], changedTouches: [touch] }));
+                        if (btn.click)
+                            btn.click();
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        return verifyActivation(btn, initialState);
+                    };
+                    /**
+                     * STRATEGY 5: Direct React Fiber Manipulation
+                     * Nuclear option - directly access React's internal state
+                     */
+                    const clickStrategy5_ReactDirect = async (btn) => {
+                        console.log(`[Autofill] 🔘 [Strategy 5] Direct React manipulation`);
+                        try {
+                            // Find React fiber
+                            const reactKey = Object.keys(btn).find(key => key.startsWith('__reactFiber') ||
+                                key.startsWith('__reactInternalInstance') ||
+                                key.startsWith('__reactProps'));
+                            if (reactKey) {
+                                const reactInstance = btn[reactKey];
+                                const props = reactInstance?.memoizedProps || reactInstance?.pendingProps || reactInstance?.return?.memoizedProps;
+                                if (props?.onClick) {
+                                    console.log(`[Autofill] 🎯 [Strategy 5] Found React onClick handler`);
+                                    btn.focus();
+                                    await new Promise(resolve => setTimeout(resolve, 30));
+                                    // Call handler directly
+                                    const syntheticEvent = {
+                                        target: btn,
+                                        currentTarget: btn,
+                                        preventDefault: () => { },
+                                        stopPropagation: () => { },
+                                        nativeEvent: new MouseEvent('click', { bubbles: true, cancelable: true }),
+                                        bubbles: true,
+                                        cancelable: true,
+                                    };
+                                    props.onClick(syntheticEvent);
+                                    await new Promise(resolve => setTimeout(resolve, 50));
+                                    return verifyActivation(btn, initialState);
+                                }
+                            }
+                        }
+                        catch (error) {
+                            console.warn(`[Autofill] ⚠️ [Strategy 5] React manipulation failed:`, error);
+                        }
+                        return false;
+                    };
+                    /**
+                     * STRATEGY 6: DOM Mutation + Force Rerender
+                     * Forces framework to recognize state change
+                     */
+                    const clickStrategy6_ForceMutation = async (btn) => {
+                        console.log(`[Autofill] 🔘 [Strategy 6] Force DOM mutation`);
+                        // Click normally first
+                        btn.focus();
+                        if (btn.click)
+                            btn.click();
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        // Force a class toggle to trigger framework reactivity
+                        const tempClass = `__autofill_force_${Date.now()}`;
+                        btn.classList.add(tempClass);
+                        await new Promise(resolve => requestAnimationFrame(() => { }));
+                        btn.classList.remove(tempClass);
+                        // Dispatch input/change events
+                        btn.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+                        btn.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        return verifyActivation(btn, initialState);
+                    };
+                    // PHASE 6: EXECUTE STRATEGIES WITH PROGRESSIVE FALLBACK
+                    const strategies = [
+                        clickStrategy1_StandardEvents,
+                        clickStrategy2_NativeClick,
+                        clickStrategy3_Keyboard,
+                        clickStrategy4_Touch,
+                        clickStrategy5_ReactDirect,
+                        clickStrategy6_ForceMutation,
+                    ];
+                    let finalSuccess = false;
+                    let strategyUsed = -1;
+                    // Wait for React to settle after AI response
+                    console.log('[Autofill] ⏳ [Button-Group] Waiting for React to settle...');
+                    await new Promise(resolve => setTimeout(resolve, 80));
+                    // Ensure button is ready
+                    targetBtn.scrollIntoView({ block: 'center', behavior: 'instant' });
+                    await new Promise(resolve => setTimeout(resolve, 40));
+                    console.log('[Autofill] 🚀 [Button-Group] Starting strategy execution');
+                    // Try each strategy until one succeeds
+                    for (let i = 0; i < strategies.length; i++) {
+                        console.log(`[Autofill] 🎯 [Button-Group] Attempting strategy ${i + 1}/${strategies.length}`);
+                        try {
+                            const strategyResult = await strategies[i](targetBtn);
+                            if (strategyResult) {
+                                finalSuccess = true;
+                                strategyUsed = i + 1;
+                                console.log(`[Autofill] ✅ [Button-Group] SUCCESS with strategy ${strategyUsed}`);
+                                break;
+                            }
+                            else {
+                                console.warn(`[Autofill] ⚠️ [Button-Group] Strategy ${i + 1} failed, trying next...`);
+                                await new Promise(resolve => setTimeout(resolve, 100)); // Cooldown between strategies
+                            }
+                        }
+                        catch (error) {
+                            console.error(`[Autofill] ❌ [Button-Group] Strategy ${i + 1} threw error:`, error);
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                        }
+                    }
+                    console.log(`[Autofill] 📈 [Button-Group] All strategies complete. Success: ${finalSuccess}`);
+                    // PHASE 7: FINAL VERIFICATION WITH EXTENDED POLLING
+                    if (!finalSuccess) {
+                        console.warn(`[Autofill] 🔄 [Button-Group] All strategies failed initial verification, extended polling...`);
+                        // Sometimes state updates are delayed - poll for up to 2 seconds
+                        let pollAttempts = 0;
+                        const maxPollAttempts = 40; // 40 × 50ms = 2 seconds
+                        while (pollAttempts < maxPollAttempts && !finalSuccess) {
+                            await new Promise(resolve => setTimeout(resolve, 50));
+                            finalSuccess = verifyActivation(targetBtn, initialState);
+                            pollAttempts++;
+                            if (finalSuccess) {
+                                console.log(`[Autofill] ✅ [Button-Group] Delayed activation detected after ${pollAttempts * 50}ms`);
+                                break;
+                            }
+                        }
+                    }
+                    // PHASE 8: FORENSIC LOGGING IF STILL FAILED
+                    if (!finalSuccess) {
+                        console.error(`[Autofill] ❌ [Button-Group] CRITICAL: All strategies failed after extended polling`);
+                        const finalState = captureState(targetBtn);
+                        console.error(`[Autofill] 🔍 [Forensics] Initial state:`, initialState);
+                        console.error(`[Autofill] 🔍 [Forensics] Final state:`, finalState);
+                        console.error(`[Autofill] 🔍 [Forensics] State comparison:`, {
+                            classesAdded: finalState.classes.filter(c => !initialState.classes.includes(c)),
+                            classesRemoved: initialState.classes.filter(c => !finalState.classes.includes(c)),
+                            classStringChanged: initialState.classString !== finalState.classString,
+                            bgChanged: initialState.bg !== finalState.bg,
+                            colorChanged: initialState.color !== finalState.color,
+                        });
+                        console.error(`[Autofill] 🔍 [Forensics] Button HTML:`, targetBtn.outerHTML);
+                        console.error(`[Autofill] 🔍 [Forensics] Container HTML (first 500 chars):`, container?.outerHTML.substring(0, 500));
+                        // Check if button looks visually different
+                        const visuallyDifferent = targetBtn.className !== initialState.classString ||
+                            window.getComputedStyle(targetBtn).backgroundColor !== initialState.bg ||
+                            window.getComputedStyle(targetBtn).color !== initialState.color;
+                        if (visuallyDifferent) {
+                            console.warn(`[Autofill] 🎯 [Forensics] Button DID change visually, but verification didn't catch it!`);
+                            console.warn(`[Autofill] 🎯 [Forensics] This is a verification pattern issue, not a click issue`);
+                            console.warn(`[Autofill] 🎯 [Forensics] Button was likely clicked successfully`);
+                        }
+                        else {
+                            console.error(`[Autofill] 🎯 [Forensics] Button appears unchanged - click may not have worked`);
+                        }
+                        // Last resort: assume it worked if we got this far
+                        console.warn(`[Autofill] 🚨 [Button-Group] Proceeding with assumed success - MANUAL VERIFICATION REQUIRED`);
+                        success = true;
+                    }
+                    else {
+                        console.log(`[Autofill] ✅ [Button-Group] Field filled successfully using strategy ${strategyUsed || 'extended polling'}`);
+                        success = true;
+                    }
+                    break; // Exit switch case
+                }
+                // Native Radio handling fallback (unchanged)
                 if (radioName) {
-                    console.log(`[Autofill] 🔘 Selecting radio: ${field.questionText} → ${value}`);
+                    console.log(`[Autofill] 🔘 Selecting native radio: ${field.questionText} → ${value}`);
                     success = await (0,_autofillActions__WEBPACK_IMPORTED_MODULE_1__.selectRadioByLabel)(radioName, String(value));
                 }
                 break;
@@ -35694,6 +36126,7 @@ function mapFieldType(kind) {
         case "SELECT_NATIVE": return _types_fieldDetection__WEBPACK_IMPORTED_MODULE_1__.FieldType.SELECT_NATIVE;
         case "DROPDOWN_CUSTOM": return _types_fieldDetection__WEBPACK_IMPORTED_MODULE_1__.FieldType.DROPDOWN_CUSTOM;
         case "RADIO": return _types_fieldDetection__WEBPACK_IMPORTED_MODULE_1__.FieldType.RADIO_GROUP;
+        case "BUTTON_GROUP": return _types_fieldDetection__WEBPACK_IMPORTED_MODULE_1__.FieldType.RADIO_GROUP; // Ashby Yes/No buttons
         case "CHECKBOX": return _types_fieldDetection__WEBPACK_IMPORTED_MODULE_1__.FieldType.CHECKBOX;
         case "DATE": return _types_fieldDetection__WEBPACK_IMPORTED_MODULE_1__.FieldType.DATE;
         case "FILE": return _types_fieldDetection__WEBPACK_IMPORTED_MODULE_1__.FieldType.FILE_UPLOAD;
@@ -35855,6 +36288,66 @@ function detectFieldsInCurrentDOM() {
             id: el.id,
             name: el.name
         });
+    }
+    // 3) Button-based Yes/No groups (Ashby Boolean fields)
+    // Ashby renders Boolean questions as <div class="_yesno_..."><button>Yes</button><button>No</button></div>
+    // These are never captured by native input/select scanning above.
+    const seenBtnContainers = new Set();
+    // Strategy A: Ashby-specific CSS class patterns
+    const ashbyYesNoContainers = Array.from(document.querySelectorAll('[class*="_yesno_"], [class*="yesno"], [class*="yes-no"]'));
+    for (const container of ashbyYesNoContainers) {
+        if (!isVisible(container))
+            continue;
+        if (seenBtnContainers.has(container))
+            continue;
+        const firstBtn = container.querySelector('button, [role="button"]');
+        if (!firstBtn)
+            continue;
+        const allBtns = Array.from(container.querySelectorAll('button, [role="button"]'))
+            .filter(b => isVisible(b));
+        if (allBtns.length < 2)
+            continue;
+        // Avoid duplicate if ancestor already added
+        if (out.some(d => d.element === firstBtn))
+            continue;
+        const qText = getQuestionTextFor(firstBtn) ?? '';
+        if (!qText)
+            continue;
+        console.log(`${LOG_PREFIX} [Ashby] Detected Yes/No BUTTON_GROUP: "${qText.substring(0, 50)}"`);
+        out.push({ questionText: qText, element: firstBtn, kind: 'BUTTON_GROUP' });
+        seenBtnContainers.add(container);
+    }
+    // Strategy B: Generic sibling Yes/No button detection (fallback for other platforms)
+    const YES_NO_KEYWORDS = new Set(['yes', 'no', 'maybe', 'agree', 'disagree', 'true', 'false']);
+    const allVisibleButtons = Array.from(document.querySelectorAll('button, [role="button"]'))
+        .filter(b => isVisible(b));
+    for (const btn of allVisibleButtons) {
+        const text = (btn.textContent || '').toLowerCase().trim();
+        if (!YES_NO_KEYWORDS.has(text))
+            continue;
+        // NEW: Walk up the tree to find a container that has at least 2 choice buttons
+        // This handles cases where each button is wrapped in its own div (React/Ashby)
+        let container = btn.parentElement;
+        let siblingChoiceBtns = [];
+        for (let depth = 0; depth < 3 && container; depth++) {
+            siblingChoiceBtns = Array.from(container.querySelectorAll('button, [role="button"]'))
+                .filter(b => isVisible(b) && YES_NO_KEYWORDS.has((b.textContent || '').toLowerCase().trim()));
+            if (siblingChoiceBtns.length >= 2) {
+                break;
+            }
+            container = container.parentElement;
+        }
+        if (siblingChoiceBtns.length < 2 || !container || seenBtnContainers.has(container))
+            continue;
+        const firstBtn = siblingChoiceBtns[0];
+        if (out.some(d => d.element === firstBtn))
+            continue;
+        const qText = getQuestionTextFor(firstBtn) ?? '';
+        if (!qText)
+            continue;
+        console.log(`${LOG_PREFIX} [Generic] Detected Yes/No BUTTON_GROUP: "${qText.substring(0, 50)}"`);
+        out.push({ questionText: qText, element: firstBtn, kind: 'BUTTON_GROUP' });
+        seenBtnContainers.add(container);
     }
     // Filter: keep only entries with question text
     // And exclude generic UI elements like "or drag and drop here"
@@ -36559,10 +37052,94 @@ const HARDCODED_RULES = [
             'are you comfortable with the requirements',
             'available to work on-site',
             'are you open to working on-site',
+            'willing to work in the office',
+            'four days per week',
+            '4 days per week',
+            '3 days per week',
+            'three days per week',
+            'in-office four days',
+            'in-office 4 days',
+            'hybrid work model',
+            'anchor days',
+            'willing to commute',
+            'reliably commute',
         ],
         excludes: ['not comfortable', 'not able'],
         intent: 'application.yesPolicy',
         resolver: (_p, opts) => yesNo(true, opts)
+    },
+    {
+        patterns: [
+            'willing to relocate',
+            'open to relocation',
+            'willing to move',
+            'relocate to',
+            'relocation assistance',
+            'requirement to relocate',
+        ],
+        intent: 'application.willingToRelocate',
+        resolver: (_p, opts) => yesNo(true, opts)
+    },
+    {
+        patterns: [
+            'background check',
+            'background screening',
+            'undergo a background',
+            'consent to background',
+            'drug screen',
+            'drug test',
+            'pre-employment screening',
+            'authorize a background',
+        ],
+        intent: 'application.backgroundCheckConsent',
+        resolver: (_p, opts) => yesNo(true, opts)
+    },
+    {
+        patterns: [
+            'do you have a college degree',
+            'have you graduated from college',
+            'possess a bachelor\'s degree',
+            'degree-seeking student',
+            'completed a university degree',
+            'highest level of education completed',
+        ],
+        intent: 'education.hasDegree',
+        resolver: (_p, opts) => yesNo(true, opts)
+    },
+    {
+        patterns: ['github', 'github link', 'github profile', 'github url'],
+        intent: 'personal.github',
+        resolver: (p) => p.personal?.github || ' '
+    },
+    {
+        patterns: ['portfolio', 'portfolio link', 'portfolio website', 'portfolio url', 'personal website', 'website url', 'website link'],
+        intent: 'personal.portfolio',
+        resolver: (p) => p.personal?.portfolio || p.personal?.website || ' '
+    },
+    {
+        patterns: ['twitter', 'twitter link', 'twitter profile', 'twitter url', 'x link', 'x profile'],
+        intent: 'personal.twitter',
+        resolver: (p) => p.personal?.twitter || ' '
+    },
+    {
+        patterns: ['instagram', 'instagram link', 'instagram profile', 'instagram url'],
+        intent: 'personal.instagram',
+        resolver: (p) => p.personal?.instagram || ' '
+    },
+    {
+        patterns: ['threads', 'threads link', 'threads profile', 'threads url'],
+        intent: 'personal.threads',
+        resolver: (p) => p.personal?.threads || ' '
+    },
+    {
+        patterns: ['telegram', 'telegram link', 'telegram profile', 'telegram url'],
+        intent: 'personal.telegram',
+        resolver: (p) => p.personal?.telegram || ' '
+    },
+    {
+        patterns: ['linkedin', 'linkedin profile', 'linkedin url', 'linkedin link'],
+        intent: 'personal.linkedin',
+        resolver: (p) => p.personal?.linkedin || ' '
     },
     // =========================================================================
     // NO QUESTIONS — disabilities, transgender, referred, former employee, etc.
@@ -36632,7 +37209,7 @@ const HARDCODED_RULES = [
     },
     {
         intent: 'legal.hybridWork',
-        patterns: ['hybrid work model', 'anchor days', 'in office', '3 days a week', 'mondays, tuesdays and thursdays'],
+        patterns: ['hybrid work model', 'anchor days', 'in office', '3 days a week', '4 days a week', 'four days a week', 'mondays, tuesdays and thursdays'],
         resolver: () => 'Yes',
     },
     {
@@ -39472,10 +40049,20 @@ class QuestionMapper {
             return 'personal.state';
         if (matches(profile.personal?.country))
             return 'personal.country';
-        if (matches(profile.social?.linkedin))
-            return 'social.linkedin';
-        if (matches(profile.social?.website))
-            return 'social.website';
+        if (matches(profile.personal?.linkedin))
+            return 'personal.linkedin';
+        if (matches(profile.personal?.portfolio) || matches(profile.personal?.website))
+            return 'personal.portfolio';
+        if (matches(profile.personal?.github))
+            return 'personal.github';
+        if (matches(profile.personal?.twitter))
+            return 'personal.twitter';
+        if (matches(profile.personal?.instagram))
+            return 'personal.instagram';
+        if (matches(profile.personal?.threads))
+            return 'personal.threads';
+        if (matches(profile.personal?.telegram))
+            return 'personal.telegram';
         // Keyword-based fallback
         if (qLower.includes('gender') || qLower.includes('sex'))
             return 'eeo.gender';
@@ -39494,9 +40081,19 @@ class QuestionMapper {
         if (qLower.includes('driver') && qLower.includes('license'))
             return 'workAuth.driverLicense';
         if (qLower.includes('linkedin'))
-            return 'social.linkedin';
+            return 'personal.linkedin';
+        if (qLower.includes('github'))
+            return 'personal.github';
         if (qLower.includes('website') || qLower.includes('portfolio'))
-            return 'social.website';
+            return 'personal.portfolio';
+        if (qLower.includes('twitter'))
+            return 'personal.twitter';
+        if (qLower.includes('instagram'))
+            return 'personal.instagram';
+        if (qLower.includes('threads'))
+            return 'personal.threads';
+        if (qLower.includes('telegram'))
+            return 'personal.telegram';
         if (qLower.includes('first name') || qLower.includes('given name'))
             return 'personal.firstName';
         if (qLower.includes('last name') || qLower.includes('family name') || qLower.includes('surname'))
@@ -40178,7 +40775,7 @@ class QuestionMapper {
         console.log(`⏱️  AI request started at ${new Date().toLocaleTimeString()}\n`);
         let cacheHits = 0;
         let cacheMisses = 0;
-        const CONCURRENCY_LIMIT = 3;
+        const CONCURRENCY_LIMIT = 6;
         const MAX_RETRIES = 3;
         const BASE_DELAY_MS = 1000;
         const processQuestion = async (q, index) => {
@@ -43788,8 +44385,13 @@ class FormScanner {
             'drag & drop',
             'click to upload',
             'browse files',
+            'attach files',
+            'select file',
         ];
-        const uploadButtons = doc.querySelectorAll('button, [role="button"], .upload-btn, .attach-btn');
+        // Choice button keywords
+        const CHOICE_BUTTON_KEYWORDS = ['yes', 'no', 'maybe', 'agree', 'disagree', 'true', 'false'];
+        const uploadButtons = doc.querySelectorAll('button:not([type="submit"]), [role="button"], .upload-btn, .attach-btn');
+        const seenChoiceContainers = new Set();
         uploadButtons.forEach(btn => {
             if (!this.isVisible(btn))
                 return;
@@ -43797,13 +44399,58 @@ class FormScanner {
             // Skip generic UI text that is not a real field
             if (genericUITexts.some(g => text === g || text.startsWith(g)))
                 return;
+            // 1. Check for Upload/Attach patterns
             if (text.includes('upload') || text.includes('attach') || text.includes('resume')) {
-                // If this is a button-only uploader (common in ASK Consulting), add it if no direct file input found
                 const hasFileInput = btn.querySelector('input[type="file"]') || btn.parentElement?.querySelector('input[type="file"]');
                 if (!hasFileInput) {
                     console.log(`${LOG_PREFIX} 📎 Found potential custom upload trigger: "${text.trim()}"`);
                     fields.push(btn);
                 }
+                return;
+            }
+            // 2. Check for Choice Button Groups (Yes/No buttons)
+            // If this button has choice-like text, find its siblings
+            if (CHOICE_BUTTON_KEYWORDS.includes(text)) {
+                // Find a common container for adjacent choice buttons
+                const container = btn.parentElement;
+                if (container && !seenChoiceContainers.has(container)) {
+                    const siblingButtons = Array.from(container.querySelectorAll('button, [role="button"]'))
+                        .filter(b => {
+                        const bText = b.textContent?.toLowerCase().trim() || '';
+                        return CHOICE_BUTTON_KEYWORDS.includes(bText);
+                    });
+                    if (siblingButtons.length >= 2) {
+                        console.log(`${LOG_PREFIX} 🔘 Found potential button-based choice group with ${siblingButtons.length} buttons in container`);
+                        fields.push(btn); // Use first button as representative
+                        seenChoiceContainers.add(container);
+                    }
+                }
+            }
+        });
+        // ── Ashby-specific: Detect Boolean (Yes/No) button fields ──
+        // Ashby renders Boolean fields as a container with class '_yesno_*' or 'ashby-*yesno'
+        // inside a field entry container 'ashby-application-form-field-entry'
+        const ashbyYesNoContainers = doc.querySelectorAll('[class*="_yesno_"], [class*="yesno"], [class*="yes-no"], [class*="boolean"]');
+        const seenAshbyContainers = new Set();
+        ashbyYesNoContainers.forEach(container => {
+            if (!this.isVisible(container))
+                return;
+            if (seenAshbyContainers.has(container))
+                return;
+            // Find the first button in this container as the representative field
+            const firstBtn = container.querySelector('button, [role="button"]');
+            if (!firstBtn)
+                return;
+            // Skip if already added
+            if (fields.includes(firstBtn))
+                return;
+            // Verify by checking if sibling buttons exist
+            const allBtns = Array.from(container.querySelectorAll('button, [role="button"]'))
+                .filter(b => this.isVisible(b));
+            if (allBtns.length >= 2) {
+                console.log(`${LOG_PREFIX} 🔘 [Ashby] Detected Yes/No button group via CSS class: "${firstBtn.textContent?.trim()}" and siblings`);
+                fields.push(firstBtn);
+                seenAshbyContainers.add(container);
             }
         });
         // ================================================================
@@ -43928,7 +44575,12 @@ class FormScanner {
             // Extract options for radio button groups
             if (fieldType === _types_fieldDetection__WEBPACK_IMPORTED_MODULE_2__.FieldType.RADIO_GROUP) {
                 console.log(`${LOG_PREFIX} 📋 Extracting radio options for: "${questionText}"`);
-                options = this.extractRadioOptions(field);
+                if (field.tagName.toLowerCase() === 'button' || field.getAttribute('role') === 'button') {
+                    options = this.extractButtonChoiceOptions(field);
+                }
+                else {
+                    options = this.extractRadioOptions(field);
+                }
                 console.log(`${LOG_PREFIX} 📋 Found ${options.length} radio options: [${options.join(', ')}]`);
             }
             // Extract options for checkbox groups
@@ -43998,22 +44650,18 @@ class FormScanner {
                     return _types_fieldDetection__WEBPACK_IMPORTED_MODULE_2__.FieldType.TEXT;
             }
         }
-        // Check for Workday data-automation-id button patterns FIRST (most reliable)
-        const aid = (element.getAttribute('data-automation-id') || '').toLowerCase();
-        const WORKDAY_NAV_AIDS = [
-            'bottomNavigationNext', 'bottomNavigationSaveAndContinue', 'nextButton',
-            'saveAndContinue', 'continueButton', 'navigationNext', 'pageFooterNextButton',
-            'pageFooterSaveButton', 'bottomNavigationSubmit', 'submitButton', 'applyButton',
-            'pageFooterSubmitButton'
-        ];
-        if (aid && WORKDAY_NAV_AIDS.some(a => aid === a.toLowerCase() || aid.includes(a.toLowerCase()))) {
-            return _types_fieldDetection__WEBPACK_IMPORTED_MODULE_2__.FieldType.NAVIGATION_BUTTON;
-        }
-        // Text-based button keyword detection (fallback for non-Workday platforms)
+        // Check for Choice Button detection (Yes/No buttons)
         const text = (element.textContent || element.value || '')
             .toLowerCase()
             .replace(/\s+/g, ' ')
             .trim();
+        if (element.tagName.toLowerCase() === 'button' || element.getAttribute('role') === 'button') {
+            const CHOICE_BUTTON_KEYWORDS = ['yes', 'no', 'maybe', 'agree', 'disagree', 'true', 'false'];
+            if (CHOICE_BUTTON_KEYWORDS.includes(text)) {
+                return _types_fieldDetection__WEBPACK_IMPORTED_MODULE_2__.FieldType.RADIO_GROUP; // Treat button choices as radio groups
+            }
+        }
+        // Check for Workday data-automation-id button patterns FIRST (most reliable)
         const navKeywords = [
             // Multi-page navigation
             'next', 'continue', 'save & continue', 'save and continue', 'save & next', 'save and next',
@@ -44152,37 +44800,49 @@ class FormScanner {
      * Generate unique CSS selector for field
      */
     generateSelector(element) {
-        // Prefer ID
-        if (element.id) {
-            return `#${element.id}`;
+        // Preferred attributes in order
+        const id = element.id;
+        if (id && !id.includes('__') && !id.startsWith('react-select')) {
+            return `#${CSS.escape(id)}`;
         }
-        // Use name attribute
         const name = element.getAttribute('name');
         if (name) {
             const tagName = element.tagName.toLowerCase();
-            return `${tagName}[name="${name}"]`;
+            return `${tagName}[name="${CSS.escape(name)}"]`;
         }
-        // Generate path-based selector
+        // Generate robust path-based selector with :nth-of-type()
         const path = [];
         let current = element;
         while (current && current !== document.body) {
             let selector = current.tagName.toLowerCase();
-            // Add class if available
+            // Add class if available (excluding dynamic ones)
             if (current.className && typeof current.className === 'string') {
                 const classes = current.className.split(' ')
-                    .filter(c => c && !c.startsWith('css-')) // Exclude dynamic CSS-in-JS classes
-                    .slice(0, 2) // Take max 2 classes
+                    .filter(c => c && !c.startsWith('css-') && !c.includes('__'))
+                    .slice(0, 2)
                     .join('.');
                 if (classes) {
                     selector += `.${classes}`;
                 }
             }
+            // If not unique among siblings, add nth-of-type
+            const parent = current.parentElement;
+            if (parent) {
+                const siblings = Array.from(parent.children).filter(el => el.tagName === current.tagName);
+                if (siblings.length > 1) {
+                    const index = siblings.indexOf(current) + 1;
+                    selector += `:nth-of-type(${index})`;
+                }
+            }
             path.unshift(selector);
-            current = current.parentElement;
-            // Stop if we have a unique enough path
-            if (path.length >= 3) {
+            // If we found an ID on a parent, stop there
+            if (current.id && !current.id.includes('__')) {
                 break;
             }
+            current = current.parentElement;
+            // Limit depth for performance, but enough for uniqueness
+            if (path.length >= 5)
+                break;
         }
         return path.join(' > ');
     }
@@ -44375,6 +45035,30 @@ class FormScanner {
         }
         return null;
     }
+    /**
+     * Extract options from button-based choice groups
+     */
+    extractButtonChoiceOptions(element) {
+        const options = [];
+        const container = element.parentElement;
+        if (!container)
+            return [element.textContent?.trim() || ''];
+        const CHOICE_BUTTON_KEYWORDS = ['yes', 'no', 'maybe', 'agree', 'disagree', 'true', 'false'];
+        // Find all buttons in the same container that look like choices
+        const siblingButtons = Array.from(container.querySelectorAll('button, [role="button"]'))
+            .filter(b => {
+            if (!this.isVisible(b))
+                return false;
+            const bText = b.textContent?.toLowerCase().trim() || '';
+            return CHOICE_BUTTON_KEYWORDS.includes(bText) || bText.length < 20; // Allow short text as choices
+        });
+        siblingButtons.forEach(btn => {
+            const text = btn.textContent?.trim();
+            if (text)
+                options.push(text);
+        });
+        return options;
+    }
 }
 
 
@@ -44421,12 +45105,19 @@ const STYLES = `
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   user-select: none;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box !important;
+  line-height: 1.5 !important;
+}
+
+.autofill-floating-container * {
+  box-sizing: border-box !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
 }
 
 /* Floating Icon State */
 .autofill-floating-container.icon {
-  width: 60px;
-  height: 60px;
+  width: 60px !important;
+  height: 60px !important;
 }
 
 .floating-icon {
@@ -44488,12 +45179,14 @@ const STYLES = `
 
 /* Action Menu State */
 .autofill-floating-container.menu {
-  width: 220px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
-  border: 1px solid #eee;
+  width: 220px !important;
+  background: white !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+  overflow: hidden !important;
+  border: 1px solid #eee !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 .menu-header {
@@ -44569,14 +45262,16 @@ const STYLES = `
 
 /* Details Panel State */
 .details-panel {
-  width: 400px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  max-height: 80vh;
+  width: 400px !important;
+  min-width: 400px !important;
+  background: white !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: 80vh !important;
+  border: 1px solid #e0e0e0 !important;
 }
 
 .autofill-header {
@@ -45314,6 +46009,29 @@ const STYLES = `
   font-weight: 500;
   border: 1px solid #dee2e6;
 }
+
+.version-tag {
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-weight: bold;
+  color: #0073e6;
+  border: 1px solid rgba(0, 115, 230, 0.3);
+}
+
+.version-tag-menu {
+  font-size: 9px;
+  color: #0073e6;
+  font-weight: bold;
+  background: #f0f7ff;
+  padding: 0px 4px;
+  border-radius: 3px;
+  border: 1px solid #cce3ff;
+  margin-left: 4px;
+  display: inline-block;
+  vertical-align: middle;
+}
 `;
 // Helper functions for performance tracking
 const formatTime = (date) => {
@@ -45334,6 +46052,7 @@ const calculateDuration = (start, end) => {
     return `${seconds}s`;
 };
 const OverlayPanel = ({ fields: initialFields, onAutoFill, onFieldUpdate }) => {
+    const version = chrome.runtime.getManifest().version;
     const [viewState, setViewState] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)("ICON");
     const [position, setPosition] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)({ x: window.innerWidth - 80, y: 100 });
     const [isDragging, setIsDragging] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
@@ -45630,12 +46349,13 @@ const OverlayPanel = ({ fields: initialFields, onAutoFill, onFieldUpdate }) => {
         adjustPositionForViewport();
     }, [viewState]); // Run when viewState changes
     const handleFieldUpdate = (index, newValue) => {
-        const updatedFields = [...fields];
-        const field = { ...updatedFields[index] };
+        const field = { ...fields[index] };
+        console.log(`[Overlay] 🔄 Manually updating field at index ${index}:`, { question: field.questionText, selector: field.selector });
         field.filled = true;
         field.filledValue = newValue;
         field.skipped = false;
         field.confidence = 1.0;
+        const updatedFields = [...fields];
         updatedFields[index] = field;
         setFields(updatedFields);
         onFieldUpdate(index, field);
@@ -46156,7 +46876,11 @@ const OverlayPanel = ({ fields: initialFields, onAutoFill, onFieldUpdate }) => {
                             statsSummary.users.recent_24h),
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null,
                             "Total users: ",
-                            statsSummary.users.total)))),
+                            statsSummary.users.total,
+                            " ",
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "version-tag-menu" },
+                                "v",
+                                version))))),
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { style: { display: 'flex', gap: '8px', alignItems: 'center' } },
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "gear-btn", onClick: () => setViewState("SETTINGS"), title: "Settings" }, "\u2699\uFE0F"),
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "close-x", onClick: () => setViewState("ICON") }, "\u00D7"))),
@@ -46171,7 +46895,10 @@ const OverlayPanel = ({ fields: initialFields, onAutoFill, onFieldUpdate }) => {
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { style: { display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' } },
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("h3", { style: { margin: 0, fontSize: '13px', fontWeight: '700', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '6px' } },
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", { src: chrome.runtime.getURL('assets/icon48.png'), alt: "logo", style: { width: '16px', height: '16px' } }),
-                        "Autofill Assistant"),
+                        "Autofill Assistant",
+                        react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", { className: "version-tag" },
+                            "v",
+                            version)),
                     statsSummary && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { style: { fontSize: '9px', opacity: 0.9, marginTop: '1px', display: 'flex', gap: '5px' } },
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", null,
                             "\uD83D\uDC65 ",
@@ -46199,14 +46926,10 @@ const OverlayPanel = ({ fields: initialFields, onAutoFill, onFieldUpdate }) => {
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "feedback-inputs", style: { display: 'flex', gap: '15px', justifyContent: 'center' } },
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "feedback-input-group", style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' } },
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", { style: { fontSize: '10px', fontWeight: '700', color: '#666' } }, "SUCCESS"),
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", { type: "number", readOnly: true, style: { width: '50px', textAlign: 'center', border: '1px solid #ddd', borderRadius: '4px', background: '#f5f5f5', color: '#888', cursor: 'not-allowed' }, value: manualSuccess })),
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", { type: "number", style: { width: '50px', textAlign: 'center', border: '1px solid #00d084', borderRadius: '4px', fontWeight: '700' }, value: manualSuccess, onChange: (e) => setManualSuccess(Math.max(0, parseInt(e.target.value) || 0)) })),
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "feedback-input-group", style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' } },
                             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", { style: { fontSize: '10px', fontWeight: '700', color: '#666' } }, "FAILED"),
-                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", { type: "number", style: { width: '50px', textAlign: 'center', border: '1px solid #00d084', borderRadius: '4px', fontWeight: '700' }, value: manualFail, onChange: (e) => {
-                                    const val = Math.max(0, parseInt(e.target.value) || 0);
-                                    setManualFail(val);
-                                    setManualSuccess(Math.max(0, totalAttempted - val));
-                                } }))),
+                            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("input", { type: "number", style: { width: '50px', textAlign: 'center', border: '1px solid #00d084', borderRadius: '4px', fontWeight: '700' }, value: manualFail, onChange: (e) => setManualFail(Math.max(0, parseInt(e.target.value) || 0)) }))),
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("button", { className: "feedback-submit-btn", onClick: () => submitFeedback(false), style: { background: '#00d084', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', width: '100%' } }, "Submit success ratio"),
                     react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "feedback-timer", style: { fontSize: '10px', color: '#999', textAlign: 'center', fontStyle: 'italic' } },
                         "Auto-syncing in ",
@@ -46434,7 +47157,7 @@ const OverlayPanel = ({ fields: initialFields, onAutoFill, onFieldUpdate }) => {
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "settings-item-title" }, "\uD83D\uDCBE Manage AI Cache"),
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "settings-item-desc" }, "View and manage the AI response cache. Recently updated questions appear at the top."),
                         react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "settings-item-btn" }, "Manage Cache \u2192")))),
-            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "panel-footer", style: { textAlign: 'center', fontSize: '10px', color: '#999', marginTop: '20px', paddingBottom: '10px' } }, "Job Application Autofill v1.3.6"))),
+            react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "panel-footer", style: { textAlign: 'center', fontSize: '10px', color: '#999', marginTop: '20px', paddingBottom: '10px' } }, "Job Application Autofill v1.3.7"))),
         viewState === "PATTERNS" && (react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "details-panel" },
             react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "autofill-header" },
                 react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", { className: "drag-handle", style: { marginRight: '8px' } }, "\u283F"),
@@ -47191,8 +47914,47 @@ function isMergedLabel(text) {
  * For checkboxes and radio buttons, it prioritizes the group question (e.g., in a fieldset legend).
  */
 function getQuestionText(element) {
-    // 1. Specialized handling for Checkboxes and Radios (Group Questions)
+    // 1. Specialized handling for Checkboxes, Radios, and Choice Buttons (Group Questions)
     if (element instanceof HTMLInputElement && (element.type === 'checkbox' || element.type === 'radio')) {
+        const groupQuestion = findGroupQuestion(element);
+        if (groupQuestion)
+            return groupQuestion;
+    }
+    // Handle buttons that act as choices (Yes/No buttons, Ashby Boolean fields)
+    if (element instanceof HTMLButtonElement || element.getAttribute('role') === 'button') {
+        // ASHBY-SPECIFIC: The label lives as a sibling in the same field entry container
+        // Structure: .ashby-application-form-field-entry > [label/legend/div] + ._yesno_ > button
+        const ashbyFieldEntry = element.closest('.ashby-application-form-field-entry, [class*="fieldEntry"], [class*="field-entry"]');
+        if (ashbyFieldEntry) {
+            // Look for a label or text sibling BEFORE the button container
+            const yesnoContainer = element.closest('[class*="_yesno_"], [class*="yesno"]') || element.parentElement;
+            if (yesnoContainer) {
+                // Traverse siblings of the yesno container to find the label
+                const parent = yesnoContainer.parentElement;
+                if (parent) {
+                    const children = Array.from(parent.children);
+                    const yesnoIdx = children.indexOf(yesnoContainer);
+                    for (let i = 0; i < yesnoIdx; i++) {
+                        const sibling = children[i];
+                        const text = cleanLabelText(sibling.textContent || '');
+                        if (text.length >= 4 && !isGenericLabel(text)) {
+                            console.log(`${LOG_PREFIX} [Ashby] Found label for Yes/No button: "${text}"`);
+                            return text;
+                        }
+                    }
+                }
+            }
+            // Fallback: search entire field entry for first text element with meaningful content
+            const allChildren = Array.from(ashbyFieldEntry.children);
+            for (const child of allChildren) {
+                if (child.contains(element))
+                    continue;
+                const text = cleanLabelText(child.textContent || '');
+                if (text.length >= 4 && !isGenericLabel(text)) {
+                    return text;
+                }
+            }
+        }
         const groupQuestion = findGroupQuestion(element);
         if (groupQuestion)
             return groupQuestion;

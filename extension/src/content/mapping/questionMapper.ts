@@ -750,8 +750,13 @@ export class QuestionMapper {
         if (matches(profile.personal?.city)) return 'personal.city';
         if (matches(profile.personal?.state)) return 'personal.state';
         if (matches(profile.personal?.country)) return 'personal.country';
-        if (matches(profile.social?.linkedin)) return 'social.linkedin';
-        if (matches(profile.social?.website)) return 'social.website';
+        if (matches(profile.personal?.linkedin)) return 'personal.linkedin';
+        if (matches(profile.personal?.portfolio) || matches(profile.personal?.website)) return 'personal.portfolio';
+        if (matches(profile.personal?.github)) return 'personal.github';
+        if (matches(profile.personal?.twitter)) return 'personal.twitter';
+        if (matches(profile.personal?.instagram)) return 'personal.instagram';
+        if (matches(profile.personal?.threads)) return 'personal.threads';
+        if (matches(profile.personal?.telegram)) return 'personal.telegram';
 
         // Keyword-based fallback
         if (qLower.includes('gender') || qLower.includes('sex')) return 'eeo.gender';
@@ -762,8 +767,13 @@ export class QuestionMapper {
         if (qLower.includes('sponsor')) return 'workAuth.needsSponsorship';
         if (qLower.includes('authorized') && qLower.includes('work')) return 'workAuth.authorizedUS';
         if (qLower.includes('driver') && qLower.includes('license')) return 'workAuth.driverLicense';
-        if (qLower.includes('linkedin')) return 'social.linkedin';
-        if (qLower.includes('website') || qLower.includes('portfolio')) return 'social.website';
+        if (qLower.includes('linkedin')) return 'personal.linkedin';
+        if (qLower.includes('github')) return 'personal.github';
+        if (qLower.includes('website') || qLower.includes('portfolio')) return 'personal.portfolio';
+        if (qLower.includes('twitter')) return 'personal.twitter';
+        if (qLower.includes('instagram')) return 'personal.instagram';
+        if (qLower.includes('threads')) return 'personal.threads';
+        if (qLower.includes('telegram')) return 'personal.telegram';
         if (qLower.includes('first name') || qLower.includes('given name')) return 'personal.firstName';
         if (qLower.includes('last name') || qLower.includes('family name') || qLower.includes('surname')) return 'personal.lastName';
         if (qLower.includes('email')) return 'personal.email';
@@ -1557,7 +1567,7 @@ export class QuestionMapper {
         let cacheHits = 0;
         let cacheMisses = 0;
 
-        const CONCURRENCY_LIMIT = 3;
+        const CONCURRENCY_LIMIT = 6;
         const MAX_RETRIES = 3;
         const BASE_DELAY_MS = 1000;
 

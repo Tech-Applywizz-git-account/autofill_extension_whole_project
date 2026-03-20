@@ -20,12 +20,19 @@ const STYLES = `
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   user-select: none;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box !important;
+  line-height: 1.5 !important;
+}
+
+.autofill-floating-container * {
+  box-sizing: border-box !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
 }
 
 /* Floating Icon State */
 .autofill-floating-container.icon {
-  width: 60px;
-  height: 60px;
+  width: 60px !important;
+  height: 60px !important;
 }
 
 .floating-icon {
@@ -87,12 +94,14 @@ const STYLES = `
 
 /* Action Menu State */
 .autofill-floating-container.menu {
-  width: 220px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
-  border: 1px solid #eee;
+  width: 220px !important;
+  background: white !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+  overflow: hidden !important;
+  border: 1px solid #eee !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 .menu-header {
@@ -168,14 +177,16 @@ const STYLES = `
 
 /* Details Panel State */
 .details-panel {
-  width: 400px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  max-height: 80vh;
+  width: 400px !important;
+  min-width: 400px !important;
+  background: white !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: 80vh !important;
+  border: 1px solid #e0e0e0 !important;
 }
 
 .autofill-header {
@@ -913,6 +924,29 @@ const STYLES = `
   font-weight: 500;
   border: 1px solid #dee2e6;
 }
+
+.version-tag {
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-weight: bold;
+  color: #0073e6;
+  border: 1px solid rgba(0, 115, 230, 0.3);
+}
+
+.version-tag-menu {
+  font-size: 9px;
+  color: #0073e6;
+  font-weight: bold;
+  background: #f0f7ff;
+  padding: 0px 4px;
+  border-radius: 3px;
+  border: 1px solid #cce3ff;
+  margin-left: 4px;
+  display: inline-block;
+  vertical-align: middle;
+}
 `;
 
 interface OverlayPanelProps {
@@ -957,6 +991,7 @@ const calculateDuration = (start: Date, end: Date): string => {
 };
 
 const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAutoFill, onFieldUpdate }) => {
+    const version = chrome.runtime.getManifest().version;
     const [viewState, setViewState] = useState<ViewState>("ICON");
     const [position, setPosition] = useState({ x: window.innerWidth - 80, y: 100 });
     const [isDragging, setIsDragging] = useState(false);
@@ -1301,13 +1336,15 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
     }, [viewState]); // Run when viewState changes
 
     const handleFieldUpdate = (index: number, newValue: string) => {
-        const updatedFields = [...fields];
-        const field = { ...updatedFields[index] };
+        const field = { ...fields[index] };
+        console.log(`[Overlay] 🔄 Manually updating field at index ${index}:`, { question: field.questionText, selector: field.selector });
+
         field.filled = true;
         field.filledValue = newValue;
         field.skipped = false;
         field.confidence = 1.0;
 
+        const updatedFields = [...fields];
         updatedFields[index] = field;
         setFields(updatedFields);
         onFieldUpdate(index, field);
@@ -1918,7 +1955,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                             {statsSummary && (
                                 <div style={{ fontSize: '9px', opacity: 0.9, marginTop: '2px', display: 'flex', flexDirection: 'column', gap: '1px', textAlign: 'center' }}>
                                     <span>Total users in the last 24 hours: {statsSummary.users.recent_24h}</span>
-                                    <span>Total users: {statsSummary.users.total}</span>
+                                    <span>Total users: {statsSummary.users.total} <span className="version-tag-menu">v{version}</span></span>
                                 </div>
                             )}
                         </div>
@@ -2149,6 +2186,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                             <h3 style={{ margin: 0, fontSize: '13px', fontWeight: '700', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <img src={chrome.runtime.getURL('assets/icon48.png')} alt="logo" style={{ width: '16px', height: '16px' }} />
                                 Autofill Assistant
+                                <span className="version-tag">v{version}</span>
                             </h3>
                             {statsSummary && (
                                 <div style={{ fontSize: '9px', opacity: 0.9, marginTop: '1px', display: 'flex', gap: '5px' }}>
@@ -2220,9 +2258,9 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                                                         <label style={{ fontSize: '10px', fontWeight: '700', color: '#666' }}>SUCCESS</label>
                                                         <input
                                                             type="number"
-                                                            readOnly
-                                                            style={{ width: '50px', textAlign: 'center', border: '1px solid #ddd', borderRadius: '4px', background: '#f5f5f5', color: '#888', cursor: 'not-allowed' }}
+                                                            style={{ width: '50px', textAlign: 'center', border: '1px solid #00d084', borderRadius: '4px', fontWeight: '700' }}
                                                             value={manualSuccess}
+                                                            onChange={(e) => setManualSuccess(Math.max(0, parseInt(e.target.value) || 0))}
                                                         />
                                                     </div>
                                                     <div className="feedback-input-group" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
@@ -2231,11 +2269,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                                                             type="number"
                                                             style={{ width: '50px', textAlign: 'center', border: '1px solid #00d084', borderRadius: '4px', fontWeight: '700' }}
                                                             value={manualFail}
-                                                            onChange={(e) => {
-                                                                const val = Math.max(0, parseInt(e.target.value) || 0);
-                                                                setManualFail(val);
-                                                                setManualSuccess(Math.max(0, totalAttempted - val));
-                                                            }}
+                                                            onChange={(e) => setManualFail(Math.max(0, parseInt(e.target.value) || 0))}
                                                         />
                                                     </div>
                                                 </div>
@@ -2658,7 +2692,7 @@ const OverlayPanel: React.FC<OverlayPanelProps> = ({ fields: initialFields, onAu
                         </div>
 
                         <div className="panel-footer" style={{ textAlign: 'center', fontSize: '10px', color: '#999', marginTop: '20px', paddingBottom: '10px' }}>
-                            Job Application Autofill v1.3.6
+                            Job Application Autofill v1.3.7
                         </div>
                     </div>
                 )
@@ -3384,6 +3418,7 @@ function truncate(text: string, maxLength: number): string {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + "...";
 }
+
 
 // Render function called from content script - SHADOW DOM IMPLEMENTATION
 export function renderOverlayPanel(

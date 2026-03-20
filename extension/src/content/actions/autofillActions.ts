@@ -208,12 +208,23 @@ async function clickRadio(radio: HTMLInputElement, labelText: string): Promise<b
 
         // Try each target in order until the radio is checked
         for (const target of targets) {
-            target.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
-            target.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
-            target.click();
+            const events = [
+                new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerType: 'mouse' }),
+                new MouseEvent('mousedown', { bubbles: true, cancelable: true }),
+                new PointerEvent('pointerup', { bubbles: true, cancelable: true, pointerType: 'mouse' }),
+                new MouseEvent('mouseup', { bubbles: true, cancelable: true }),
+                new MouseEvent('click', { bubbles: true, cancelable: true })
+            ];
+
+            events.forEach(evt => target.dispatchEvent(evt));
 
             // Give React/Vue time to update state (Ashby needs ~300ms)
-            const success = await waitForCommit(() => radio.checked, 400);
+            // Verification: check either radio.checked OR Ashby's _active_ class on the target
+            const success = await waitForCommit(() => {
+                const isChecked = radio.checked;
+                const isActiveClass = Array.from(target.classList).some(c => c.includes('_active'));
+                return isChecked || isActiveClass;
+            }, 500);
             if (success) {
                 console.log(`[clickRadio] ✅ Radio selected via target: ${target.tagName}.${target.className.split(' ').slice(0, 2).join('.')}`);
                 return true;

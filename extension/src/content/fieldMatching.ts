@@ -10,7 +10,7 @@ const LOG_PREFIX = "[FieldMatching]";
 export type Detected = {
     questionText: string;
     element: HTMLElement;
-    kind: "TEXT" | "TEXTAREA" | "SELECT_NATIVE" | "DROPDOWN_CUSTOM" | "RADIO" | "CHECKBOX" | "DATE" | "FILE";
+    kind: "TEXT" | "TEXTAREA" | "SELECT_NATIVE" | "DROPDOWN_CUSTOM" | "RADIO" | "CHECKBOX" | "DATE" | "FILE" | "BUTTON_GROUP";
     name?: string;
     id?: string;
 };
@@ -139,6 +139,75 @@ export function detectFieldsInCurrentDOM(): Detected[] {
             id: (el as any).id,
             name: (el as any).name
         });
+    }
+
+    // 3) Button-based Yes/No groups (Ashby Boolean fields)
+    // Ashby renders Boolean questions as <div class="_yesno_..."><button>Yes</button><button>No</button></div>
+    // These are never captured by native input/select scanning above.
+    const seenBtnContainers = new Set<Element>();
+
+    // Strategy A: Ashby-specific CSS class patterns
+    const ashbyYesNoContainers = Array.from(document.querySelectorAll<HTMLElement>(
+        '[class*="_yesno_"], [class*="yesno"], [class*="yes-no"]'
+    ));
+
+    for (const container of ashbyYesNoContainers) {
+        if (!isVisible(container)) continue;
+        if (seenBtnContainers.has(container)) continue;
+
+        const firstBtn = container.querySelector<HTMLElement>('button, [role="button"]');
+        if (!firstBtn) continue;
+
+        const allBtns = Array.from(container.querySelectorAll('button, [role="button"]'))
+            .filter(b => isVisible(b as HTMLElement));
+        if (allBtns.length < 2) continue;
+
+        // Avoid duplicate if ancestor already added
+        if (out.some(d => d.element === firstBtn)) continue;
+
+        const qText = getQuestionTextFor(firstBtn) ?? '';
+        if (!qText) continue;
+
+        console.log(`${LOG_PREFIX} [Ashby] Detected Yes/No BUTTON_GROUP: "${qText.substring(0, 50)}"`);
+        out.push({ questionText: qText, element: firstBtn, kind: 'BUTTON_GROUP' });
+        seenBtnContainers.add(container);
+    }
+
+    // Strategy B: Generic sibling Yes/No button detection (fallback for other platforms)
+    const YES_NO_KEYWORDS = new Set(['yes', 'no', 'maybe', 'agree', 'disagree', 'true', 'false']);
+    const allVisibleButtons = Array.from(document.querySelectorAll<HTMLElement>('button, [role="button"]'))
+        .filter(b => isVisible(b));
+
+    for (const btn of allVisibleButtons) {
+        const text = (btn.textContent || '').toLowerCase().trim();
+        if (!YES_NO_KEYWORDS.has(text)) continue;
+
+        // NEW: Walk up the tree to find a container that has at least 2 choice buttons
+        // This handles cases where each button is wrapped in its own div (React/Ashby)
+        let container: HTMLElement | null = btn.parentElement;
+        let siblingChoiceBtns: HTMLElement[] = [];
+        
+        for (let depth = 0; depth < 3 && container; depth++) {
+            siblingChoiceBtns = Array.from(container.querySelectorAll<HTMLElement>('button, [role="button"]'))
+                .filter(b => isVisible(b) && YES_NO_KEYWORDS.has((b.textContent || '').toLowerCase().trim()));
+            
+            if (siblingChoiceBtns.length >= 2) {
+                break;
+            }
+            container = container.parentElement;
+        }
+
+        if (siblingChoiceBtns.length < 2 || !container || seenBtnContainers.has(container)) continue;
+
+        const firstBtn = siblingChoiceBtns[0];
+        if (out.some(d => d.element === firstBtn)) continue;
+
+        const qText = getQuestionTextFor(firstBtn) ?? '';
+        if (!qText) continue;
+
+        console.log(`${LOG_PREFIX} [Generic] Detected Yes/No BUTTON_GROUP: "${qText.substring(0, 50)}"`);
+        out.push({ questionText: qText, element: firstBtn, kind: 'BUTTON_GROUP' });
+        seenBtnContainers.add(container);
     }
 
     // Filter: keep only entries with question text

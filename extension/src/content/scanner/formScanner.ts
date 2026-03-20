@@ -340,22 +340,81 @@ export class FormScanner {
             'drag & drop',
             'click to upload',
             'browse files',
+            'attach files',
+            'select file',
         ];
-        const uploadButtons = doc.querySelectorAll('button, [role="button"], .upload-btn, .attach-btn');
+
+        // Choice button keywords
+        const CHOICE_BUTTON_KEYWORDS = ['yes', 'no', 'maybe', 'agree', 'disagree', 'true', 'false'];
+
+        const uploadButtons = doc.querySelectorAll('button:not([type="submit"]), [role="button"], .upload-btn, .attach-btn');
+        const seenChoiceContainers = new Set<HTMLElement>();
+
         uploadButtons.forEach(btn => {
             if (!this.isVisible(btn as HTMLElement)) return;
             const text = btn.textContent?.toLowerCase().trim() || '';
+            
             // Skip generic UI text that is not a real field
             if (genericUITexts.some(g => text === g || text.startsWith(g))) return;
+
+            // 1. Check for Upload/Attach patterns
             if (text.includes('upload') || text.includes('attach') || text.includes('resume')) {
-                // If this is a button-only uploader (common in ASK Consulting), add it if no direct file input found
                 const hasFileInput = btn.querySelector('input[type="file"]') || btn.parentElement?.querySelector('input[type="file"]');
                 if (!hasFileInput) {
                     console.log(`${LOG_PREFIX} 📎 Found potential custom upload trigger: "${text.trim()}"`);
                     fields.push(btn as HTMLElement);
                 }
+                return;
             }
-        });
+
+        // 2. Check for Choice Button Groups (Yes/No buttons)
+        // If this button has choice-like text, find its siblings
+        if (CHOICE_BUTTON_KEYWORDS.includes(text)) {
+            // Find a common container for adjacent choice buttons
+            const container = btn.parentElement;
+            if (container && !seenChoiceContainers.has(container)) {
+                const siblingButtons = Array.from(container.querySelectorAll('button, [role="button"]'))
+                    .filter(b => {
+                        const bText = b.textContent?.toLowerCase().trim() || '';
+                        return CHOICE_BUTTON_KEYWORDS.includes(bText);
+                    });
+
+                if (siblingButtons.length >= 2) {
+                    console.log(`${LOG_PREFIX} 🔘 Found potential button-based choice group with ${siblingButtons.length} buttons in container`);
+                    fields.push(btn as HTMLElement); // Use first button as representative
+                    seenChoiceContainers.add(container);
+                }
+            }
+        }
+    });
+
+    // ── Ashby-specific: Detect Boolean (Yes/No) button fields ──
+    // Ashby renders Boolean fields as a container with class '_yesno_*' or 'ashby-*yesno'
+    // inside a field entry container 'ashby-application-form-field-entry'
+    const ashbyYesNoContainers = doc.querySelectorAll(
+        '[class*="_yesno_"], [class*="yesno"], [class*="yes-no"], [class*="boolean"]'
+    );
+    const seenAshbyContainers = new Set<Element>();
+    ashbyYesNoContainers.forEach(container => {
+        if (!this.isVisible(container as HTMLElement)) return;
+        if (seenAshbyContainers.has(container)) return;
+
+        // Find the first button in this container as the representative field
+        const firstBtn = container.querySelector('button, [role="button"]');
+        if (!firstBtn) return;
+
+        // Skip if already added
+        if (fields.includes(firstBtn as HTMLElement)) return;
+
+        // Verify by checking if sibling buttons exist
+        const allBtns = Array.from(container.querySelectorAll('button, [role="button"]'))
+            .filter(b => this.isVisible(b as HTMLElement));
+        if (allBtns.length >= 2) {
+            console.log(`${LOG_PREFIX} 🔘 [Ashby] Detected Yes/No button group via CSS class: "${(firstBtn as HTMLElement).textContent?.trim()}" and siblings`);
+            fields.push(firstBtn as HTMLElement);
+            seenAshbyContainers.add(container);
+        }
+    });
 
         // ================================================================
         // Find Navigation/Submit Buttons - TWO-PASS DETECTION
@@ -492,7 +551,11 @@ export class FormScanner {
             // Extract options for radio button groups
             if (fieldType === FieldType.RADIO_GROUP) {
                 console.log(`${LOG_PREFIX} 📋 Extracting radio options for: "${questionText}"`);
-                options = this.extractRadioOptions(field as HTMLInputElement);
+                if (field.tagName.toLowerCase() === 'button' || field.getAttribute('role') === 'button') {
+                    options = this.extractButtonChoiceOptions(field);
+                } else {
+                    options = this.extractRadioOptions(field as HTMLInputElement);
+                }
                 console.log(`${LOG_PREFIX} 📋 Found ${options.length} radio options: [${options.join(', ')}]`);
             }
 
@@ -571,23 +634,20 @@ export class FormScanner {
             }
         }
 
-        // Check for Workday data-automation-id button patterns FIRST (most reliable)
-        const aid = (element.getAttribute('data-automation-id') || '').toLowerCase();
-        const WORKDAY_NAV_AIDS = [
-            'bottomNavigationNext', 'bottomNavigationSaveAndContinue', 'nextButton',
-            'saveAndContinue', 'continueButton', 'navigationNext', 'pageFooterNextButton',
-            'pageFooterSaveButton', 'bottomNavigationSubmit', 'submitButton', 'applyButton',
-            'pageFooterSubmitButton'
-        ];
-        if (aid && WORKDAY_NAV_AIDS.some(a => aid === a.toLowerCase() || aid.includes(a.toLowerCase()))) {
-            return FieldType.NAVIGATION_BUTTON;
-        }
-
-        // Text-based button keyword detection (fallback for non-Workday platforms)
+        // Check for Choice Button detection (Yes/No buttons)
         const text = (element.textContent || (element as HTMLInputElement).value || '')
             .toLowerCase()
             .replace(/\s+/g, ' ')
             .trim();
+
+        if (element.tagName.toLowerCase() === 'button' || element.getAttribute('role') === 'button') {
+            const CHOICE_BUTTON_KEYWORDS = ['yes', 'no', 'maybe', 'agree', 'disagree', 'true', 'false'];
+            if (CHOICE_BUTTON_KEYWORDS.includes(text)) {
+                return FieldType.RADIO_GROUP; // Treat button choices as radio groups
+            }
+        }
+
+        // Check for Workday data-automation-id button patterns FIRST (most reliable)
         const navKeywords = [
             // Multi-page navigation
             'next', 'continue', 'save & continue', 'save and continue', 'save & next', 'save and next',
@@ -748,30 +808,30 @@ export class FormScanner {
      * Generate unique CSS selector for field
      */
     private generateSelector(element: HTMLElement): string {
-        // Prefer ID
-        if (element.id) {
-            return `#${element.id}`;
+        // Preferred attributes in order
+        const id = element.id;
+        if (id && !id.includes('__') && !id.startsWith('react-select')) {
+            return `#${CSS.escape(id)}`;
         }
 
-        // Use name attribute
         const name = element.getAttribute('name');
         if (name) {
             const tagName = element.tagName.toLowerCase();
-            return `${tagName}[name="${name}"]`;
+            return `${tagName}[name="${CSS.escape(name)}"]`;
         }
 
-        // Generate path-based selector
+        // Generate robust path-based selector with :nth-of-type()
         const path: string[] = [];
-        let current: Element | null = element;
+        let current: HTMLElement | null = element;
 
         while (current && current !== document.body) {
             let selector = current.tagName.toLowerCase();
 
-            // Add class if available
+            // Add class if available (excluding dynamic ones)
             if (current.className && typeof current.className === 'string') {
                 const classes = current.className.split(' ')
-                    .filter(c => c && !c.startsWith('css-')) // Exclude dynamic CSS-in-JS classes
-                    .slice(0, 2) // Take max 2 classes
+                    .filter(c => c && !c.startsWith('css-') && !c.includes('__'))
+                    .slice(0, 2)
                     .join('.');
 
                 if (classes) {
@@ -779,13 +839,28 @@ export class FormScanner {
                 }
             }
 
-            path.unshift(selector);
-            current = current.parentElement;
+            // If not unique among siblings, add nth-of-type
+            const parent = current.parentElement;
+            if (parent) {
+                const siblings = Array.from(parent.children).filter(
+                    el => el.tagName === current!.tagName
+                );
+                if (siblings.length > 1) {
+                    const index = siblings.indexOf(current) + 1;
+                    selector += `:nth-of-type(${index})`;
+                }
+            }
 
-            // Stop if we have a unique enough path
-            if (path.length >= 3) {
+            path.unshift(selector);
+
+            // If we found an ID on a parent, stop there
+            if (current.id && !current.id.includes('__')) {
                 break;
             }
+
+            current = current.parentElement;
+            // Limit depth for performance, but enough for uniqueness
+            if (path.length >= 5) break;
         }
 
         return path.join(' > ');
@@ -993,5 +1068,31 @@ export class FormScanner {
         }
 
         return null;
+    }
+
+    /**
+     * Extract options from button-based choice groups
+     */
+    private extractButtonChoiceOptions(element: HTMLElement): string[] {
+        const options: string[] = [];
+        const container = element.parentElement;
+        if (!container) return [element.textContent?.trim() || ''];
+
+        const CHOICE_BUTTON_KEYWORDS = ['yes', 'no', 'maybe', 'agree', 'disagree', 'true', 'false'];
+        
+        // Find all buttons in the same container that look like choices
+        const siblingButtons = Array.from(container.querySelectorAll('button, [role="button"]'))
+            .filter(b => {
+                if (!this.isVisible(b as HTMLElement)) return false;
+                const bText = b.textContent?.toLowerCase().trim() || '';
+                return CHOICE_BUTTON_KEYWORDS.includes(bText) || bText.length < 20; // Allow short text as choices
+            });
+
+        siblingButtons.forEach(btn => {
+            const text = btn.textContent?.trim();
+            if (text) options.push(text);
+        });
+
+        return options;
     }
 }

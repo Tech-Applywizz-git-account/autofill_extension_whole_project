@@ -2,6 +2,8 @@
 node_modules/
 build/
 .env
+.agent/
+.venv/
 
 # OS
 .DS_Store

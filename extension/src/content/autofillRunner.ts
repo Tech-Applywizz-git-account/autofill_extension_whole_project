@@ -379,6 +379,7 @@ function mapFieldType(kind: string): FieldType {
         case "SELECT_NATIVE": return FieldType.SELECT_NATIVE;
         case "DROPDOWN_CUSTOM": return FieldType.DROPDOWN_CUSTOM;
         case "RADIO": return FieldType.RADIO_GROUP;
+        case "BUTTON_GROUP": return FieldType.RADIO_GROUP; // Ashby Yes/No buttons
         case "CHECKBOX": return FieldType.CHECKBOX;
         case "DATE": return FieldType.DATE;
         case "FILE": return FieldType.FILE_UPLOAD;
